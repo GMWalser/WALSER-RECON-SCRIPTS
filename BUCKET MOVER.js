@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.1
+// @version      3.2
 // @author       Gabe
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @match        https://app.reconvision.com/departments/3122*
 // @match        https://app.reconvision.com/departments/4282*
 // @match        https://app.reconvision.com/work_orders/*/edit*
@@ -501,29 +503,38 @@ function applyHighlights() {
 
       // Persistent PDR count badge — shown regardless of current flag state,
       // so everyone can see the last entered PDR count for this vehicle.
+      // If PDR task is complete, badge is greyed out and non-clickable.
       if (typeof entry.pdrCount === 'number') {
+        const pdrComplete = !entry.depts || !entry.depts.PDR || !entry.depts.PDR.incomplete;
         const noteEl = document.createElement('div');
         noteEl.className = 'rv-pdr-note';
         noteEl.textContent = 'PDR ct: ' + entry.pdrCount;
-        noteEl.title = 'Current PDR count entered when this vehicle was moved. Click to update.';
-        noteEl.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-        }, true);
-        noteEl.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          const c = getCache();
-          if (!c[row.woId]) return;
-          const raw = prompt('Update current PDR count:', String(c[row.woId].pdrCount));
-          if (raw === null) return;
-          const count = parseInt(raw, 10);
-          if (isNaN(count)) return;
-          c[row.woId].pdrCount = count;
-          saveCache(c);
-          applyHighlights();
-        }, true);
+        if (pdrComplete) {
+          noteEl.title = 'PDR task complete.';
+          noteEl.style.opacity = '0.4';
+          noteEl.style.cursor = 'default';
+          noteEl.style.pointerEvents = 'none';
+        } else {
+          noteEl.title = 'Current PDR count entered when this vehicle was moved. Click to update.';
+          noteEl.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+          }, true);
+          noteEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            const c = getCache();
+            if (!c[row.woId]) return;
+            const raw = prompt('Update current PDR count:', String(c[row.woId].pdrCount));
+            if (raw === null) return;
+            const count = parseInt(raw, 10);
+            if (isNaN(count)) return;
+            c[row.woId].pdrCount = count;
+            saveCache(c);
+            applyHighlights();
+          }, true);
+        }
         wrapper.appendChild(noteEl);
       }
     });
