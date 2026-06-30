@@ -1,0 +1,628 @@
+// ==UserScript==
+// @name         ReconVision → PartsTech Pre-Loader
+// @namespace    http://tampermonkey.net/
+// @version      9.11
+// @author       Gabe
+// @match        https://app.reconvision.com/work_orders/*/edit
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+'use strict';
+
+const SKIP = [
+  /^diag\b/i,/color.?change/i,/\bpaint\b/i,/^reinstall\b/i,/remove.*send.?out/i,
+  /\bpdr\b/i,/\bsublet\b/i,/\btint\b/i,/\bdetail\b/i,/\bdeodor/i,/\balignment\b/i,
+  /\bwash\b/i,/estimate.?parts/i,/\bpulse\b/i,/burnsville/i,/\blof\b/i,
+  /air.?filter.*engine|engine.*air.?filter/i,/safety.?inspection/i,/^team\s+\d/i,
+  /mount.?and.?balance/i,/license.?plate/i,/ready.?for.?pick/i,/at.?recon\b/i,
+  /parts.?ordered/i,/\bkey.?fob\b/i,/\bhub.?rings?\b/i,/\bhub.?centric\b/i,
+  /^remove\b/i,/^flush\b/i,/\bbalance\s+\d+\s+tires?\b/i,/per\s+diag$/i,
+  /\*+estimate.?parts\*+/i,/^degrease\b/i,
+  /\bbulb\b/i,/tire.?repair/i,/a\/?c.?evac/i,/battery.*service.*terminal/i,
+  /no.?pulse/i,/runflat.*mount/i,/plug.?patch/i,/tap.?and.?re.?drill/i,
+  /lof.?synthetic/i,/^reposition\b/i,/splash.?shield.*hardware|hardware.*splash.?shield/i,
+  /seat.*motor|motor.*seat/i,/\bneed\s+\d+\s*(qts?|quarts?|gal|gallons?)\b/i,
+  /\breplace\s+transmission\b/i,/\breplace\s+(rear|front|lf|rf|lr|rr)?\s*differential\b/i,
+  /\breplace\s+.*\bptu\b/i,/\breplace\s+.*transfer.?case\b/i,/\breplace\s+.*\bengine\b/i,
+  /^[A-Z][a-z]+'?s?\s+[Ll]ine$/,/^[A-Z][a-z]+\s+[Ll]ine$/,
+];
+
+const SPLIT_RULES = [
+  {p:/wiper.*rear|rear.*wiper/i, parts:['Wiper Blade']},
+  {p:/wiper.?motor|motor.?wiper/i, parts:['Wiper Motor']},
+  {p:/wiper.?blade|\bwipers?\b/i, parts:['Wiper Blade']},
+  {p:/pads?\s*[&,]\s*rotors?|rotors?\s*[&,]\s*pads?/i, parts:['Brake Pad','Disc Brake Rotor']},
+  {p:/shoes?\s*[&,]\s*(drums?|hardware)/i, parts:['Brake Shoe','Brake Drum','Brake Hardware Kit']},
+  {p:/drums?\s*[&,]\s*shoes?/i, parts:['Brake Drum','Brake Shoe','Brake Hardware Kit']},
+  {p:/timing.?belt.*water.?pump/i, parts:['Timing Belt','Water Pump','Timing Belt Tensioner']},
+  {p:/water.?pump.*timing.?belt/i, parts:['Water Pump','Timing Belt','Timing Belt Tensioner']},
+  {p:/exhaust.?manifold/i, parts:['Exhaust Manifold','Exhaust Manifold Gasket','Exhaust Manifold Hardware']},
+  {p:/struts?\s*[&,]\s*springs?/i, parts:['Suspension Strut and Coil Spring Assembly']},
+  {p:/shocks?\s*[&,]\s*springs?/i, parts:['Shock','Coil Spring']},
+  {p:/belt\s*[&,]\s*tensioner/i, parts:['Serpentine Belt','Belt Tensioner']},
+  {p:/a\/?c.?lines?/i, parts:['A/C Suction Line Hose Assembly','A/C Discharge Line Hose Assembly']},
+  {p:/shocks?\s*(and|&)\s*mounts?|mounts?\s*(and|&)\s*shocks?/i, parts:['Shock','Shock Mount']},
+];
+
+const REMAP = [
+  {p:/air.?filter/i, term:'Air Filter'},
+  {p:/\bbattery\b/i, term:'Vehicle Battery'},
+  {p:/cabin.?filter/i, term:'Cabin Air Filter'},
+  {p:/wiper.?motor|motor.?wiper/i, term:'Wiper Motor'},
+  {p:/wiper.?blade|\bwipers?\b/i, term:'Wiper Blade'},
+  {p:/fog.?light.*(assembly|assy|housing)|(assembly|assy|housing).*fog.?light/i, term:'Fog Light Assembly'},
+  {p:/fog.?light/i, term:'Fog Light Bulb'},
+  {p:/window.?switch|door.?window/i, term:'Window Switch'},
+  {p:/wheel.?bearing/i, term:'Wheel Bearing'},
+  {p:/\bstrut\b/i, term:'Suspension Strut and Coil Spring Assembly'},
+  {p:/repl\.?\s*rotor|rotors?\s*replace/i, term:'Disc Brake Rotor'},
+  {p:/mirror.?switch|power.?mirror/i, term:'Door Mirror Switch'},
+  {p:/oil.?cooler|oil.?filter.?adapter/i, term:'Engine Oil Filter Adapter'},
+  {p:/oil.?pan/i, term:'Engine Oil Pan Gasket Set'},
+  {p:/serp.?belt|serpentine/i, term:'Serpentine Belt'},
+  {p:/brake.?actuator/i, term:'Brake Actuators'},
+  {p:/trailing.?arm/i, term:'Suspension Trailing Arm'},
+  {p:/gas.?cap|fuel.?cap|fuel.?tank.?cap|gas.?tank.?cap/i, term:'Fuel Tank Cap'},
+  {p:/abs.?sensor|wheel.?speed.?sensor/i, term:'ABS Wheel Speed Sensor'},
+  {p:/brake.?wear.?sensor|wear.?sensor|pad.?sensor/i, term:'Disc Brake Pad Wear Sensor'},
+  {p:/valve.?cover.?gasket|vc.?gasket/i, term:'Engine Valve Cover Gasket Set'},
+  {p:/clutch.?master.?cyl/i, term:'Clutch Master Cylinder'},
+  {p:/clutch.?slave.?cyl/i, term:'Clutch Slave Cylinder'},
+  {p:/dip.?stick|oil.?dipstick/i, term:'Engine Oil Dipstick'},
+  {p:/sun.?visor/i, term:'Sun Visor'},
+  {p:/mirror|side.?mirror|door.?mirror|\bmirrors?\b/i, term:'Door Mirror'},
+  {p:/door.?limit.?strap|door.?check|check.?strap/i, term:'Door Check'},
+  {p:/power.?steering.*rack|rack.*pinion|rack.?(and|&|n).?pinion/i, term:'Rack and Pinion Assembly'},
+  {p:/power.?steering.*(line|hose)|high.?pressure.*steering|ps.?pressure.?line/i, term:'Power Steering Pressure Line Hose Assembly'},
+  {p:/backing.?plate|brake.?dust.?shield/i, term:'Brake Backing Plate'},
+  {p:/manifold.?bolt|exhaust.?bolt/i, term:'Exhaust Manifold Bolt'},
+  {p:/exhaust.?manifold.?gasket|exh.?manifold.?gasket/i, term:'Exhaust Manifold Gasket Set'},
+  {p:/exhaust.?manifold|exh.?manifold/i, term:'Exhaust Manifold'},
+  {p:/headlight.?selector|headlight.?switch|head.?light.?switch/i, term:'Headlight Switch'},
+  {p:/back.?up.?camera|backup.?camera|rear.?view.?camera|reverse.?camera/i, term:'Park Assist Camera'},
+  {p:/blower.?motor/i, term:'HVAC Blower Motor'},
+];
+
+const STRIP = [
+  'replace both','replace all','replace','repl.','repl','repalce','install','r&r','repair',
+  'part is available separately at vw','part is available separately','available separately','separately at vw',
+  'rebuild','leaking','broken','damaged','worn','bad','faulty','quick','power','stationary',
+  'both','all four','all 4','front and rear','front','rear','left','right','driver','passenger',
+  'upper','lower','inner','outer','lh','rh','lf','rf','lr','rr','w/','with',
+  'and harness','per diag','cracked','drive','and pigtail','pigtail',
+];
+
+const SING = [
+  [/\bstruts\b/i,'Suspension Strut and Coil Spring Assembly'],[/\bshocks\b/i,'Shock'],[/\bmodules\b/i,'Module'],
+  [/\bsensors\b/i,'Sensor'],[/\bboards\b/i,'Board'],[/\bsprings\b/i,'Spring'],
+  [/\bbearings\b/i,'Bearing'],[/\bbushings\b/i,'Bushing'],[/\bpads\b/i,'Pad'],
+  [/\brotors\b/i,'Disc Brake Rotor'],[/\bcalipers\b/i,'Caliper'],[/\barms\b/i,'Arm'],
+  [/\blinks\b/i,'Link'],[/\bhoses\b/i,'Hose'],[/\bbelts\b/i,'Belt'],
+  [/\bplugs\b/i,'Plug'],[/\bfilters\b/i,'Filter'],[/\btires\b/i,'Tire'],
+  [/\bseals\b/i,'Seal'],[/\bgaskets\b/i,'Gasket'],[/\bvalves\b/i,'Valve'],
+  [/\bpumps\b/i,'Pump'],[/\bmounts\b/i,'Mount'],[/\bshoes\b/i,'Shoe'],[/\bdrums\b/i,'Drum'],
+];
+
+function shouldSkip(t) { return SKIP.some(r => r.test(t)); }
+
+function getTerms(text) {
+  for (const r of SPLIT_RULES) if (r.p.test(text)) return r.parts;
+  for (const r of REMAP) if (r.p.test(text)) return [r.term];
+  let s = text.replace(/\(.*?\)/g,'')
+    .replace(/\s*-\s*repl\.?.*/i,'').replace(/\s*-\s*part\s+is.*/i,'')
+    .replace(/\s*-\s*available.*/i,'').replace(/[\*#@!]+/g,'');
+  for (const w of STRIP) s = s.replace(new RegExp('(?:^|\\s)'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:\\s|$)','gi'),' ');
+  for (const [r,rep] of SING) s = s.replace(r,rep);
+  s = s.replace(/[-.,;:]+$/, '').trim().replace(/\s+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  return [s.trim()].filter(Boolean);
+}
+
+function scrapeVIN() {
+  const m = document.body.innerText.match(/\b[A-HJ-NPR-Z0-9]{17}\b/);
+  return m ? m[0] : null;
+}
+
+function getMechanicalContainer() {
+  for (const h2 of document.querySelectorAll('h2.collapsible__toggle')) {
+    if (/mechanical.?repair/i.test(h2.innerText.trim())) {
+      const th = h2.closest('th');
+      const tbl = th ? th.closest('table') : null;
+      if (tbl && tbl.nextElementSibling) return tbl.nextElementSibling;
+    }
+  }
+  return null;
+}
+
+function scrapeJobLines() {
+  const container = getMechanicalContainer();
+  if (!container) return [];
+  const inputs = container.querySelectorAll('input[name*="line_items_attributes"][name$="[name]"]');
+  const seen = new Set(), seenTerms = new Set(), lines = [];
+  inputs.forEach(inp => {
+    const val = (inp.value||'').trim();
+    if (!val || val.length < 3 || seen.has(val) || shouldSkip(val)) return;
+    seen.add(val);
+    const row = inp.closest('tr');
+    let hasQuote = false, lineId = null;
+    if (row) {
+      const pc = row.querySelector('td[class*="parts"]');
+      if (pc) hasQuote = parseFloat(pc.innerText.replace(/[$,\s]/g,'')) > 0;
+      lineId = row.getAttribute('data-service-id');
+    }
+    const terms = getTerms(val);
+    const newTerms = terms.filter(t => !seenTerms.has(t));
+    if (!newTerms.length) return;
+    newTerms.forEach(t => seenTerms.add(t));
+    lines.push({name:val, hasQuote, lineId, partNumbers:[], _terms: newTerms});
+  });
+  return lines;
+}
+
+GM_addStyle(`
+  #rv-pt-panel {
+    position:fixed;bottom:60px;right:20px;width:300px;background:#1a1a1a;
+    border:1px solid #333;border-radius:10px;font-family:'Segoe UI',sans-serif;
+    font-size:14px;color:#e0e0e0;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,.6);
+    overflow:hidden;display:none;
+  }
+  #rv-pt-drag-handle {
+    background:#0a0a0a;padding:4px 14px;cursor:grab;border-bottom:1px solid #1a1a1a;
+    display:flex;align-items:center;justify-content:center;gap:3px;
+  }
+  #rv-pt-drag-handle:active { cursor:grabbing; }
+  #rv-pt-drag-handle span { display:inline-block;width:4px;height:4px;background:#333;border-radius:50%; }
+  #rv-pt-header {
+    background:#111;padding:8px 12px;font-weight:700;font-size:15px;color:#4ade80;
+    display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a2a;
+  }
+  #rv-pt-header-right { display:flex;align-items:center;gap:10px; }
+  #rv-pt-collapse-chevron { font-size:13px;color:#555;cursor:pointer; }
+  #rv-pt-close {cursor:pointer;color:#888;font-size:17px;}
+  #rv-pt-close:hover {color:#fff;}
+  #rv-pt-body {padding:10px 12px;}
+  #rv-pt-toprow {
+    display:flex;gap:6px;margin-bottom:6px;align-items:center;
+  }
+  #rv-pt-vin {
+    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:5px 8px;
+    font-family:monospace;font-size:12px;color:#4ade80;word-break:break-all;flex:1;
+  }
+  #rv-clip-status {
+    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:5px 8px;
+    font-size:12px;color:#888;margin-bottom:6px;display:flex;align-items:center;gap:5px;
+  }
+  #rv-clip-status .dot {width:6px;height:6px;border-radius:50%;background:#555;flex-shrink:0;}
+  #rv-clip-status .dot.ready {background:#4ade80;}
+  #rv-pt-note {margin-bottom:6px;font-size:11px;color:#666;line-height:1.3;}
+  #rv-pt-lines {max-height:260px;overflow-y:auto;margin-bottom:8px;}
+  .rv-line {display:grid;grid-template-columns:16px 1fr;gap:6px;align-items:start;padding:5px 0;border-bottom:1px solid #222;}
+  .rv-line:last-child {border-bottom:none;}
+  .rv-cb {accent-color:#4ade80;width:16px;height:16px;cursor:pointer;margin-top:2px;}
+  .rv-right {display:flex;flex-direction:column;gap:3px;}
+  .rv-orig {font-size:11px;color:#555;line-height:1.25;}
+  .rv-input {
+    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:3px 6px;
+    font-size:13px;color:#e0e0e0;width:100%;box-sizing:border-box;font-family:'Segoe UI',sans-serif;
+  }
+  .rv-input:focus {outline:none;border-color:#4ade80;color:#fff;}
+  .rv-split {font-size:10px;color:#4ade80;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+  #rv-pt-btn {
+    width:100%;padding:8px;background:#4ade80;color:#000;font-weight:700;
+    font-size:14px;border:none;border-radius:6px;cursor:pointer;
+  }
+  #rv-pt-btn:hover {background:#22c55e;}
+  #rv-pt-btn:disabled {background:#2a2a2a;color:#555;cursor:not-allowed;}
+  #rv-pt-status {margin-top:6px;font-size:11px;color:#888;text-align:center;min-height:14px;}
+  #rv-toggle {
+    position:fixed;bottom:20px;right:20px;background:#4ade80;color:#000;font-weight:700;
+    font-size:14px;padding:8px 14px;border-radius:20px;cursor:pointer;z-index:99999;
+    box-shadow:0 2px 12px rgba(74,222,128,.4);
+  }
+  #rv-manual-section {margin-bottom:8px;}
+  .rv-manual-label {font-size:11px;color:#555;text-transform:uppercase;margin-bottom:4px;}
+  #rv-filter-section {margin-bottom:8px;border:1px solid #1e4d8c;border-radius:6px;overflow:hidden;background:#0d1825;}
+  #rv-filter-header {
+    background:#0f1f33;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;
+    font-size:12px;color:#5b9bd5;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;
+  }
+  #rv-filter-header-left { display:flex;align-items:center;gap:6px; }
+  #rv-filter-chevron { font-size:11px;color:#5b9bd5;transition:transform 0.2s; }
+  #rv-filter-section.collapsed #rv-filter-chevron { transform:rotate(-90deg); }
+  #rv-filter-section.collapsed #rv-filter-rows { display:none; }
+  #rv-filter-master {
+    display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;
+    color:#5b9bd5;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    background:none;border:none;padding:0;
+  }
+  #rv-filter-master .rv-toggle-track {
+    width:24px;height:13px;border-radius:7px;background:#1e3a5f;position:relative;
+    transition:background 0.2s;flex-shrink:0;
+  }
+  #rv-filter-master.on .rv-toggle-track { background:#3b82f6; }
+  #rv-filter-master .rv-toggle-thumb {
+    width:9px;height:9px;border-radius:50%;background:#fff;position:absolute;
+    top:2px;left:2px;transition:left 0.2s;
+  }
+  #rv-filter-master.on .rv-toggle-thumb { left:13px; }
+  #rv-filter-rows {padding:4px 8px 3px;}
+  .rv-filter-row {
+    display:flex;align-items:center;justify-content:space-between;
+    padding:3px 0;border-bottom:1px solid #14283f;
+  }
+  .rv-filter-row:last-child {border-bottom:none;}
+  .rv-filter-label {font-size:12px;color:#cfe0f5;}
+  .rv-filter-cb {accent-color:#3b82f6;width:14px;height:14px;cursor:pointer;}
+`);
+
+function buildPanel(vin, jobLines) {
+  const panel = document.createElement('div');
+  panel.id = 'rv-pt-panel';
+
+  const dragHandle = document.createElement('div');
+  dragHandle.id = 'rv-pt-drag-handle';
+  for (let i = 0; i < 6; i++) dragHandle.appendChild(document.createElement('span'));
+  panel.appendChild(dragHandle);
+
+  const header = document.createElement('div');
+  header.id = 'rv-pt-header';
+  const headerTitle = document.createElement('span');
+  headerTitle.textContent = '⚡ PartsTech Pre-Loader';
+  const headerRight = document.createElement('div');
+  headerRight.id = 'rv-pt-header-right';
+  const chevron = document.createElement('span');
+  chevron.id = 'rv-pt-collapse-chevron';
+  chevron.textContent = '▼';
+  chevron.title = 'Alt+E — Minimize';
+  const closeBtn = document.createElement('span');
+  closeBtn.id = 'rv-pt-close';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Alt+E — Minimize';
+  headerRight.appendChild(chevron);
+  headerRight.appendChild(closeBtn);
+  header.appendChild(headerTitle);
+  header.appendChild(headerRight);
+  panel.appendChild(header);
+
+  const minimizeToP = () => {
+    panel.style.display = 'none';
+    toggle.style.display = 'block';
+  };
+  chevron.onclick = (e) => { e.stopPropagation(); minimizeToP(); };
+  closeBtn.onclick = (e) => { e.stopPropagation(); minimizeToP(); };
+
+  const body = document.createElement('div');
+  body.id = 'rv-pt-body';
+
+  const vinDiv = document.createElement('div');
+  vinDiv.id = 'rv-pt-vin';
+  vinDiv.textContent = vin ? 'VIN: '+vin : '⚠ VIN not found';
+  body.appendChild(vinDiv);
+
+  const clipStatus = document.createElement('div');
+  clipStatus.id = 'rv-clip-status';
+  body.appendChild(clipStatus);
+
+  function refreshClipStatus() {
+    const part  = GM_getValue('clip_part',  '');
+    const price = GM_getValue('clip_price', '');
+    clipStatus.innerHTML = '';
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (part ? ' ready' : '');
+    clipStatus.appendChild(dot);
+    const txt = document.createElement('span');
+    txt.textContent = part
+      ? part + (price ? ' | $' + price : '')
+      : 'No clip data — right-click part# in PartsTech';
+    clipStatus.appendChild(txt);
+  }
+  refreshClipStatus();
+  setInterval(refreshClipStatus, 500);
+
+  // Select All / Deselect All
+  const selectAllBar = document.createElement('div');
+  selectAllBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+  const selAllBtn = document.createElement('button');
+  selAllBtn.textContent = '✓ Select All';
+  selAllBtn.style.cssText = 'flex:1;padding:4px;background:#1a3a1a;color:#4ade80;border:1px solid #2a5a2a;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
+  selAllBtn.onmouseover = () => selAllBtn.style.background = '#1f4a1f';
+  selAllBtn.onmouseout  = () => selAllBtn.style.background = '#1a3a1a';
+  const deselAllBtn = document.createElement('button');
+  deselAllBtn.textContent = '✕ Deselect All';
+  deselAllBtn.style.cssText = 'flex:1;padding:4px;background:#1a1a1a;color:#888;border:1px solid #333;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
+  deselAllBtn.onmouseover = () => deselAllBtn.style.background = '#222';
+  deselAllBtn.onmouseout  = () => deselAllBtn.style.background = '#1a1a1a';
+  selAllBtn.onclick   = () => document.querySelectorAll('#rv-pt-lines .rv-cb').forEach(cb => cb.checked = true);
+  deselAllBtn.onclick = () => document.querySelectorAll('#rv-pt-lines .rv-cb').forEach(cb => cb.checked = false);
+  selectAllBar.appendChild(selAllBtn);
+  selectAllBar.appendChild(deselAllBtn);
+  body.appendChild(selectAllBar);
+
+  const linesDiv = document.createElement('div');
+  linesDiv.id = 'rv-pt-lines';
+  body.appendChild(linesDiv);
+
+  // Filter toggles section — collapsible, remembers open/closed state per machine
+  const filterSection = document.createElement('div');
+  filterSection.id = 'rv-filter-section';
+
+  const filterHeader = document.createElement('div');
+  filterHeader.id = 'rv-filter-header';
+  const filterHeaderLeft = document.createElement('div');
+  filterHeaderLeft.id = 'rv-filter-header-left';
+  const filterChevron = document.createElement('span');
+  filterChevron.id = 'rv-filter-chevron';
+  filterChevron.textContent = '▼';
+  const filterLabel = document.createElement('span');
+  filterLabel.textContent = 'Filter Lookups';
+  filterLabel.title = 'Alt+F — Toggle all filters on/off';
+  filterHeaderLeft.appendChild(filterChevron);
+  filterHeaderLeft.appendChild(filterLabel);
+  const masterBtn = document.createElement('button');
+  masterBtn.id = 'rv-filter-master';
+  masterBtn.title = 'Alt+F — Toggle all filters on/off';
+  masterBtn.innerHTML = '<span class="rv-toggle-track"><span class="rv-toggle-thumb"></span></span><span>ALL</span>';
+  filterHeader.appendChild(filterHeaderLeft);
+  filterHeader.appendChild(masterBtn);
+  filterSection.appendChild(filterHeader);
+
+  // Restore collapsed/expanded state from last time (persists across sessions)
+  const savedFilterState = GM_getValue('rv_filter_section_collapsed', 'true');
+  if (savedFilterState === 'true') filterSection.classList.add('collapsed');
+
+  filterHeaderLeft.addEventListener('click', () => {
+    filterSection.classList.toggle('collapsed');
+    GM_setValue('rv_filter_section_collapsed', filterSection.classList.contains('collapsed') ? 'true' : 'false');
+  });
+
+  const filterRows = document.createElement('div');
+  filterRows.id = 'rv-filter-rows';
+
+  const filters = [
+    { id: 'rv-filter-air',   label: 'Air Filter',        search: 'Air Filter',        checked: false },
+    { id: 'rv-filter-oil',   label: 'Engine Oil Filter', search: 'Engine Oil Filter', checked: false },
+    { id: 'rv-filter-cabin', label: 'Cabin Air Filter',  search: 'Cabin Air Filter',  checked: false },
+  ];
+
+  filters.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'rv-filter-row';
+    const lbl = document.createElement('label');
+    lbl.className = 'rv-filter-label';
+    lbl.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer;width:100%;';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = f.id;
+    cb.className = 'rv-filter-cb';
+    cb.checked = f.checked;
+    cb.dataset.search = f.search;
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(f.label));
+    row.appendChild(lbl);
+    filterRows.appendChild(row);
+  });
+  filterSection.appendChild(filterRows);
+  body.appendChild(filterSection);
+
+  masterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOn = masterBtn.classList.toggle('on');
+    filterRows.querySelectorAll('.rv-filter-cb').forEach(cb => { cb.checked = isOn; });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && (e.key === 'f' || e.key === 'F')) {
+      e.preventDefault();
+      masterBtn.click();
+    }
+  }, true);
+
+  const manualSection = document.createElement('div');
+  manualSection.id = 'rv-manual-section';
+  const manualLabel = document.createElement('div');
+  manualLabel.className = 'rv-manual-label';
+  manualLabel.textContent = 'Manual Entry';
+  manualSection.appendChild(manualLabel);
+  const manualRows = document.createElement('div');
+  manualRows.id = 'rv-manual-rows';
+  manualSection.appendChild(manualRows);
+  body.appendChild(manualSection);
+
+  function addManualRow() {
+    const row = document.createElement('div');
+    row.className = 'rv-line';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'rv-cb';
+    cb.checked = false;
+    const inp = document.createElement('input');
+    inp.className = 'rv-input';
+    inp.placeholder = 'Type part name...';
+    inp.style.cssText = 'width:100%;box-sizing:border-box;';
+    inp.addEventListener('input', () => {
+      if (inp.value.trim()) cb.checked = true;
+      const rows = manualRows.querySelectorAll('.rv-line');
+      if (row === rows[rows.length - 1] && inp.value.trim()) addManualRow();
+    });
+    row.appendChild(cb);
+    row.appendChild(inp);
+    manualRows.appendChild(row);
+  }
+  addManualRow();
+
+  const openBtn = document.createElement('button');
+  openBtn.id = 'rv-pt-btn';
+  openBtn.textContent = 'Open PartsTech';
+  body.appendChild(openBtn);
+
+  const status = document.createElement('div');
+  status.id = 'rv-pt-status';
+  status.textContent = 'Select lines then click Open.';
+  body.appendChild(status);
+
+  panel.appendChild(body);
+  document.body.appendChild(panel);
+
+  const toggle = document.createElement('div');
+  toggle.id = 'rv-toggle';
+  toggle.textContent = '⚡ PartsTech';
+  toggle.title = 'Alt+E — Expand';
+  const expandFromToggle = () => { panel.style.display='block'; toggle.style.display='none'; };
+  toggle.onclick = expandFromToggle;
+  document.body.appendChild(toggle);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+      e.preventDefault();
+      if (panel.style.display === 'none') {
+        expandFromToggle();
+      } else {
+        minimizeToP();
+      }
+    }
+  }, true);
+
+  let dragging = false, dragOffX = 0, dragOffY = 0;
+  dragHandle.addEventListener('mousedown', (e) => {
+    dragging = true;
+    const r = panel.getBoundingClientRect();
+    dragOffX = e.clientX - r.left;
+    dragOffY = e.clientY - r.top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    let x = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  e.clientX - dragOffX));
+    let y = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, e.clientY - dragOffY));
+    panel.style.left = x+'px'; panel.style.top = y+'px';
+    panel.style.bottom = 'auto'; panel.style.right = 'auto';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+
+  function render() {
+    linesDiv.innerHTML = '';
+    if (!jobLines.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'color:#666;font-size:13px;padding:6px 0';
+      empty.textContent = 'No parts job lines found.';
+      linesDiv.appendChild(empty);
+      return;
+    }
+    jobLines.forEach((line) => {
+      const terms = line._terms;
+      if (!terms || !terms.length) return;
+      const div = document.createElement('div');
+      div.className = 'rv-line';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'rv-cb';
+      cb.checked = true;
+      const right = document.createElement('div');
+      right.className = 'rv-right';
+      const orig = document.createElement('div');
+      orig.className = 'rv-orig';
+      orig.textContent = line.name;
+      right.appendChild(orig);
+      terms.forEach((t, ti) => {
+        if (terms.length > 1) {
+          const sp = document.createElement('div');
+          sp.className = 'rv-split';
+          sp.textContent = 'Part '+(ti+1);
+          right.appendChild(sp);
+        }
+        const inp = document.createElement('input');
+        inp.className = 'rv-input';
+        inp.value = t;
+        right.appendChild(inp);
+      });
+      div.appendChild(cb);
+      div.appendChild(right);
+      linesDiv.appendChild(div);
+    });
+  }
+
+  let ptTab = null;
+
+  openBtn.onclick = () => {
+    const lineEls = [...document.querySelectorAll('#rv-pt-lines .rv-line, #rv-manual-rows .rv-line')];
+    const searches = [];
+    for (const el of lineEls) {
+      const cb = el.querySelector('.rv-cb');
+      if (!cb || !cb.checked) continue;
+      for (const inp of el.querySelectorAll('.rv-input')) {
+        if (inp.value.trim()) searches.push(inp.value.trim());
+      }
+    }
+
+    // Add checked filter lookups
+    document.querySelectorAll('.rv-filter-cb').forEach(cb => {
+      if (cb.checked && cb.dataset.search) searches.push(cb.dataset.search);
+    });
+
+    if (!searches.length) { status.textContent = 'Nothing selected.'; return; }
+
+    const originalNames = jobLines.map(l => l.name);
+
+    const state = { queue: searches, idx: 0, vin: vin || '', jobLines: originalNames };
+
+    // Pass queue via URL hash to catalog page — Navigator reads it there and saves
+    // to PartsTech's own localStorage. This is the only reliable cross-domain method.
+    const hash = encodeURIComponent(JSON.stringify(state));
+    const url = 'https://app.partstech.com/catalog#rv_pt=' + hash;
+
+    minimizeToP();
+    if (ptTab && !ptTab.closed) {
+      ptTab.location.href = url;
+      ptTab.focus();
+    } else {
+      ptTab = window.open(url, 'recon_pt_tab');
+    }
+    openBtn.disabled = true;
+    setTimeout(() => {
+      openBtn.disabled = false;
+      status.textContent = '✓ Opened PartsTech — '+searches.length+' part'+(searches.length>1?'s':'')+' queued.';
+    }, 1500);
+  };
+
+  render();
+}
+
+function init() {
+  const vin = scrapeVIN();
+  const lines = scrapeJobLines();
+  buildPanel(vin, lines);
+}
+
+// CHANGED in 9.11: Previously the panel (and its always-visible "PartsTech"
+// toggle button) only got built after a "Mechanical Repair" section header
+// was found on the page via waitForMechanicalSection(). That meant on any
+// vehicle/bucket where that section isn't currently rendered, the entire
+// UI -- including the toggle button -- silently never appeared at all.
+//
+// scrapeJobLines() already handles a missing Mechanical Repairs section
+// gracefully (returns an empty array, panel shows "No parts job lines
+// found."), so there's no reason to gate the whole panel on it. We now
+// build the panel on every work order edit page load regardless of
+// department/bucket, after a short readiness wait for the VIN to appear
+// (present on every work order edit page, used as a simple "page has
+// rendered" signal) or a max wait timeout so we never hang forever.
+function waitForPageReady(callback) {
+  let attempts = 0;
+  const maxAttempts = 20; // ~6s at 300ms
+  const check = () => {
+    attempts++;
+    if (scrapeVIN() || attempts >= maxAttempts) {
+      callback();
+      return;
+    }
+    setTimeout(check, 300);
+  };
+  check();
+}
+
+waitForPageReady(init);
+
+})();

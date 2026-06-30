@@ -1,0 +1,1234 @@
+// ==UserScript==
+// @name         Recon Clipboard
+// @namespace    reconclipboard
+// @version      4.90
+// @author       Gabe
+// @match        https://app.partstech.com/*
+// @match        https://app.tekioncloud.com/*
+// @match        https://*.reconvision.com/*
+// @match        https://shop.usautoforce.com/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+'use strict';
+
+const IS_PARTSTECH   = location.hostname.includes('partstech');
+const IS_TEKION      = location.hostname.includes('tekion');
+const IS_RECONVISION = location.hostname.includes('reconvision');
+const IS_USAUTOFORCE = location.hostname.includes('usautoforce');
+const IS_PI          = IS_TEKION && location.pathname.includes('/parts/inventory/part');
+const IS_PO          = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && new URLSearchParams(location.search).get('create') === 'true';
+const IS_RO_SALES    = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && !IS_PI;
+const IS_RV_WO_EDIT  = IS_RECONVISION && /\/work_orders\/\d+\/edit/.test(location.pathname);
+
+function getClip() {
+    return {
+        part:  GM_getValue('clip_part', ''),
+        price: GM_getValue('clip_price', '')
+    };
+}
+
+function setClip(part, price) {
+    if (part  !== null) GM_setValue('clip_part',  part);
+    if (price !== null) GM_setValue('clip_price', price);
+}
+
+// Cache logged-in user name
+let cachedTekionUserName = '';
+if (IS_TEKION) {
+    const cacheUserName = () => {
+        const spans = document.querySelectorAll('span[title]');
+        for (const s of spans) {
+            const t = (s.getAttribute('title') || '').trim();
+            if (t && t.includes(' ') && t.length > 4 && t.length < 40) {
+                cachedTekionUserName = t;
+                return;
+            }
+        }
+        setTimeout(cacheUserName, 500);
+    };
+    setTimeout(cacheUserName, 100);
+}
+
+// =============================================
+// US AUTOFORCE SIDE
+// =============================================
+if (IS_USAUTOFORCE) {
+
+    // Hover outlines
+    document.addEventListener('mouseover', (e) => {
+        const pn  = e.target.closest('[id$="_PartNumBlock"]');
+        const cost = e.target.closest('[id$="_Cost"]');
+        if (pn)   pn.style.outline   = '2px dashed #4ade80';
+        if (cost) cost.style.outline = '2px dashed #facc15';
+    });
+    document.addEventListener('mouseout', (e) => {
+        const pn   = e.target.closest('[id$="_PartNumBlock"]');
+        const cost = e.target.closest('[id$="_Cost"]');
+        if (pn)   pn.style.outline   = '';
+        if (cost) cost.style.outline = '';
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+        // Part number — green highlight
+        const pnBlock = e.target.closest('[id$="_PartNumBlock"]');
+        if (pnBlock) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Part# is in the inner div with class body-xsmall-regular-tight
+            const inner = pnBlock.querySelector('.body-xsmall-regular-tight, [class*="xsmall"], [class*="PartNum"]');
+            const pn = (inner ? inner.innerText : pnBlock.innerText).trim().replace(/Part\s*#?\s*:?\s*/i, '').trim();
+            if (pn) {
+                GM_setValue('clip_part', pn);
+                pnBlock.style.background = 'rgba(74,222,128,0.4)';
+                setTimeout(() => { pnBlock.style.background = ''; }, 600);
+            }
+            return;
+        }
+
+        // Cost price — yellow highlight, auto-add FET if present
+        const costEl = e.target.closest('[id$="_Cost"]');
+        if (costEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Get the result ID prefix (e.g. "tireResult_156020")
+            const idMatch = costEl.id.match(/^(tireResult_\d+)_Cost$/);
+            const prefix = idMatch ? idMatch[1] : null;
+
+            // Parse cost
+            const costText = costEl.innerText.trim().replace(/[$,\s]/g, '').replace(/ea\.?/i, '').trim();
+            let cost = parseFloat(costText);
+            if (isNaN(cost)) return;
+
+            // Parse FET if present in the same result block
+            let fet = 0;
+            if (prefix) {
+                const fetEl = document.getElementById(prefix + '_FET');
+                if (fetEl) {
+                    const fetText = fetEl.innerText.trim().replace(/[$,\s]/g, '').replace(/ea\.?/i, '').trim();
+                    const fetVal = parseFloat(fetText);
+                    if (!isNaN(fetVal) && fetVal > 0) fet = fetVal;
+                }
+            }
+
+            const total = (cost + fet).toFixed(2);
+            GM_setValue('clip_price', total);
+
+            costEl.style.background = 'rgba(250,204,21,0.4)';
+            setTimeout(() => { costEl.style.background = ''; }, 600);
+            return;
+        }
+    }, true);
+}
+
+// =============================================
+// PARTSTECH SIDE
+// =============================================
+if (IS_PARTSTECH) {
+
+    let ptArmed = true;
+
+    window.addEventListener('recon_arm_toggle', (e) => { ptArmed = e.detail; });
+    const storedArm = sessionStorage.getItem('recon_clip_armed');
+    if (storedArm === '0') ptArmed = false;
+
+    document.addEventListener('contextmenu', (e) => {
+        if (!ptArmed) return;
+        const partEl  = e.target.closest('span.css-1og29io');
+        const priceEl = e.target.closest('[data-testid="actualPrice"]');
+        if (partEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const pn = partEl.innerText.trim();
+            GM_setValue('clip_part', pn);
+            partEl.style.background = 'rgba(74,222,128,0.4)';
+            setTimeout(() => { partEl.style.background = ''; }, 600);
+            return;
+        }
+        if (priceEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const price = priceEl.innerText.trim().replace(/[$,]/g, '');
+            GM_setValue('clip_price', price);
+            priceEl.style.background = 'rgba(250,204,21,0.4)';
+            setTimeout(() => { priceEl.style.background = ''; }, 600);
+            return;
+        }
+    }, true);
+
+    document.addEventListener('mouseover', (e) => {
+        const p  = e.target.closest('span.css-1og29io');
+        const pr = e.target.closest('[data-testid="actualPrice"]');
+        if (p)  p.style.outline  = '2px dashed #4ade80';
+        if (pr) pr.style.outline = '2px dashed #facc15';
+    });
+    document.addEventListener('mouseout', (e) => {
+        const p  = e.target.closest('span.css-1og29io');
+        const pr = e.target.closest('[data-testid="actualPrice"]');
+        if (p)  p.style.outline = '';
+        if (pr) pr.style.outline = '';
+    });
+}
+
+// =============================================
+// TEKION RO SALES SIDE
+// =============================================
+if (IS_RO_SALES) {
+
+    GM_addStyle(`
+        #tekion-clip-pill {
+            position:fixed;bottom:14px;right:320px;z-index:999999;
+            background:#1a1a1a;border:2px solid #444;border-radius:20px;
+            padding:6px 14px;font-family:'Segoe UI',sans-serif;font-size:12px;
+            color:#ccc;display:flex;align-items:center;gap:8px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.5);user-select:none;
+            transition:border-color 0.2s,background 0.2s;
+        }
+        #tekion-clip-pill.armed {border-color:#2563eb;background:#0f1f3d;}
+        #tekion-clip-pill .dot {width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;}
+        #tekion-clip-pill .dot.idle  {background:#555;}
+        #tekion-clip-pill .dot.ready {background:#4ade80;}
+        #tekion-clip-pill .dot.armed {background:#2563eb;}
+        #tekion-clip-pill .dot.warn  {background:#f97316;}
+        #tekion-clip-pill .dot.err   {background:#ef4444;}
+        #tekion-clip-pill .pill-text {font-size:11px;}
+        #tekion-clip-pill.armed .pill-text {color:#60a5fa;font-weight:bold;}
+    `);
+
+    const pill = document.createElement('div');
+    pill.id = 'tekion-clip-pill';
+    document.body.appendChild(pill);
+
+    let resetTimer = null;
+    let armedInput = null;
+
+    function setPill(text, dotState, armed, autoReset) {
+        pill.innerHTML = '';
+        armed ? pill.classList.add('armed') : pill.classList.remove('armed');
+        const dot = document.createElement('div');
+        dot.className = 'dot ' + (dotState || 'idle');
+        pill.appendChild(dot);
+        const lbl = document.createElement('span');
+        lbl.className = 'pill-text';
+        lbl.textContent = text;
+        pill.appendChild(lbl);
+        if (resetTimer) clearTimeout(resetTimer);
+        if (autoReset) {
+            resetTimer = setTimeout(() => {
+                armedInput = null;
+                setPill('Click Select field to arm', 'idle', false);
+            }, autoReset);
+        }
+    }
+
+    setPill('Click Select field to arm', 'idle', false);
+
+    document.addEventListener('contextmenu', (e) => {
+        const cell = e.target.closest('[data-test-id*="field-bin-sellingPrice"]');
+        if (!cell) return;
+        e.preventDefault();
+        // Try editable input first, then fall back to displayed text
+        const input = cell.querySelector('.ant-input-number-input');
+        let price = '';
+        if (input) {
+            price = input.value.trim().replace('$', '');
+        } else {
+            // Read-only / saved state — grab text content
+            price = cell.innerText.trim().replace(/[$,\s]/g, '');
+        }
+        if (!price || price === '0' || price === '0.00') {
+            setPill('⚠ Selling price is $0 — not copied', 'warn', false, 4000);
+            return;
+        }
+        // Flash highlight on the cell regardless of edit state
+        cell.style.background = 'rgba(37,99,235,0.3)';
+        setTimeout(() => { cell.style.background = ''; }, 600);
+        let partNum = '';
+        const rowContainer = cell.parentElement;
+        if (rowContainer) {
+            const itemNameCell = rowContainer.querySelector('[data-test-id*="field-bin-itemName"]');
+            if (itemNameCell) {
+                const partInput = itemNameCell.querySelector('input');
+                if (partInput && partInput.value.trim()) {
+                    partNum = partInput.value.trim().split(' - ')[0].trim();
+                } else {
+                    const text = itemNameCell.innerText.trim();
+                    if (text) partNum = text.split(' - ')[0].trim();
+                }
+            }
+        }
+        if (partNum) {
+            setClip(partNum, price);
+            setPill('✓ ' + partNum + ' | $' + price + ' copied', 'ready', false, 30000);
+        } else {
+            setClip(null, price);
+            setPill('✓ Selling price $' + price + ' copied', 'ready', false, 30000);
+        }
+    });
+
+    document.addEventListener('focusin', (e) => {
+        const testId = (e.target.getAttribute && e.target.getAttribute('data-test-id')) || '';
+        const name   = (e.target.getAttribute && e.target.getAttribute('name')) || '';
+        const ph     = (e.target.getAttribute && e.target.getAttribute('placeholder')) || '';
+        const isPartSelect = testId.includes('partsTable-partSelect')
+            || name.includes('partSelect')
+            || ph.toLowerCase().includes('select part')
+            || ph.toLowerCase().includes('search part');
+        if (!isPartSelect) return;
+        armedInput = e.target;
+        const { part, price } = getClip();
+        if (part) {
+            setPill('⌨ DblClick → ' + part + (price ? ' | $' + price : ''), 'armed', true);
+        } else {
+            setPill('⌨ Armed — no part# copied yet', 'warn', true);
+        }
+    }, true);
+
+    document.addEventListener('focusout', (e) => {
+        const testId = (e.target.getAttribute && e.target.getAttribute('data-test-id')) || '';
+        const name   = (e.target.getAttribute && e.target.getAttribute('name')) || '';
+        const ph     = (e.target.getAttribute && e.target.getAttribute('placeholder')) || '';
+        const isPartSelect = testId.includes('partsTable-partSelect')
+            || name.includes('partSelect')
+            || ph.toLowerCase().includes('select part')
+            || ph.toLowerCase().includes('search part');
+        if (!isPartSelect) return;
+        // Use longer delay so dblclick fires before we clear armedInput
+        setTimeout(() => {
+            if (armedInput) {
+                armedInput = null;
+                if (!GM_getValue('clip_price', '') && !GM_getValue('clip_part', '')) {
+                    setPill('Click Select field to arm', 'idle', false);
+                }
+            }
+        }, 600);
+    }, true);
+
+    document.addEventListener('dblclick', (e) => {
+        // Find the target input — try armedInput first, then event target, then active element
+        let el = (armedInput && document.contains(armedInput)) ? armedInput : null;
+        if (!el) el = e.target.closest('input[data-test-id*="partsTable-partSelect"]');
+        if (!el && document.activeElement && document.activeElement.tagName === 'INPUT') {
+            const tid = document.activeElement.getAttribute('data-test-id') || '';
+            if (tid.includes('partsTable-partSelect')) el = document.activeElement;
+        }
+        if (!el) return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        const { part, price } = getClip();
+        if (!part) {
+            setPill('No part# — right-click one in PartsTech first', 'warn', false, 5000);
+            return;
+        }
+
+        armedInput = null;
+        setPill('Pasting: ' + part + (price ? ' | $' + price : ''), 'ready', false);
+
+        el.focus();
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(el, '');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+
+        setTimeout(() => {
+            setter.call(el, part);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 100);
+
+        setTimeout(() => {
+            const firstItem = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
+            if (!firstItem) {
+                el.blur();
+                afterPaste(part, price);
+                return;
+            }
+            const isCreateOnly = firstItem.textContent.trim().startsWith('Create');
+            if (isCreateOnly) {
+                GM_setValue('clip_price', '');
+                setPill('⚠ Not in database — finish manually', 'warn', false, 6000);
+                return;
+            }
+            firstItem.click();
+            afterPaste(part, price);
+        }, 600);
+
+    }, true);
+
+    function afterPaste(part, price) {
+        setPill('✓ Part# pasted — click ••• → Update', 'warn', false, 15000);
+    }
+
+    let lastFill = 0;
+    new MutationObserver(() => {
+        const price = GM_getValue('clip_price', '');
+        if (!price) { lastFill = 0; return; }
+        const el = document.querySelector('[data-test-id="@tekion-parts-partsRosales-costPrice"]');
+        if (!el) return;
+        const now = Date.now();
+        if (now - lastFill < 2000) return;
+        lastFill = now;
+        GM_setValue('clip_price', '');
+        setTimeout(() => {
+            el.focus();
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, price);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+            setPill('✓ Price filled — click Save', 'ready', false, 8000);
+        }, 300);
+    }).observe(document.body, { childList: true, subtree: true });
+
+    const saveBtnObserver = new MutationObserver(() => {
+        const saveBtn = document.querySelector(
+            '[data-test-id="@tekion-parts-roSalesDetailedView-modal-updatePrice-container-submitButton"]'
+        );
+        if (!saveBtn || saveBtn._piListening) return;
+        saveBtn._piListening = true;
+        saveBtn.addEventListener('click', () => {
+            // Read cost from the field at click time
+            const costEl = document.querySelector('[data-test-id="@tekion-parts-partsRosales-costPrice"]');
+            const cost = costEl ? costEl.value.trim() : '';
+            // Read part# from modal header
+            const modalHeader = document.querySelector('.ant-modal-header');
+            let partNum = '';
+            if (modalHeader) {
+                const match = modalHeader.innerText.match(/Update\s+(\S+)/i);
+                if (match) partNum = match[1];
+            }
+            if (!partNum || !cost) {
+                setPill('⚠ Could not read part# or cost', 'warn', false, 5000);
+                return;
+            }
+            GM_setValue('pi_update_part', partNum);
+            GM_setValue('pi_update_cost', cost);
+            setPill('✓ Saved — opening P&I...', 'ready', false, 10000);
+            setTimeout(() => {
+                const piUrl = 'https://app.tekioncloud.com/parts/inventory/part';
+                if (window._piTab && !window._piTab.closed) {
+                    window._piTab.close();
+                }
+                window._piTab = window.open(piUrl, '_blank');
+            }, 300);
+        });
+    });
+    saveBtnObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+// =============================================
+// PO AUTOFILL
+// =============================================
+if (IS_PO) {
+
+    GM_addStyle(`
+        #po-fill-pill {
+            position:fixed;z-index:999999;
+            background:#2563eb;color:#fff;font-weight:700;font-size:11px;
+            padding:6px 14px;border-radius:20px;cursor:pointer;
+            box-shadow:0 2px 10px rgba(37,99,235,0.4);
+            font-family:'Segoe UI',sans-serif;user-select:none;
+            border:none;white-space:nowrap;
+        }
+        #po-fill-pill:hover { background:#1d4ed8; }
+        #po-fill-pill.filling { background:#555;cursor:default; }
+        #po-fill-pill.done { background:#16a34a; }
+        #po-fill-pill.error { background:#dc2626; }
+    `);
+
+    const poPill = document.createElement('button');
+    poPill.id = 'po-fill-pill';
+    poPill.textContent = '⏳ Waiting...';
+    // Set initial visible position before anchor search completes
+    poPill.style.top = '80px';
+    poPill.style.right = '20px';
+    poPill.style.left = 'auto';
+    poPill.style.bottom = 'auto';
+    document.body.appendChild(poPill);
+
+    function positionPoPill() {
+        const spans = document.querySelectorAll('span');
+        for (const s of spans) {
+            if (s.innerText && s.innerText.trim() === 'Create another Vendor Special Order') {
+                const r = s.getBoundingClientRect();
+                poPill.style.top = (r.top + (r.height / 2) - 14) + 'px';
+                poPill.style.left = (r.right + 20) + 'px';
+                poPill.style.right = 'auto';
+                poPill.style.bottom = 'auto';
+                return;
+            }
+        }
+        // Fallback — always visible in top-right
+        poPill.style.top = '80px';
+        poPill.style.right = '20px';
+        poPill.style.left = 'auto';
+        poPill.style.bottom = 'auto';
+    }
+
+    function waitForPOAnchor() {
+        const spans = document.querySelectorAll('span');
+        for (const s of spans) {
+            if (s.innerText && s.innerText.trim() === 'Create another Vendor Special Order') {
+                positionPoPill(); return;
+            }
+        }
+        setTimeout(waitForPOAnchor, 300);
+    }
+    waitForPOAnchor();
+    window.addEventListener('resize', positionPoPill);
+
+    function poNativeSet(el, value) {
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function poPressKey(el, key, keyCode) {
+        el.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode, bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keypress', { key, keyCode, bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keyup', { key, keyCode, bubbles: true }));
+    }
+
+    function getRoNumber() {
+        const match = location.pathname.match(/parts-fulfillment\/(\d+)/);
+        return match ? match[1] : '';
+    }
+
+    let poFilled = false;
+
+    async function fillPO() {
+        if (poFilled) return;
+        poFilled = true;
+        poPill.classList.add('filling');
+        const roNumber = getRoNumber();
+
+        let userName = cachedTekionUserName;
+        for (let i = 0; i < 15 && !userName; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            userName = cachedTekionUserName;
+        }
+
+        try {
+            const controlField = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+            if (controlField && roNumber) {
+                poPill.textContent = '⏳ RO# ' + roNumber + '...';
+                controlField.focus();
+                poNativeSet(controlField, '');
+                poNativeSet(controlField, roNumber);
+                // No blur dispatch — causes Tekion to treat form as abandoned
+            }
+
+            await new Promise(r => setTimeout(r, 100));
+            poPill.textContent = '⏳ ' + userName + '...';
+            // Requested By is a Tekion Select component — click the control to open, then click the option
+            const reqControl = document.querySelector(
+                '[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-requestedBy-advancedSelect"] [class*="tekion-select"][class*="control"], ' +
+                '#requestedByUserId [class*="control"]'
+            );
+            if (reqControl && userName) {
+                reqControl.click();
+                await new Promise(r => setTimeout(r, 400));
+
+                // Type into the search input that appears after clicking
+                const reqInput = document.querySelector(
+                    '#requestedByUserId input, ' +
+                    '[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-requestedBy-advancedSelect"] input'
+                );
+                if (reqInput) {
+                    reqInput.focus();
+                    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                    setter.call(reqInput, userName);
+                    reqInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    reqInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    await new Promise(r => setTimeout(r, 600));
+                }
+
+                // Click the matching option from the Tekion Select dropdown
+                let nameSelected = false;
+                for (let i = 0; i < 20; i++) {
+                    const options = document.querySelectorAll(
+                        '[class*="tekion-select"][class*="option"], ' +
+                        '[class*="menuItem"][role="option"], ' +
+                        '[id^="react-select"] [class*="option"], ' +
+                        'div[role="option"]'
+                    );
+                    for (const opt of options) {
+                        const txt = (opt.innerText || opt.textContent || '').trim();
+                        if (txt && (txt === userName || txt.includes(userName.split(' ')[0]))) {
+                            opt.click();
+                            nameSelected = true;
+                            break;
+                        }
+                    }
+                    if (nameSelected) break;
+                    await new Promise(r => setTimeout(r, 200));
+                }
+                if (!nameSelected) {
+                    // Last resort keyboard fallback
+                    const inp = document.querySelector('#requestedByUserId input');
+                    if (inp) {
+                        poPressKey(inp, 'ArrowDown', 40);
+                        await new Promise(r => setTimeout(r, 150));
+                        poPressKey(inp, 'Enter', 13);
+                    }
+                }
+            }
+
+            await new Promise(r => setTimeout(r, 200));
+            poPill.classList.remove('filling');
+            poPill.classList.add('done');
+            poPill.textContent = userName ? '✓ Done — select vendor' : '✓ RO# filled — enter name manually';
+            setTimeout(() => { poPill.style.display = 'none'; }, 5000);
+
+        } catch(err) {
+            poFilled = false;
+            poPill.classList.remove('filling');
+            poPill.classList.add('error');
+            poPill.textContent = '⚠ Error';
+            console.error('[PO Fill]', err);
+        }
+    }
+
+    let lastPOControlField = null;
+    new MutationObserver(() => {
+        const controlField = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+        if (controlField && controlField !== lastPOControlField) {
+            lastPOControlField = controlField;
+            poFilled = false;
+            poPill.style.display = '';
+            poPill.classList.remove('done', 'error', 'filling');
+            poPill.textContent = '⏳ Waiting...';
+            // Delay fill so Tekion finishes its own form initialization first
+            setTimeout(fillPO, 1500);
+        }
+    }).observe(document.body, { childList: true, subtree: true });
+
+    poPill.onclick = () => {
+        poFilled = false;
+        poPill.classList.remove('done', 'error', 'filling');
+        fillPO();
+    };
+}
+
+// =============================================
+// PARTS & INVENTORY SIDE
+// =============================================
+if (IS_PI) {
+
+    GM_addStyle(`
+        #pi-clip-pill {
+            position:fixed;bottom:70px;right:12px;z-index:999999;
+            background:#1a1a1a;border:2px solid #444;border-radius:20px;
+            padding:6px 14px;font-family:'Segoe UI',sans-serif;font-size:12px;
+            color:#ccc;display:flex;align-items:center;gap:8px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.5);user-select:none;
+        }
+        #pi-clip-pill .dot {width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;}
+        #pi-clip-pill .dot.idle  {background:#555;}
+        #pi-clip-pill .dot.ready {background:#4ade80;}
+        #pi-clip-pill .dot.warn  {background:#f97316;}
+        #pi-clip-pill .dot.err   {background:#ef4444;}
+        #pi-clip-pill .pill-text {font-size:11px;}
+    `);
+
+    const pill = document.createElement('div');
+    pill.id = 'pi-clip-pill';
+    document.body.appendChild(pill);
+
+    function setPill(text, dotState) {
+        pill.innerHTML = '';
+        const dot = document.createElement('div');
+        dot.className = 'dot ' + (dotState || 'idle');
+        pill.appendChild(dot);
+        const lbl = document.createElement('span');
+        lbl.className = 'pill-text';
+        lbl.textContent = text;
+        pill.appendChild(lbl);
+    }
+
+    setPill('Waiting...', 'idle');
+
+    function waitFor(selector, timeout) {
+        return new Promise((resolve, reject) => {
+            const el = document.querySelector(selector);
+            if (el) return resolve(el);
+            const obs = new MutationObserver(() => {
+                const found = document.querySelector(selector);
+                if (found) { obs.disconnect(); resolve(found); }
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => { obs.disconnect(); reject(new Error('Timeout: ' + selector)); }, timeout || 10000);
+        });
+    }
+
+    function nativeSet(el, value) {
+        const proto = el.tagName === 'TEXTAREA'
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setter.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+        el.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+    }
+
+    async function findEditPartButton(maxWaitMs) {
+        const start = Date.now();
+        while (Date.now() - start < maxWaitMs) {
+            let btn = document.querySelector('[data-test-id="@tekion-parts-partsAndInventory-partsTab-partDetailsTab-editPartButton"]');
+            if (btn && btn.offsetParent !== null) return btn;
+            for (const b of document.querySelectorAll('button')) {
+                if (b.innerText.trim() === 'Edit Part' && b.offsetParent !== null) return b;
+            }
+            for (const b of document.querySelectorAll('[data-test-id*="editPart"], [data-test-id*="edit-part"], [data-test-id*="EditPart"]')) {
+                if (b.offsetParent !== null) return b;
+            }
+            for (const b of document.querySelectorAll('button[aria-label*="Edit"]')) {
+                if (b.innerText.includes('Part') && b.offsetParent !== null) return b;
+            }
+            await new Promise(r => setTimeout(r, 300));
+        }
+        return null;
+    }
+
+    async function runPIUpdate(partNum, cost) {
+        try {
+            setPill('Searching ' + partNum + '...', 'ready');
+            const searchBox = await waitFor('input.ant-input[placeholder="Type Here"]', 8000);
+            searchBox.focus();
+            nativeSet(searchBox, partNum);
+
+            setPill('Waiting for result...', 'ready');
+            await new Promise(r => setTimeout(r, 800));
+
+            // Wait for correct part to appear — check autocomplete dropdown AND row-0
+            let firstItem = null;
+            for (let attempt = 0; attempt < 40; attempt++) {
+                // Primary: Tekion autocomplete first item (same dropdown as RO Sales paste)
+                const autoFirst = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
+                if (autoFirst && autoFirst.innerText.includes(partNum) && !autoFirst.innerText.startsWith('Create')) {
+                    firstItem = autoFirst;
+                }
+                // Secondary: row-0 in the parts list table
+                if (!firstItem) {
+                    const el = document.querySelector('[data-test-id="@tekion-parts-partsAndInventory-tabs-preferredPartListTableUserPreference-row-0"]');
+                    if (el && el.innerText.includes(partNum)) firstItem = el;
+                }
+                if (firstItem) break;
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            if (!firstItem) {
+                setPill('⚠ ' + partNum + ' not found in list', 'err');
+                GM_setValue('pi_update_part', '');
+                GM_setValue('pi_update_cost', '');
+                return;
+            }
+
+            await new Promise(r => setTimeout(r, 200));
+            firstItem.click();
+
+            // If we clicked the autocomplete dropdown, now wait for the table row to appear and click it
+            setPill('Loading part detail...', 'ready');
+            await new Promise(r => setTimeout(r, 800));
+
+            // Check if we need to click a table row (autocomplete just filtered the list)
+            const tableRow = document.querySelector('[data-test-id="@tekion-parts-partsAndInventory-tabs-preferredPartListTableUserPreference-row-0"]');
+            if (tableRow && tableRow.innerText.includes(partNum)) {
+                await new Promise(r => setTimeout(r, 200));
+                tableRow.click();
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            setPill('Opening edit...', 'ready');
+            await new Promise(r => setTimeout(r, 600));
+            const editBtn = await findEditPartButton(15000);
+
+            if (!editBtn) throw new Error('Edit Part button not found after 15s');
+
+            await new Promise(r => setTimeout(r, 300));
+            editBtn.click();
+
+            setPill('Type $' + cost + ' → Tab → Save', 'ready');
+            const costField = await waitFor('input#costPrice', 8000);
+            await new Promise(r => setTimeout(r, 400));
+
+            costField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await new Promise(r => setTimeout(r, 400));
+
+            const existingBadge = document.getElementById('pi-cost-badge');
+            if (existingBadge) existingBadge.remove();
+            const badge = document.createElement('div');
+            badge.id = 'pi-cost-badge';
+            badge.textContent = 'TYPE: $' + cost;
+            badge.style.cssText = [
+                'position:fixed',
+                'z-index:9999999',
+                'background:#4ade80',
+                'color:#000',
+                'font-weight:700',
+                'font-size:16px',
+                'padding:8px 16px',
+                'border-radius:8px',
+                'box-shadow:0 4px 16px rgba(0,0,0,0.5)',
+                'pointer-events:none',
+                'font-family:monospace',
+            ].join(';');
+            const rect = costField.getBoundingClientRect();
+            badge.style.top  = (rect.top - 48) + 'px';
+            badge.style.left = rect.left + 'px';
+            document.body.appendChild(badge);
+
+            setTimeout(() => { const b = document.getElementById('pi-cost-badge'); if (b) b.remove(); }, 30000);
+
+            GM_setValue('pi_update_part', '');
+            GM_setValue('pi_update_cost', '');
+
+            costField.focus();
+            costField.select();
+
+            new MutationObserver((_, obs) => {
+                const save = document.querySelector('button.ant-btn-primary[type="button"]:not([disabled])');
+                if (!save || save._piClosing) return;
+                save._piClosing = true;
+                obs.disconnect();
+                save.addEventListener('click', () => {
+                    setPill('✓ Saved — closing...', 'ready');
+                    setTimeout(() => window.close(), 2000);
+                }, { once: true });
+            }).observe(document.body, { childList: true, subtree: true });
+
+        } catch (err) {
+            setPill('⚠ ' + err.message, 'err');
+            console.error('[PI Update]', err);
+        }
+    }
+
+    setTimeout(() => {
+        const partNum = GM_getValue('pi_update_part', '');
+        const cost    = GM_getValue('pi_update_cost', '');
+        if (partNum && cost) {
+            runPIUpdate(partNum, cost);
+        } else {
+            setPill('P&I ready', 'idle');
+        }
+    }, 2500);
+}
+
+// =============================================
+// RECONVISION SIDE
+// =============================================
+if (IS_RECONVISION) {
+
+    function nativeSet(el, value) {
+        const proto = el.tagName === 'TEXTAREA'
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setter.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+        el.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+    }
+
+    let filling = false;
+
+    document.addEventListener('focusin', (e) => {
+        const el = e.target;
+        if (
+            el.tagName === 'TEXTAREA' &&
+            (el.getAttribute('data-field-name') === 'partNumber' ||
+             el.id.includes('part_number') ||
+             el.placeholder === 'Add Part#')
+        ) {
+            if (filling) return;
+            const { part, price } = getClip();
+            if (!part) return;
+            filling = true;
+            nativeSet(el, part);
+            setTimeout(() => {
+                const row = el.closest('tr') || el.closest('[data-id]') || el.parentElement;
+                const priceInput = (row && row.querySelector('input[id*="part_price"]'))
+                    || document.querySelector(
+                        '#line_item_parts_attributes_new_row_1_part_price, ' +
+                        'input[data-field-name="partPrice"], ' +
+                        'input[id*="part_price"]'
+                    );
+                if (priceInput && price) {
+                    nativeSet(priceInput, price);
+                    GM_setValue('clip_price', '');
+                }
+                // Clear part# only after we've used both values
+                GM_setValue('clip_part', '');
+                setTimeout(() => { filling = false; }, 800);
+            }, 300);
+        }
+    }, true);
+
+    // =============================================
+    // RV BUCKET MOVER PILLS (24 HR / OVER 24 HR)
+    // Only on work order edit pages
+    // =============================================
+    if (IS_RV_WO_EDIT) {
+
+        GM_addStyle(`
+            #rv-bucket-pills {
+                position:fixed;
+                z-index:99999;
+                display:flex;
+                flex-direction:column;
+                align-items:stretch;
+                gap:4px;
+                pointer-events:none;
+                width:105px;
+            }
+            .rv-bucket-btn {
+                pointer-events:all;
+                border:none;
+                border-radius:20px;
+                padding:8px 14px;
+                font-family:'Segoe UI',sans-serif;
+                font-size:12px;
+                font-weight:700;
+                cursor:pointer;
+                white-space:nowrap;
+                text-align:center;
+                user-select:none;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                transition:background 0.2s, opacity 0.2s;
+                width:105px;
+                box-sizing:border-box;
+                line-height:1;
+            }
+            .rv-bucket-btn.busy {
+                font-size:10px;
+                font-weight:500;
+            }
+            .rv-bucket-btn:disabled { opacity:0.5; cursor:not-allowed; }
+            #rv-btn-24 {
+                background:#3b82f6;
+                color:#000;
+                box-shadow:0 2px 12px rgba(59,130,246,0.4);
+            }
+            #rv-btn-24:hover:not(:disabled) {
+                background:#2563eb;
+                box-shadow:0 2px 16px rgba(59,130,246,0.6);
+            }
+            #rv-btn-over24 {
+                background:#2dd4bf;
+                color:#000;
+                box-shadow:0 2px 12px rgba(45,212,191,0.4);
+            }
+            #rv-btn-over24:hover:not(:disabled) {
+                background:#14b8a6;
+                box-shadow:0 2px 16px rgba(45,212,191,0.6);
+            }
+        `);
+
+        const pillContainer = document.createElement('div');
+        pillContainer.id = 'rv-bucket-pills';
+        document.body.appendChild(pillContainer);
+
+        const btn24 = document.createElement('button');
+        btn24.id = 'rv-btn-24';
+        btn24.className = 'rv-bucket-btn';
+        btn24.textContent = '24 HR';
+        pillContainer.appendChild(btn24);
+
+        const btnOver24 = document.createElement('button');
+        btnOver24.id = 'rv-btn-over24';
+        btnOver24.className = 'rv-bucket-btn';
+        btnOver24.textContent = 'OVER 24';
+        pillContainer.appendChild(btnOver24);
+
+        // Position pills above whichever RV element is highest on screen:
+        // - If PreLoader panel is open (visible), sit above it
+        // - Otherwise sit above the rv-toggle pill
+        function positionBucketPills() {
+            const rvToggle = document.getElementById('rv-toggle');
+            const rvPanel  = document.getElementById('rv-pt-panel');
+
+            let anchorTop = null;
+
+            // Match width of PartsTech toggle pill exactly
+            if (rvToggle) {
+                const toggleW = rvToggle.offsetWidth;
+                if (toggleW > 0) {
+                    pillContainer.style.width = toggleW + 'px';
+                    btn24.style.width = '100%';
+                    btnOver24.style.width = '100%';
+                }
+            }
+
+            // Check if panel is visible (display not none and has height)
+            if (rvPanel && rvPanel.style.display !== 'none' && rvPanel.offsetHeight > 0) {
+                const r = rvPanel.getBoundingClientRect();
+                anchorTop = r.top;
+            } else if (rvToggle) {
+                const r = rvToggle.getBoundingClientRect();
+                anchorTop = r.top;
+            }
+
+            if (anchorTop !== null) {
+                pillContainer.style.bottom = (window.innerHeight - anchorTop + 6) + 'px';
+            } else {
+                pillContainer.style.bottom = '100px';
+            }
+            // Always align right edge with PartsTech pill (right:20px)
+            pillContainer.style.right = '20px';
+            pillContainer.style.top = 'auto';
+            pillContainer.style.left = 'auto';
+        }
+
+        // Position on load and on resize
+        setTimeout(positionBucketPills, 1000);
+        window.addEventListener('resize', positionBucketPills);
+
+        // Re-position when panel or toggle style changes — observe only those two elements directly
+        const positionObserver = new MutationObserver(() => positionBucketPills());
+        const observeEl = (id) => {
+            const el = document.getElementById(id);
+            if (el) positionObserver.observe(el, { attributes: true, attributeFilter: ['style'] });
+        };
+        // Also watch body childList (not subtree) so we catch when rv-toggle/rv-pt-panel are injected
+        const bodyObserver = new MutationObserver(() => {
+            observeEl('rv-pt-panel');
+            observeEl('rv-toggle');
+            positionBucketPills();
+        });
+        bodyObserver.observe(document.body, { childList: true });
+        observeEl('rv-pt-panel');
+        observeEl('rv-toggle');
+
+        function waitForEl(selector, timeout) {
+            return new Promise((resolve, reject) => {
+                const el = document.querySelector(selector);
+                if (el) return resolve(el);
+                const obs = new MutationObserver(() => {
+                    const found = document.querySelector(selector);
+                    if (found) { obs.disconnect(); resolve(found); }
+                });
+                obs.observe(document.body, { childList: true, subtree: true });
+                setTimeout(() => { obs.disconnect(); reject(new Error('Timeout waiting for: ' + selector)); }, timeout || 10000);
+            });
+        }
+
+        function waitForElGone(selector, timeout) {
+            return new Promise((resolve, reject) => {
+                if (!document.querySelector(selector)) return resolve();
+                const obs = new MutationObserver(() => {
+                    if (!document.querySelector(selector)) { obs.disconnect(); resolve(); }
+                });
+                obs.observe(document.body, { childList: true, subtree: true });
+                setTimeout(() => { obs.disconnect(); reject(new Error('Timeout waiting for removal: ' + selector)); }, timeout || 10000);
+            });
+        }
+
+        // Find section header by text, return that header element
+        function findSectionHeader(text) {
+            const headers = document.querySelectorAll('.service-search h2, .popup__content h2, .service-search [class*="header"], .popup__content [class*="section"]');
+            for (const h of headers) {
+                if (h.innerText && h.innerText.trim() === text) return h;
+            }
+            // Fallback: any element whose trimmed text exactly matches
+            const all = document.querySelectorAll('*');
+            for (const el of all) {
+                if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+                    if (el.innerText && el.innerText.trim() === text) return el;
+                }
+            }
+            return null;
+        }
+
+        // Find all checkboxes in the section following the header
+        function getCheckboxesInSection(headerEl) {
+            // Walk siblings/descendants after the header until the next same-level section
+            const parent = headerEl.closest('.service-search') || headerEl.closest('.popup__content') || headerEl.parentElement;
+            if (!parent) return [];
+            const checkboxes = [];
+            // Collect all unchecked checkboxes after the header within the parent
+            const allCheckboxes = parent.querySelectorAll('input[type="checkbox"]');
+            let headerPassed = false;
+            for (const cb of allCheckboxes) {
+                if (!headerPassed) {
+                    if (headerEl.compareDocumentPosition(cb) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                        headerPassed = true;
+                    }
+                }
+                if (headerPassed) checkboxes.push(cb);
+            }
+            return checkboxes;
+        }
+
+        // Find first unchecked checkbox in a named section
+        function findFirstUncheckedInSection(sectionText) {
+            // Strategy: find all checkboxes in the modal, group by section
+            const modal = document.querySelector('.service-search, #service-search, .popup__content, .mfp-content');
+            if (!modal) return null;
+
+            // Find the section heading
+            let sectionHeader = null;
+            const allEls = modal.querySelectorAll('*');
+            for (const el of allEls) {
+                if (el.children.length === 0 || (el.children.length === 1 && el.children[0].tagName === 'I')) {
+                    const txt = el.innerText ? el.innerText.trim() : '';
+                    if (txt === sectionText) { sectionHeader = el; break; }
+                }
+            }
+
+            if (!sectionHeader) {
+                console.warn('[RV Bucket] Section not found:', sectionText);
+                return null;
+            }
+
+            // Get all checkboxes that come after this header and before the next same-level header
+            const allCheckboxes = Array.from(modal.querySelectorAll('input[type="checkbox"]'));
+            let inSection = false;
+            let foundHeader = false;
+
+            for (const cb of allCheckboxes) {
+                const pos = sectionHeader.compareDocumentPosition(cb);
+                if (pos & Node.DOCUMENT_POSITION_FOLLOWING) {
+                    if (!foundHeader) { foundHeader = true; inSection = true; }
+                    if (inSection && !cb.checked && !cb.disabled) return cb;
+                }
+            }
+
+            // Fallback: if compareDocumentPosition didn't work, try text proximity
+            // Find all section headers in modal
+            const sectionHeaders = [];
+            for (const el of allEls) {
+                if (el.children.length === 0) {
+                    const txt = el.innerText ? el.innerText.trim() : '';
+                    if (txt && txt.length > 3 && txt.length < 60 && !txt.includes('\n')) {
+                        const cbsNear = el.closest('tr') || el.closest('li') || el.closest('div');
+                        if (!cbsNear || !cbsNear.querySelector('input[type="checkbox"]')) {
+                            sectionHeaders.push({ el, txt });
+                        }
+                    }
+                }
+            }
+
+            const targetIdx = sectionHeaders.findIndex(s => s.txt === sectionText);
+            if (targetIdx === -1) return null;
+            const nextHeader = sectionHeaders[targetIdx + 1];
+
+            for (const cb of allCheckboxes) {
+                const afterTarget = sectionHeader.compareDocumentPosition(cb) & Node.DOCUMENT_POSITION_FOLLOWING;
+                const beforeNext = !nextHeader || (nextHeader.el.compareDocumentPosition(cb) & Node.DOCUMENT_POSITION_PRECEDING);
+                if (afterTarget && beforeNext && !cb.checked && !cb.disabled) return cb;
+            }
+
+            return null;
+        }
+
+        async function addServiceToBucket(sectionText, btnEl) {
+            btnEl.disabled = true;
+            btnEl.classList.add('busy');
+            const origText = btnEl.textContent;
+            btnEl.textContent = '⏳ Opening';
+
+            try {
+                // Step 1: Click Add Service button
+                const addServiceBtn = document.querySelector('button.add-service--toggle');
+                if (!addServiceBtn) throw new Error('Add Service button not found');
+                addServiceBtn.click();
+
+                // Step 2: Wait for modal content to actually load (search input appears inside modal)
+                btnEl.textContent = '⏳ Modal...';
+                await waitForEl('.mfp-wrap .service-search, .mfp-wrap #service-search, .mfp-wrap input[placeholder="Search"]', 10000);
+                await new Promise(r => setTimeout(r, 600));
+
+                // Step 3: Click "View All Services" — it's a div[data-button="view-all-services"]
+                btnEl.textContent = '⏳ Services...';
+                let viewAllBtn = null;
+                for (let i = 0; i < 30; i++) {
+                    // Primary: exact data attribute match
+                    viewAllBtn = document.querySelector('[data-button="view-all-services"], [data-test="view-all-services"]');
+                    if (!viewAllBtn) {
+                        // Fallback: any visible element whose text is exactly "View All Services"
+                        const all = document.querySelectorAll('div, button, a, span');
+                        for (const el of all) {
+                            if ((el.innerText || '').trim() === 'View All Services') { viewAllBtn = el; break; }
+                        }
+                    }
+                    if (viewAllBtn) break;
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                if (!viewAllBtn) throw new Error('"View All Services" not found');
+                viewAllBtn.click();
+
+                // Step 4: Wait for full list to load (Parts - 24 Hours section appears)
+                btnEl.textContent = '⏳ Loading...';
+                await new Promise(r => setTimeout(r, 1200));
+
+                // Step 5: Find first unchecked checkbox in the target section
+                btnEl.textContent = '⏳ Searching';
+                let targetCb = null;
+                for (let attempt = 0; attempt < 15; attempt++) {
+                    targetCb = findFirstUncheckedInSection(sectionText);
+                    if (targetCb) break;
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                if (!targetCb) throw new Error('No available checkbox in "' + sectionText + '"');
+
+                // Step 6: Check it
+                btnEl.textContent = '⏳ Selecting';
+                targetCb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                await new Promise(r => setTimeout(r, 300));
+                targetCb.click();
+                await new Promise(r => setTimeout(r, 300));
+
+                // Step 7: Click + ADD SERVICE
+                btnEl.textContent = '⏳ Adding';
+                let addBtn = null;
+                const candidates = document.querySelectorAll('button, input[type="submit"]');
+                for (const b of candidates) {
+                    const txt = (b.innerText || b.value || '').trim();
+                    if (txt.includes('ADD SERVICE') || txt === '+ ADD SERVICE') {
+                        addBtn = b; break;
+                    }
+                }
+                if (!addBtn) throw new Error('+ ADD SERVICE button not found');
+                addBtn.click();
+
+                // Step 8: Wait for modal to close
+                await new Promise(r => setTimeout(r, 1000));
+
+                btnEl.textContent = '✓ Done!';
+                btnEl.style.background = '#16a34a';
+                setTimeout(() => {
+                    btnEl.textContent = origText;
+                    btnEl.style.background = '';
+                    btnEl.classList.remove('busy');
+                    btnEl.disabled = false;
+                }, 5000);
+
+            } catch (err) {
+                console.error('[RV Bucket]', err);
+                btnEl.textContent = '⚠ ' + err.message;
+                btnEl.style.background = '#7f1d1d';
+                setTimeout(() => {
+                    btnEl.textContent = origText;
+                    btnEl.style.background = '';
+                    btnEl.classList.remove('busy');
+                    btnEl.disabled = false;
+                }, 5000);
+            }
+        }
+
+        btn24.addEventListener('click', () => addServiceToBucket('Parts - 24 Hours', btn24));
+        btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
+    }
+}
+
+})();
