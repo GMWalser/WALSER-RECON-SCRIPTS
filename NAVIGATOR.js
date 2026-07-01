@@ -3,6 +3,8 @@
 // @namespace    reconclipboard
 // @version      15.3
 // @author       Gabe
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
 // @match        https://app.partstech.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
