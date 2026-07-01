@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.3
+// @version      5.9
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -13,7 +13,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        unsafeWindow
-// @run-at       document-idle
+// @run-at       document-start
 // ==/UserScript==
 
 (function () {
@@ -43,6 +43,70 @@ function setClip(part, price) {
 // Cache logged-in user name
 let cachedTekionUserName = '';
 if (IS_TEKION) {
+    // Intercept XHR + fetch to catch Tekion's search API (fires on page load)
+    // which contains trimDetails.trim and stockID for the current vehicle.
+    // Also poll DOM for when Vehicle Profile drawer is open.
+    (function startVehicleDataCapture() {
+        function saveVehicleData(trim, stock, vin) {
+            if (!trim && !stock) return;
+            const key = 'rv_veh_' + (vin || 'last');
+            try {
+                const existing = JSON.parse(GM_getValue(key, '{}'));
+                if (trim)  existing.trim  = trim;
+                if (stock) existing.stock = stock;
+                GM_setValue(key, JSON.stringify(existing));
+            } catch(e) {}
+        }
+        function extractFromResponse(text) {
+            try {
+                if (!text || (!text.includes('trimDetails') && !text.includes('stockID'))) return;
+                const data = JSON.parse(text);
+                const hits = data && data.data && data.data.hits;
+                if (!hits || !hits.length) return;
+                const v = hits[0];
+                const trim  = (v.trimDetails && v.trimDetails.trim) || '';
+                const stock = v.stockID || '';
+                const vin   = v.vin || '';
+                saveVehicleData(trim, stock, vin);
+            } catch(e) {}
+        }
+        // Intercept XHR
+        const RealXHR = unsafeWindow.XMLHttpRequest;
+        function PatchedXHR() {
+            const xhr = new RealXHR();
+            xhr.addEventListener('load', function() { extractFromResponse(xhr.responseText); });
+            return xhr;
+        }
+        PatchedXHR.prototype = RealXHR.prototype;
+        unsafeWindow.XMLHttpRequest = PatchedXHR;
+        // Intercept fetch
+        const realFetch = unsafeWindow.fetch;
+        unsafeWindow.fetch = function(...args) {
+            return realFetch.apply(this, args).then(function(resp) {
+                resp.clone().text().then(extractFromResponse).catch(function(){});
+                return resp;
+            });
+        };
+        // Also poll DOM for Vehicle Profile drawer (backup)
+        function getVinFromDOM() {
+            let vin = '';
+            document.querySelectorAll('span,div,input').forEach(el => {
+                if (vin) return;
+                const t = (el.value || el.textContent || '').trim();
+                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
+            });
+            return vin;
+        }
+        setInterval(function() {
+            const trimEl  = document.querySelector('#vehicleDetailsOverviewTrim');
+            const stockEl = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
+            if (!trimEl && !stockEl) return;
+            const trim  = trimEl  ? (trimEl.value  || trimEl.innerText  || '').trim() : '';
+            const stock = stockEl ? (stockEl.value || stockEl.innerText || '').trim() : '';
+            saveVehicleData(trim, stock, getVinFromDOM());
+        }, 500);
+    })();
+
     const cacheUserName = () => {
         const spans = document.querySelectorAll('span[title]');
         for (const s of spans) {
@@ -450,13 +514,18 @@ if (IS_RO_SALES) {
         const modelBtn = document.querySelector('[data-test-id="undefined-modelButton"]');
         if (modelBtn) data.vehicle = modelBtn.innerText.trim();
         // VIN: scan leaf nodes for 17-char pattern
-        document.querySelectorAll('span,div').forEach(el => {
-            if (data.vin || el.childElementCount > 0) return;
-            const t = (el.textContent || '').trim();
+        document.querySelectorAll('span,div,input').forEach(el => {
+            if (data.vin) return;
+            const t = (el.value || el.textContent || '').trim();
             if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) data.vin = t;
         });
-        data.stock = cachedStock;
-        data.trim  = cachedTrim;
+        // Load trim+stock from GM storage (saved by global scanner on any Tekion page)
+        try {
+            const key = 'rv_veh_' + (data.vin || 'last');
+            const saved = JSON.parse(GM_getValue(key, '{}'));
+            data.stock = saved.stock || '';
+            data.trim  = saved.trim  || '';
+        } catch(e) {}
         return data;
     }
 
@@ -481,36 +550,32 @@ if (IS_RO_SALES) {
         rvVehicleTooltip.style.top = (rect.bottom + 6) + 'px';
     }
 
-    // Intercept Tekion's search XHR (fires on page load) to get trim + stock
-    // Uses unsafeWindow to access the real page XHR, bypassing CSP restrictions.
     let cachedStock = '';
     let cachedTrim  = '';
 
-    (function setupXhrIntercept() {
-        const RealXHR = unsafeWindow.XMLHttpRequest;
-        function PatchedXHR() {
-            const xhr = new RealXHR();
-            xhr.addEventListener('load', function() {
-                try {
-                    const text = xhr.responseText || '';
-                    if (!text.includes('trimDetails') && !text.includes('stockID')) return;
-                    const data = JSON.parse(text);
-                    const hits = data && data.data && data.data.hits;
-                    if (!hits || !hits.length) return;
-                    const v = hits[0];
-                    const trim  = (v.trimDetails && v.trimDetails.trim) || '';
-                    const stock = v.stockID || '';
-                    if (trim  && !cachedTrim)  cachedTrim  = trim;
-                    if (stock && !cachedStock) cachedStock = stock;
-                } catch(e) {}
-            });
-            return xhr;
-        }
-        PatchedXHR.prototype = RealXHR.prototype;
-        unsafeWindow.XMLHttpRequest = PatchedXHR;
-    })();
+    // Scan all visible input/textarea fields with a label containing 'trim' or 'stock'
+    // Works regardless of element ID — handles any Tekion layout
+    function scanVehicleFields() {
+        document.querySelectorAll('input, textarea').forEach(el => {
+            const v = (el.value || el.innerText || '').trim();
+            if (!v) return;
+            // Find associated label by walking up to container and finding label text
+            let container = el.parentElement;
+            for (let i = 0; i < 5 && container; i++) {
+                const label = container.querySelector('label, [class*="label"], [class*="Label"]');
+                if (label) {
+                    const lt = (label.innerText || label.textContent || '').toLowerCase();
+                    if (lt.includes('trim') && v.length > 3) cachedTrim = v;
+                    if ((lt.includes('stock') || lt.includes('Stock Number')) && v.length > 2) cachedStock = v;
+                    break;
+                }
+                container = container.parentElement;
+            }
+        });
+    }
+    setInterval(scanVehicleFields, 500);
 
-    function autoFetchDrawerData(link) {} // no-op, kept for compatibility
+    function autoFetchDrawerData(link) {} // no-op
 
     let vehicleLinkAttached = null;
     function attachVehicleHover() {
