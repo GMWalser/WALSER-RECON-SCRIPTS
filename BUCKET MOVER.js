@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.2
+// @version      3.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @match        https://app.reconvision.com/departments/3122*
+// @match        https://app.tekioncloud.com/parts/*
 // @match        https://app.reconvision.com/departments/4282*
 // @match        https://app.reconvision.com/work_orders/*/edit*
-// @match        https://app.tekioncloud.com/parts/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @run-at       document-idle
@@ -420,6 +420,12 @@ function applyHighlights() {
                 return;
               }
 
+              // Pre-open a blank window NOW while still in the synchronous
+              // click context. After an async operation (await) or a prompt(),
+              // browsers block window.open as a popup. We navigate this
+              // pre-opened window to the real URL at the end.
+              const newWin = window.open('', '_blank');
+
               // The cached flag can be stale -- the task may have been
               // completed on the work order page itself since the last
               // scan, and the bucket page has no way to know that until
@@ -437,7 +443,8 @@ function applyHighlights() {
               tag.textContent = origText;
 
               if (!stillIncomplete) {
-                // Already complete -- remove this tag and don't proceed.
+                // Already complete -- close the pre-opened blank tab and don't proceed.
+                if (newWin && !newWin.closed) newWin.close();
                 tag.remove();
                 alert(`${key} is already complete on this vehicle. Refreshing its status.`);
                 const c = getCache();
@@ -458,15 +465,17 @@ function applyHighlights() {
               // also stored on the vehicle so it travels with it afterward.
               if (key === 'PDR') {
                 const raw = prompt('Current PDR count in your bucket (required to move to PDR):', '');
-                if (raw === null) return; // cancelled, do not move
+                if (raw === null) { if (newWin && !newWin.closed) newWin.close(); return; } // cancelled
                 const count = parseInt(raw, 10);
                 if (isNaN(count)) {
+                  if (newWin && !newWin.closed) newWin.close();
                   alert('Enter a number for the current PDR count.');
                   return;
                 }
                 if (count >= 30) {
                   // Still save the count so the badge reflects it, but
                   // don't lock the button out since the move never happened.
+                  if (newWin && !newWin.closed) newWin.close();
                   const c = getCache();
                   if (c[row.woId]) {
                     c[row.woId].pdrCount = count;
@@ -493,7 +502,12 @@ function applyHighlights() {
               const url = deptId
                 ? `https://app.reconvision.com/work_orders/${row.woId}/edit#rv_auto_move=${deptId}`
                 : `https://app.reconvision.com/work_orders/${row.woId}/edit`;
-              window.open(url, '_blank');
+              // Navigate the pre-opened window to the real URL
+              if (newWin && !newWin.closed) {
+                newWin.location.href = url;
+              } else {
+                window.open(url, '_blank'); // fallback if pre-open failed
+              }
             }, true);
             tagRow.appendChild(tag);
           });
@@ -573,22 +587,13 @@ function injectTekionButton() {
   btn.textContent = '🔧 Open in Tekion';
   btn.title = `Open RO# ${roNumber} in Tekion Parts Fulfillment`;
   btn.addEventListener('click', () => {
-    // Write the RO# to shared Tampermonkey storage rather than trying to
-    // window.open() a specific tab. window.open can only ever "reuse" a
-    // tab it itself opened previously -- it has no way to find or target
-    // an existing manually-opened Tekion tab on another screen. The
-    // Tekion-side script polls this value instead, so it picks up the
-    // request on whatever Tekion tab is already open, wherever it is.
+    // Write the RO# to shared GM storage so the Tekion Fulfillment Opener
+    // script picks it up on whichever Tekion tab is already open — including
+    // one on a different monitor. window.open() can't target existing tabs.
     const sentTs = Date.now();
     GM_setValue('rv_tekion_ro_request', { ro: roNumber, ts: sentTs });
-    console.log('[Bucket Scanner] Sent RO# to Tekion:', roNumber);
     btn.classList.remove('rv-tekion-btn-error');
     btn.textContent = '✓ Sent to Tekion';
-
-    // Poll briefly for the Tekion-side watcher to acknowledge receipt.
-    // If nothing acks within ~5s, the Tekion tab's script is probably
-    // stale (needs a refresh to pick up an update) or there's no Tekion
-    // tab open with the watcher running at all.
     let acked = false;
     let checks = 0;
     const ackCheck = setInterval(() => {
@@ -597,17 +602,16 @@ function injectTekionButton() {
       if (ack === sentTs) {
         acked = true;
         clearInterval(ackCheck);
-        btn.classList.remove('rv-tekion-btn-error');
         btn.textContent = '✓ Sent to Tekion';
         setTimeout(() => { btn.textContent = '🔧 Open in Tekion'; }, 1500);
         return;
       }
-      if (checks >= 10) { // ~5s at 500ms
+      if (checks >= 10) {
         clearInterval(ackCheck);
         if (!acked) {
           btn.classList.add('rv-tekion-btn-error');
-          btn.textContent = '⚠ Refresh Tekion';
-          btn.title = 'No response from the Tekion tab — refresh it to pick up the latest script, then try again.';
+          btn.textContent = '⚠ No Tekion tab found';
+          btn.title = 'No Tekion tab responded — make sure a Tekion tab is open and refresh it if needed.';
         }
       }
     }, 500);
@@ -630,139 +634,6 @@ function injectTekionButton() {
   positionButton();
   window.addEventListener('scroll', positionButton, { passive: true });
   window.addEventListener('resize', positionButton, { passive: true });
-}
-
-
-// --- Tekion side: runs on app.tekioncloud.com. Polls the shared GM value ---
-// for a new RO# request from the RV button and auto-drives the Create     ---
-// Fulfillment flow whenever it sees one, on whatever Tekion tab happens   ---
-// to be open -- including a tab you opened manually yourself.            ---
-function setNativeValue(el, value) {
-  const proto = Object.getPrototypeOf(el);
-  const setter = Object.getOwnPropertyDescriptor(proto, 'value') &&
-                  Object.getOwnPropertyDescriptor(proto, 'value').set;
-  if (setter) {
-    setter.call(el, value);
-  } else {
-    el.value = value;
-  }
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: value.slice(-1) }));
-  el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: value.slice(-1) }));
-}
-
-function runTekionFulfillment(roNumber) {
-  let stage = 'navigateIfNeeded';
-  let attempts = 0;
-  const maxAttempts = 100; // ~25s at 250ms
-  console.log('[Bucket Scanner / Tekion] Starting fulfillment flow for RO#', roNumber);
-
-  const tick = setInterval(() => {
-    attempts++;
-    if (attempts > maxAttempts) {
-      clearInterval(tick);
-      console.warn('[Bucket Scanner / Tekion] Timed out at stage: ' + stage);
-      return;
-    }
-
-    if (stage === 'navigateIfNeeded') {
-      if (!location.pathname.includes('/parts/ro-sales/parts-fulfillment')) {
-        console.log('[Bucket Scanner / Tekion] Navigating to Parts Fulfillment page...');
-        location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
-        clearInterval(tick);
-        // Page will reload onto the right URL; the load-time check below
-        // picks the pending request back up once it lands there.
-        return;
-      }
-      console.log('[Bucket Scanner / Tekion] Already on Parts Fulfillment page.');
-      stage = 'waitForCreateFulfillment';
-      return;
-    }
-
-    if (stage === 'waitForCreateFulfillment') {
-      const createBtn = document.querySelector(
-        '[data-test-id="@tekion-parts-partsRoSales-common-createGroupedPartRequestsModalButton"]'
-      );
-      if (createBtn) {
-        createBtn.click();
-        stage = 'waitForRoInput';
-      }
-      return;
-    }
-
-    if (stage === 'waitForRoInput') {
-      const roInput = document.querySelector(
-        '[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field, ' +
-        'input.ant-select-search__field'
-      );
-      if (roInput) {
-        roInput.focus();
-        setNativeValue(roInput, roNumber);
-        stage = 'waitForDropdownOption';
-      }
-      return;
-    }
-
-    if (stage === 'waitForDropdownOption') {
-      const options = document.querySelectorAll(
-        '.ant-select-item-option, .ant-select-dropdown li, [role="option"]'
-      );
-      let match = null;
-      options.forEach(opt => {
-        if (!match && opt.textContent && opt.textContent.includes(roNumber)) {
-          match = opt;
-        }
-      });
-      if (match) {
-        match.click();
-        stage = 'waitForSubmit';
-      }
-      return;
-    }
-
-    if (stage === 'waitForSubmit') {
-      const submitBtn = document.querySelector(
-        '[data-test-id="@tekion-parts-roSalesDetailedView-createGroupedPartRequestsModal-container-submitButton"]'
-      );
-      if (submitBtn && !submitBtn.disabled) {
-        clearInterval(tick);
-        submitBtn.click();
-      }
-      return;
-    }
-  }, 250);
-}
-
-function watchForTekionRequests() {
-  console.log('[Bucket Scanner] Tekion watcher active on', location.href);
-  // Tell the RV side this tab's watcher is alive at all, even before any
-  // request comes in -- lets the RV button know a watcher is present.
-  GM_setValue('rv_tekion_watcher_alive', Date.now());
-  setInterval(() => { GM_setValue('rv_tekion_watcher_alive', Date.now()); }, 5000);
-
-  let lastSeenTs = 0;
-  setInterval(() => {
-    const req = GM_getValue('rv_tekion_ro_request', null);
-    if (req && req.ts !== lastSeenTs) {
-      console.log('[Bucket Scanner] Tekion watcher picked up request:', req);
-      lastSeenTs = req.ts;
-      GM_setValue('rv_tekion_ack', req.ts); // confirm receipt back to the RV button
-      runTekionFulfillment(req.ro);
-    }
-  }, 1000);
-
-  // Also check immediately on load in case this tab was opened or
-  // reloaded after a request was already sent (e.g. it had to navigate
-  // to the right URL first).
-  const initial = GM_getValue('rv_tekion_ro_request', null);
-  if (initial) {
-    console.log('[Bucket Scanner] Found existing request on load:', initial);
-    lastSeenTs = initial.ts;
-    GM_setValue('rv_tekion_ack', initial.ts);
-    if (location.pathname.includes('/parts/ro-sales/parts-fulfillment')) {
-      runTekionFulfillment(initial.ro);
-    }
-  }
 }
 
 
@@ -810,6 +681,10 @@ function tryAutoMove() {
     if (deptBtn) {
       console.log('[Bucket Scanner] tryAutoMove: found department button, clicking now.', deptBtn);
       clearInterval(tick);
+      // Set sessionStorage flag before clicking -- if the dept move causes
+      // a page navigation, the setTimeout below gets cancelled. The flag
+      // persists across same-tab navigations and closes the tab on reload.
+      sessionStorage.setItem('rv_auto_close', '1');
       deptBtn.click();
       console.log('[Bucket Scanner] tryAutoMove: click dispatched, will close tab in 1.5s.');
       setTimeout(() => {
@@ -827,11 +702,108 @@ function tryAutoMove() {
   }, 250);
 }
 
+// --- Tekion receiver: runs on app.tekioncloud.com. Polls shared GM storage  ---
+// for RO# requests from the RV 'Open in Tekion' button and auto-drives the   ---
+// Create Fulfillment flow. Claim-based locking ensures only ONE tab fires     ---
+// even when multiple Tekion tabs are open across different monitors.          ---
+function setNativeValue(el, value) {
+  const proto = Object.getPrototypeOf(el);
+  const setter = Object.getOwnPropertyDescriptor(proto, 'value') &&
+                  Object.getOwnPropertyDescriptor(proto, 'value').set;
+  if (setter) setter.call(el, value);
+  else el.value = value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: value.slice(-1) }));
+  el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: value.slice(-1) }));
+}
+
+function runTekionFulfillment(roNumber) {
+  let stage = 'navigateIfNeeded';
+  let attempts = 0;
+  const maxAttempts = 100;
+  const tick = setInterval(() => {
+    attempts++;
+    if (attempts > maxAttempts) { clearInterval(tick); return; }
+    if (stage === 'navigateIfNeeded') {
+      if (!location.pathname.includes('/parts/ro-sales/parts-fulfillment')) {
+        GM_setValue('rv_tekion_pending_ro', roNumber);
+        location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
+        clearInterval(tick); return;
+      }
+      stage = 'waitForCreateFulfillment'; return;
+    }
+    if (stage === 'waitForCreateFulfillment') {
+      const btn = document.querySelector('[data-test-id="@tekion-parts-partsRoSales-common-createGroupedPartRequestsModalButton"]');
+      if (btn) { btn.click(); stage = 'waitForRoInput'; } return;
+    }
+    if (stage === 'waitForRoInput') {
+      const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field, input.ant-select-search__field');
+      if (inp) { inp.focus(); setNativeValue(inp, roNumber); stage = 'waitForDropdownOption'; } return;
+    }
+    if (stage === 'waitForDropdownOption') {
+      const opts = document.querySelectorAll('.ant-select-item-option, .ant-select-dropdown li, [role="option"]');
+      let match = null;
+      opts.forEach(o => { if (!match && o.textContent && o.textContent.includes(roNumber)) match = o; });
+      if (match) { match.click(); stage = 'waitForSubmit'; } return;
+    }
+    if (stage === 'waitForSubmit') {
+      const btn = document.querySelector('[data-test-id="@tekion-parts-roSalesDetailedView-createGroupedPartRequestsModal-container-submitButton"]');
+      if (btn && !btn.disabled) { clearInterval(tick); btn.click(); } return;
+    }
+  }, 250);
+}
+
+function watchForTekionRequests() {
+  // Unique tab ID for claim-based locking — prevents all open Tekion tabs
+  // from firing simultaneously when a request comes in.
+  const MY_TAB_ID = 'tab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+
+  function tryClaimAndRun(req) {
+    const claimKey = 'rv_tekion_claimed_' + req.ts;
+    GM_setValue(claimKey, MY_TAB_ID);
+    // Re-read after 200ms — last write wins. If we still own claim, run.
+    setTimeout(() => {
+      const winner = GM_getValue(claimKey, null);
+      if (winner !== MY_TAB_ID) return; // another tab claimed it
+      GM_setValue('rv_tekion_ack', req.ts);
+      runTekionFulfillment(req.ro);
+    }, 200);
+  }
+
+  // On load: resume a pending request if this tab navigated to fulfillment page
+  const pending = GM_getValue('rv_tekion_pending_ro', null);
+  if (pending && location.pathname.includes('/parts/ro-sales/parts-fulfillment')) {
+    GM_setValue('rv_tekion_pending_ro', null);
+    setTimeout(() => runTekionFulfillment(pending), 1500);
+  }
+
+  // Mark any already-stored request as seen to avoid re-firing on stale data
+  let lastSeenTs = 0;
+  const existing = GM_getValue('rv_tekion_ro_request', null);
+  if (existing) lastSeenTs = existing.ts;
+
+  setInterval(() => {
+    const req = GM_getValue('rv_tekion_ro_request', null);
+    if (req && req.ts !== lastSeenTs) {
+      lastSeenTs = req.ts;
+      tryClaimAndRun(req);
+    }
+  }, 1000);
+}
+
+
 if (location.hostname === 'app.tekioncloud.com') {
   setTimeout(watchForTekionRequests, 500);
 } else if (location.pathname.match(/\/work_orders\/\d+\/edit/)) {
-  setTimeout(tryAutoMove, 800);
-  setTimeout(injectTekionButton, 1200);
+  // If this tab was opened for an auto-move and the dept button click caused
+  // a page navigation (cancelling the setTimeout close), close it now.
+  if (sessionStorage.getItem('rv_auto_close') === '1' && !location.hash.includes('rv_auto_move=')) {
+    sessionStorage.removeItem('rv_auto_close');
+    window.close();
+  } else {
+    setTimeout(tryAutoMove, 800);
+    setTimeout(injectTekionButton, 1200);
+  }
 } else {
   setTimeout(init, 1000);
 }
