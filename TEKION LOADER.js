@@ -3,6 +3,8 @@
 // @namespace    reconclipboard
 // @version      1.1
 // @description  Auto-drives Tekion's Parts RO Sales -> Create Fulfillment flow when opened from ReconVision with #rv_ro=<RO#>
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEKION%20LOADER.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEKION%20LOADER.js
 // @match        https://app.tekioncloud.com/parts/*
 // @grant        none
 // ==/UserScript==
@@ -16,8 +18,6 @@
   }
 
   function setNativeValue(el, value) {
-    // React-controlled inputs need the native setter so React's change
-    // detection actually fires, plain el.value = ... won't trigger it.
     const proto = Object.getPrototypeOf(el);
     const setter = Object.getOwnPropertyDescriptor(proto, 'value') &&
                     Object.getOwnPropertyDescriptor(proto, 'value').set;
@@ -27,9 +27,6 @@
       el.value = value;
     }
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    // Ant Design's search/filter logic sometimes also listens for key
-    // events rather than just input change, so dispatch a synthetic
-    // keyup as a fallback to make sure the dropdown filters correctly.
     el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: value.slice(-1) }));
     el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: value.slice(-1) }));
   }
@@ -37,7 +34,7 @@
   function run(roNumber) {
     let stage = 'waitForCreateFulfillment';
     let attempts = 0;
-    const maxAttempts = 80; // ~20s at 250ms
+    const maxAttempts = 80;
 
     const tick = setInterval(() => {
       attempts++;
@@ -59,9 +56,6 @@
       }
 
       if (stage === 'waitForRoInput') {
-        // The RO Number field is an ant-design combobox (ant-select), not a
-        // plain input. The actual typing target is the hidden search field
-        // inside it: input.ant-select-search__field
         const roInput = document.querySelector(
           '[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field, ' +
           'input.ant-select-search__field'
@@ -75,8 +69,6 @@
       }
 
       if (stage === 'waitForDropdownOption') {
-        // After typing, a matching option should appear in a dropdown list.
-        // Look for any visible option containing the RO number text.
         const options = document.querySelectorAll(
           '.ant-select-item-option, .ant-select-dropdown li, [role="option"]'
         );
@@ -108,12 +100,9 @@
 
   const roNumber = getRoFromHash();
   if (roNumber) {
-    setTimeout(() => run(roNumber), 1500); // give the SPA time to mount before we start polling
+    setTimeout(() => run(roNumber), 1500);
   }
 
-  // The RV-side button reuses a single named window, so repeated clicks
-  // often land here as a hash change on an already-loaded page rather
-  // than a fresh navigation. Re-run the flow whenever the hash updates.
   window.addEventListener('hashchange', () => {
     const ro = getRoFromHash();
     if (ro) run(ro);
