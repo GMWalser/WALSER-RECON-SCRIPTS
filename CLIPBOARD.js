@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      4.90
+// @version      4.95
 // @author       Gabe
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @match        https://app.partstech.com/*
 // @match        https://app.tekioncloud.com/*
 // @match        https://*.reconvision.com/*
@@ -418,6 +420,100 @@ if (IS_RO_SALES) {
         });
     });
     saveBtnObserver.observe(document.body, { childList: true, subtree: true });
+
+    // VEHICLE HOVER TOOLTIP
+    GM_addStyle(`
+        #rv-vehicle-tooltip {
+            position:fixed;z-index:999999;
+            background:#111;border:1px solid #1e4d8c;border-radius:8px;
+            padding:14px 18px;font-family:'Segoe UI',sans-serif;font-size:14px;
+            color:#e0e0e0;box-shadow:0 4px 20px rgba(0,0,0,.7);
+            pointer-events:none;display:none;min-width:320px;max-width:460px;
+        }
+        #rv-vehicle-tooltip .rv-vtt-row {
+            display:flex;justify-content:space-between;align-items:baseline;
+            padding:5px 0;border-bottom:1px solid #222;
+        }
+        #rv-vehicle-tooltip .rv-vtt-row:last-child { border-bottom:none; }
+        #rv-vehicle-tooltip .rv-vtt-label { color:#888;font-size:11px;text-transform:uppercase;flex-shrink:0;margin-right:16px;letter-spacing:.05em; }
+        #rv-vehicle-tooltip .rv-vtt-val { color:#fff;font-family:monospace;font-size:14px;text-align:right;word-break:break-all; }
+        #rv-vehicle-tooltip .rv-vtt-val.empty { color:#444;font-style:italic;font-family:'Segoe UI',sans-serif;font-size:11px; }
+    `);
+
+    const rvVehicleTooltip = document.createElement('div');
+    rvVehicleTooltip.id = 'rv-vehicle-tooltip';
+    document.body.appendChild(rvVehicleTooltip);
+
+    function getVehicleData() {
+        const data = { vin: '', stock: '', vehicle: '', trim: '' };
+        // Year/Make/Model from the vehicle link button text
+        const modelBtn = document.querySelector('[data-test-id="undefined-modelButton"]');
+        if (modelBtn) data.vehicle = modelBtn.innerText.trim();
+        // VIN — find a leaf span/div containing exactly a 17-char VIN
+        document.querySelectorAll('span,div').forEach(el => {
+            if (data.vin) return;
+            if (el.childElementCount > 0) return;
+            const t = (el.innerText || '').trim();
+            if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) data.vin = t;
+        });
+        // Stock Number + Trim — use cached values from background prefetch,
+        // fall back to live DOM read if drawer happens to still be open.
+        data.stock = cachedStock;
+        data.trim = cachedTrim;
+        if (!data.stock) { const el = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber'); if (el) data.stock = el.value.trim(); }
+        if (!data.trim)  { const el = document.querySelector('#vehicleDetailsOverviewTrim'); if (el) data.trim = (el.value || el.innerText || '').trim(); }
+        return data;
+    }
+
+    function showVehicleTooltip(anchorEl) {
+        const d = getVehicleData();
+        const rows = [
+            { label: 'Vehicle', val: d.vehicle },
+            { label: 'VIN',     val: d.vin },
+            { label: 'Stock #', val: d.stock },
+            { label: 'Trim',    val: d.trim },
+        ];
+        rvVehicleTooltip.innerHTML = rows.map(r =>
+            `<div class="rv-vtt-row"><span class="rv-vtt-label">${r.label}</span>` +
+            `<span class="rv-vtt-val${r.val ? '' : ' empty'}">${r.val || '— click vehicle link once to load —'}</span></div>`
+        ).join('');
+        rvVehicleTooltip.style.display = 'block';
+        const rect = anchorEl.getBoundingClientRect();
+        let left = rect.left;
+        const tipW = rvVehicleTooltip.offsetWidth;
+        if (left + tipW > window.innerWidth - 10) left = window.innerWidth - tipW - 10;
+        rvVehicleTooltip.style.left = left + 'px';
+        rvVehicleTooltip.style.top = (rect.bottom + 6) + 'px';
+    }
+
+    // Passively watch for the vehicle detail drawer opening.
+    // Whenever it opens (user clicks the vehicle link for any reason),
+    // read and cache stock/trim immediately. No programmatic open/close.
+    let cachedStock = '';
+    let cachedTrim = '';
+
+    function tryReadDrawerData() {
+        const stockEl = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
+        const trimEl  = document.querySelector('#vehicleDetailsOverviewTrim');
+        if (stockEl && stockEl.value.trim()) cachedStock = stockEl.value.trim();
+        if (trimEl  && (trimEl.value || trimEl.innerText || '').trim()) {
+            cachedTrim = (trimEl.value || trimEl.innerText || '').trim();
+        }
+    }
+
+    // Watch for the drawer being added to / updated in the DOM
+    new MutationObserver(tryReadDrawerData).observe(document.body, { childList: true, subtree: true });
+
+    let vehicleLinkAttached = null;
+    function attachVehicleHover() {
+        const link = document.querySelector('[data-test-id="undefined-link"]');
+        if (!link || link === vehicleLinkAttached) return;
+        vehicleLinkAttached = link;
+        link.addEventListener('mouseenter', () => showVehicleTooltip(link));
+        link.addEventListener('mouseleave', () => { rvVehicleTooltip.style.display = 'none'; });
+    }
+    attachVehicleHover();
+    new MutationObserver(attachVehicleHover).observe(document.body, { childList: true, subtree: true });
 }
 
 // =============================================
@@ -603,8 +699,23 @@ if (IS_PO) {
             poPill.style.display = '';
             poPill.classList.remove('done', 'error', 'filling');
             poPill.textContent = '⏳ Waiting...';
-            // Delay fill so Tekion finishes its own form initialization first
-            setTimeout(fillPO, 1500);
+            // Poll until the field is actually interactive (not disabled, React ready)
+            // rather than waiting a fixed delay -- fires immediately when ready.
+            let readyAttempts = 0;
+            const waitForReady = setInterval(() => {
+                readyAttempts++;
+                const f = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+                const reqControl = document.querySelector(
+                    '[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-requestedBy-advancedSelect"] [class*="tekion-select"][class*="control"], ' +
+                    '#requestedByUserId [class*="control"]'
+                );
+                // Ready when: control field exists, is not disabled, and Requested By control is also present
+                const ready = f && !f.disabled && reqControl;
+                if (ready || readyAttempts >= 40) {
+                    clearInterval(waitForReady);
+                    if (ready) fillPO();
+                }
+            }, 150);
         }
     }).observe(document.body, { childList: true, subtree: true });
 
