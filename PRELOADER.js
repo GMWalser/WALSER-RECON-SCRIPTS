@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name         ReconVision → PartsTech Pre-Loader
 // @namespace    http://tampermonkey.net/
-// @version      9.11
+// @version      9.12
 // @author       Gabe
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @match        https://app.reconvision.com/work_orders/*/edit
 // @grant        GM_addStyle
 // @grant        GM_setValue
@@ -155,7 +157,9 @@ function scrapeJobLines() {
     }
     const terms = getTerms(val);
     const newTerms = terms.filter(t => !seenTerms.has(t));
-    if (!newTerms.length) return;
+    // Always add to lines for Job Lines display, even if search terms are
+    // duplicates (e.g. Front AND Rear brakes both need to show). Only the
+    // search queue deduplicates terms so we don't search the same part twice.
     newTerms.forEach(t => seenTerms.add(t));
     lines.push({name:val, hasQuote, lineId, partNumbers:[], _terms: newTerms});
   });
@@ -513,31 +517,42 @@ function buildPanel(vin, jobLines) {
     }
     jobLines.forEach((line) => {
       const terms = line._terms;
-      if (!terms || !terms.length) return;
+      const hasTerms = terms && terms.length > 0;
       const div = document.createElement('div');
       div.className = 'rv-line';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.className = 'rv-cb';
-      cb.checked = true;
+      // Lines with no new search terms (duplicate of another line's parts)
+      // still show for reference but are unchecked and greyed out.
+      cb.checked = hasTerms;
+      cb.disabled = !hasTerms;
       const right = document.createElement('div');
       right.className = 'rv-right';
+      if (!hasTerms) right.style.opacity = '0.45';
       const orig = document.createElement('div');
       orig.className = 'rv-orig';
       orig.textContent = line.name;
       right.appendChild(orig);
-      terms.forEach((t, ti) => {
-        if (terms.length > 1) {
-          const sp = document.createElement('div');
-          sp.className = 'rv-split';
-          sp.textContent = 'Part '+(ti+1);
-          right.appendChild(sp);
-        }
-        const inp = document.createElement('input');
-        inp.className = 'rv-input';
-        inp.value = t;
-        right.appendChild(inp);
-      });
+      if (!hasTerms) {
+        const note = document.createElement('div');
+        note.style.cssText = 'font-size:10px;color:#666;font-style:italic;margin-top:2px;';
+        note.textContent = '(search terms already queued)';
+        right.appendChild(note);
+      } else {
+        terms.forEach((t, ti) => {
+          if (terms.length > 1) {
+            const sp = document.createElement('div');
+            sp.className = 'rv-split';
+            sp.textContent = 'Part '+(ti+1);
+            right.appendChild(sp);
+          }
+          const inp = document.createElement('input');
+          inp.className = 'rv-input';
+          inp.value = t;
+          right.appendChild(inp);
+        });
+      }
       div.appendChild(cb);
       div.appendChild(right);
       linesDiv.appendChild(div);
