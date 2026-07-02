@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.9
+// @version      5.16
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -13,6 +13,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        unsafeWindow
+// @grant        GM_xmlhttpRequest
 // @run-at       document-start
 // ==/UserScript==
 
@@ -43,9 +44,8 @@ function setClip(part, price) {
 // Cache logged-in user name
 let cachedTekionUserName = '';
 if (IS_TEKION) {
-    // Intercept XHR + fetch to catch Tekion's search API (fires on page load)
-    // which contains trimDetails.trim and stockID for the current vehicle.
-    // Also poll DOM for when Vehicle Profile drawer is open.
+    // Fetch trim + stock directly from Tekion's inventory search API using GM_xmlhttpRequest.
+    // Runs once per VIN per session, uses browser session cookies automatically.
     (function startVehicleDataCapture() {
         function saveVehicleData(trim, stock, vin) {
             if (!trim && !stock) return;
@@ -57,54 +57,102 @@ if (IS_TEKION) {
                 GM_setValue(key, JSON.stringify(existing));
             } catch(e) {}
         }
-        function extractFromResponse(text) {
-            try {
-                if (!text || (!text.includes('trimDetails') && !text.includes('stockID'))) return;
-                const data = JSON.parse(text);
-                const hits = data && data.data && data.data.hits;
-                if (!hits || !hits.length) return;
-                const v = hits[0];
-                const trim  = (v.trimDetails && v.trimDetails.trim) || '';
-                const stock = v.stockID || '';
-                const vin   = v.vin || '';
-                saveVehicleData(trim, stock, vin);
-            } catch(e) {}
+        function getCookieVal(name) {
+            const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+            return m ? decodeURIComponent(m[1]) : '';
         }
-        // Intercept XHR
-        const RealXHR = unsafeWindow.XMLHttpRequest;
-        function PatchedXHR() {
-            const xhr = new RealXHR();
-            xhr.addEventListener('load', function() { extractFromResponse(xhr.responseText); });
-            return xhr;
-        }
-        PatchedXHR.prototype = RealXHR.prototype;
-        unsafeWindow.XMLHttpRequest = PatchedXHR;
-        // Intercept fetch
-        const realFetch = unsafeWindow.fetch;
-        unsafeWindow.fetch = function(...args) {
-            return realFetch.apply(this, args).then(function(resp) {
-                resp.clone().text().then(extractFromResponse).catch(function(){});
-                return resp;
+        function fetchVehicleData(vin, cb) {
+            // Pull auth/context values from cookies (same ones Tekion's own frontend sends)
+            const apiToken = getCookieVal('tekion-api-token');
+            let tcookie = {};
+            try { tcookie = JSON.parse(getCookieVal('tcookie') || '{}'); } catch(e) {}
+            const hdrs = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+            if (apiToken) hdrs['Tekion-Api-Token'] = apiToken;
+            if (tcookie.dealerId)     hdrs['Dealerid']         = String(tcookie.dealerId);
+            if (tcookie.tenantname)   hdrs['Tenantname']       = tcookie.tenantname;
+            if (tcookie.userId)       hdrs['Userid']           = tcookie.userId;
+            if (tcookie.roleId)       hdrs['Roleid']           = tcookie.roleId;
+            if (tcookie.clientid)     hdrs['Clientid']         = tcookie.clientid;
+            if (tcookie.locale)       hdrs['Locale']           = tcookie.locale;
+            if (tcookie.program)      hdrs['Program']          = tcookie.program;
+            if (tcookie.applicationId) hdrs['Applicationid']   = tcookie.applicationId;
+            if (tcookie['tek-siteId']) hdrs['Tek-Siteid']      = tcookie['tek-siteId'];
+            if (tcookie['original-userid'])   hdrs['Original-Userid']   = tcookie['original-userid'];
+            if (tcookie['original-tenantid']) hdrs['Original-Tenantid'] = tcookie['original-tenantid'];
+            if (tcookie.productIds)   hdrs['Productids']       = Array.isArray(tcookie.productIds) ? tcookie.productIds.join(',') : tcookie.productIds;
+            console.log('[RV] Headers built:', JSON.stringify(hdrs).slice(0,300));
+            GM_xmlhttpRequest({
+                method: 'POST',
+                url: 'https://app.tekioncloud.com/api/vi/u/v1.0.0/inventory/tenant/v2/search',
+                headers: hdrs,
+                data: JSON.stringify({
+                    filters: [{ field: 'vin', operator: 'IN', values: [vin], key: 'vin' }],
+                    excludeFields: [], groupBy: [], includeFields: [],
+                    searchText: '', searchableFields: [], sort: []
+                }),
+                onload: function(resp) {
+                    console.log('[RV] HTTP status:', resp.status, '- body preview:', (resp.responseText||'').slice(0,200));
+                    try {
+                        const data = JSON.parse(resp.responseText);
+                        const hits = data && data.data && data.data.hits;
+                        if (!hits || !hits.length) { if (cb) cb(false); return; }
+                        const v = hits[0];
+                        const trim  = (v.trimDetails && v.trimDetails.trim) || '';
+                        const stock = v.stockID || '';
+                        saveVehicleData(trim, stock, vin);
+                        if (cb) cb(!!(trim || stock));
+                    } catch(e) { if (cb) cb(false); }
+                },
+                onerror: function() { console.log('[RV] API request error for', vin); if (cb) cb(false); },
+                ontimeout: function() { console.log('[RV] API request timeout for', vin); if (cb) cb(false); }
             });
-        };
-        // Also poll DOM for Vehicle Profile drawer (backup)
-        function getVinFromDOM() {
-            let vin = '';
-            document.querySelectorAll('span,div,input').forEach(el => {
-                if (vin) return;
-                const t = (el.value || el.textContent || '').trim();
-                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
-            });
-            return vin;
         }
+        // Also poll DOM for when Vehicle Profile drawer is open (backup)
         setInterval(function() {
             const trimEl  = document.querySelector('#vehicleDetailsOverviewTrim');
             const stockEl = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
             if (!trimEl && !stockEl) return;
             const trim  = trimEl  ? (trimEl.value  || trimEl.innerText  || '').trim() : '';
             const stock = stockEl ? (stockEl.value || stockEl.innerText || '').trim() : '';
-            saveVehicleData(trim, stock, getVinFromDOM());
+            let vin = '';
+            document.querySelectorAll('span,div,input').forEach(el => {
+                if (vin) return;
+                const t = (el.value || el.textContent || '').trim();
+                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
+            });
+            saveVehicleData(trim, stock, vin);
         }, 500);
+        // Retry every 2s. A VIN is only marked done AFTER the API returns a hit.
+        // Failed lookups retry up to 3x per VIN. Keyed per VIN so SPA nav to a new RO works.
+        const _vinAttempts = {}; // vin -> attempt count, or 'done'
+        setInterval(function() {
+            // Scan LEAF elements only for an exact 17-char VIN (header VIN span is a leaf).
+            // No substring matching inside big containers — that produced false positives.
+            let vin = '';
+            document.querySelectorAll('span,div,p,td,input').forEach(el => {
+                if (vin) return;
+                let t = '';
+                if (el.tagName === 'INPUT') t = el.value || '';
+                else if (el.childElementCount === 0) t = el.textContent || '';
+                else return;
+                t = t.trim();
+                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
+            });
+            if (!vin) return;
+            const state = _vinAttempts[vin];
+            if (state === 'done' || (state || 0) >= 3) return;
+            // Already have complete cached data for this VIN?
+            try {
+                const existing = JSON.parse(GM_getValue('rv_veh_' + vin, '{}'));
+                if (existing.trim && existing.stock) { _vinAttempts[vin] = 'done'; return; }
+            } catch(e) {}
+            _vinAttempts[vin] = (state || 0) + 1;
+            console.log('[RV] VIN found:', vin, '- attempt', _vinAttempts[vin], '- calling inventory API');
+            fetchVehicleData(vin, function(success) {
+                if (success) _vinAttempts[vin] = 'done';
+                console.log('[RV] API result for', vin, ':', success ? 'HIT - saved' : 'no hit / error');
+            });
+        }, 2000);
     })();
 
     const cacheUserName = () => {
@@ -513,11 +561,12 @@ if (IS_RO_SALES) {
         const data = { vin: '', stock: '', vehicle: '', trim: '' };
         const modelBtn = document.querySelector('[data-test-id="undefined-modelButton"]');
         if (modelBtn) data.vehicle = modelBtn.innerText.trim();
-        // VIN: scan leaf nodes for 17-char pattern
-        document.querySelectorAll('span,div,input').forEach(el => {
+        // VIN: scan for standalone 17-char VIN
+        document.querySelectorAll('span,div,p,td,input').forEach(el => {
             if (data.vin) return;
-            const t = (el.value || el.textContent || '').trim();
-            if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) data.vin = t;
+            const t = el.tagName === 'INPUT' ? (el.value || '') : (el.innerText || el.textContent || '');
+            const m = t.trim().match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
+            if (m) data.vin = m[1];
         });
         // Load trim+stock from GM storage (saved by global scanner on any Tekion page)
         try {
