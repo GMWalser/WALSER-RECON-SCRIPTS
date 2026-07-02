@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.6
+// @version      3.10
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -592,6 +592,7 @@ function injectTekionButton() {
     // one on a different monitor. window.open() can't target existing tabs.
     const sentTs = Date.now();
     GM_setValue('rv_tekion_ro_request', { ro: roNumber, ts: sentTs });
+    btn.disabled = true; // prevent re-click while waiting, so we never open more than one fallback tab
     btn.classList.remove('rv-tekion-btn-error');
     btn.textContent = '✓ Sent to Tekion';
     let acked = false;
@@ -603,15 +604,19 @@ function injectTekionButton() {
         acked = true;
         clearInterval(ackCheck);
         btn.textContent = '✓ Sent to Tekion';
-        setTimeout(() => { btn.textContent = '🔧 Open in Tekion'; }, 1500);
+        setTimeout(() => { btn.textContent = '🔧 Open in Tekion'; btn.disabled = false; }, 1500);
         return;
       }
       if (checks >= 10) {
         clearInterval(ackCheck);
         if (!acked) {
-          btn.classList.add('rv-tekion-btn-error');
-          btn.textContent = '⚠ No Tekion tab found';
-          btn.title = 'No Tekion tab responded — make sure a Tekion tab is open and refresh it if needed.';
+          // No existing tab was already on RO Sales to claim it. Open
+          // exactly one new tab there -- it will land already on the
+          // fulfillment page and claim this still-unclaimed request
+          // itself via the same watcher, no separate code path needed.
+          btn.textContent = 'Opening new Tekion tab...';
+          window.open('https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment#rv_fresh=' + sentTs, '_blank');
+          setTimeout(() => { btn.textContent = '🔧 Open in Tekion'; btn.disabled = false; }, 1500);
         }
       }
     }, 500);
@@ -760,6 +765,13 @@ function watchForTekionRequests() {
 
   function tryClaimAndRun(req) {
     const claimKey = 'rv_tekion_claimed_' + req.ts;
+    // Check for ANY existing claim first -- whether it's still pending or
+    // already completed by another tab. Without this upfront check, a tab
+    // that detects the request late (its own poll cycle just hadn't fired
+    // yet) would overwrite an already-resolved claim and re-run the whole
+    // flow on a second tab, even though the first tab already handled it.
+    const existing = GM_getValue(claimKey, null);
+    if (existing) return; // someone already claimed this request -- back off entirely
     GM_setValue(claimKey, MY_TAB_ID);
     // Re-read after 200ms — last write wins. If we still own claim, run.
     setTimeout(() => {
@@ -778,15 +790,30 @@ function watchForTekionRequests() {
   }
 
   // Mark any already-stored request as seen to avoid re-firing on stale data
+  // -- UNLESS this tab was just opened specifically to handle an unclaimed
+  // request (signaled via #rv_fresh=<ts> on the URL by the RV-side button's
+  // fallback tab-open). In that case, attempt the claim immediately instead
+  // of silently treating it as already-seen.
   let lastSeenTs = 0;
   const existing = GM_getValue('rv_tekion_ro_request', null);
+  const freshMatch = location.hash.match(/rv_fresh=(\d+)/);
+  if (existing && freshMatch && Number(freshMatch[1]) === existing.ts) {
+    tryClaimAndRun(existing);
+  }
   if (existing) lastSeenTs = existing.ts;
 
   setInterval(() => {
     const req = GM_getValue('rv_tekion_ro_request', null);
     if (req && req.ts !== lastSeenTs) {
       lastSeenTs = req.ts;
-      tryClaimAndRun(req);
+      // ONLY a tab already sitting on the fulfillment page ever acts on a
+      // request. Tabs on any other Tekion page (PO screen, inventory, etc.)
+      // ignore it entirely -- no fallback, no navigating some other open
+      // tab there. If no tab is currently on RO Sales, nothing happens.
+      const onFulfillmentPage = location.pathname.includes('/parts/ro-sales/parts-fulfillment');
+      if (onFulfillmentPage) {
+        tryClaimAndRun(req);
+      }
     }
   }, 1000);
 }
