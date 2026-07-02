@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         ReconVision → PartsTech Pre-Loader
 // @namespace    http://tampermonkey.net/
-// @version      9.12
+// @version      9.14
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @match        https://app.reconvision.com/work_orders/*/edit
+// @match        https://app.partstech.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -559,8 +560,6 @@ function buildPanel(vin, jobLines) {
     });
   }
 
-  let ptTab = null;
-
   openBtn.onclick = () => {
     const lineEls = [...document.querySelectorAll('#rv-pt-lines .rv-line, #rv-manual-rows .rv-line')];
     const searches = [];
@@ -589,17 +588,45 @@ function buildPanel(vin, jobLines) {
     const url = 'https://app.partstech.com/catalog#rv_pt=' + hash;
 
     minimizeToP();
-    if (ptTab && !ptTab.closed) {
-      ptTab.location.href = url;
-      ptTab.focus();
-    } else {
-      ptTab = window.open(url, 'recon_pt_tab');
-    }
+
+    // Broadcast via shared GM storage instead of window.open(url, 'recon_pt_tab').
+    // Named-window reuse turned out to be unreliable (new tab opened instead of
+    // reusing the existing one, cause unconfirmed -- possibly a Chrome-side
+    // security policy change, not anything in this script). This mirrors the
+    // claim-based broadcast approach already confirmed working for Tekion in
+    // Bucket Scanner: any open PartsTech tab picks up the request itself,
+    // rather than us trying to hold and reuse a direct window reference.
+    const sentTs = Date.now();
+    GM_setValue('rv_pt_open_request', { state: state, ts: sentTs });
     openBtn.disabled = true;
-    setTimeout(() => {
-      openBtn.disabled = false;
-      status.textContent = '✓ Opened PartsTech — '+searches.length+' part'+(searches.length>1?'s':'')+' queued.';
-    }, 1500);
+    openBtn.textContent = 'Sending to PartsTech...';
+    let acked = false;
+    let checks = 0;
+    const ackCheck = setInterval(() => {
+      checks++;
+      const ack = GM_getValue('rv_pt_ack', 0);
+      if (ack === sentTs) {
+        acked = true;
+        clearInterval(ackCheck);
+        openBtn.disabled = false;
+        openBtn.textContent = 'Open PartsTech';
+        status.textContent = '✓ Opened PartsTech — '+searches.length+' part'+(searches.length>1?'s':'')+' queued.';
+        return;
+      }
+      if (checks >= 10) {
+        clearInterval(ackCheck);
+        if (!acked) {
+          // No existing PartsTech tab claimed it -- open exactly one new
+          // tab directly at the catalog URL with the hash embedded.
+          // Queue Navigator's own init() already reads #rv_pt= on a fresh
+          // page load natively, so this fallback needs no special signal.
+          window.open(url, '_blank');
+          openBtn.disabled = false;
+          openBtn.textContent = 'Open PartsTech';
+          status.textContent = '✓ Opened PartsTech (new tab) — '+searches.length+' part'+(searches.length>1?'s':'')+' queued.';
+        }
+      }
+    }, 500);
   };
 
   render();
@@ -638,6 +665,47 @@ function waitForPageReady(callback) {
   check();
 }
 
-waitForPageReady(init);
+// --- PartsTech side: runs on app.partstech.com. Polls shared GM storage  ---
+// for open-requests broadcast by the RV-side "Open PartsTech" button and  ---
+// navigates this tab there. Claim-based locking (same pattern as Bucket   ---
+// Scanner's Tekion watcher) ensures only ONE PartsTech tab acts on each   ---
+// request even when multiple PartsTech tabs are open.                    ---
+function watchForPartsTechRequests() {
+  const MY_TAB_ID = 'pt_tab_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+
+  function tryClaimAndOpen(req) {
+    const claimKey = 'rv_pt_claimed_' + req.ts;
+    const existing = GM_getValue(claimKey, null);
+    if (existing) return; // someone already claimed this request -- back off entirely
+    GM_setValue(claimKey, MY_TAB_ID);
+    setTimeout(() => {
+      const winner = GM_getValue(claimKey, null);
+      if (winner !== MY_TAB_ID) return; // another tab claimed it
+      GM_setValue('rv_pt_ack', req.ts);
+      const hash = encodeURIComponent(JSON.stringify(req.state));
+      location.href = 'https://app.partstech.com/catalog#rv_pt=' + hash;
+    }, 200);
+  }
+
+  // Mark any already-stored request as seen on load, so a tab that's just
+  // being manually refreshed doesn't re-fire on old data.
+  let lastSeenTs = 0;
+  const existing = GM_getValue('rv_pt_open_request', null);
+  if (existing) lastSeenTs = existing.ts;
+
+  setInterval(() => {
+    const req = GM_getValue('rv_pt_open_request', null);
+    if (req && req.ts !== lastSeenTs) {
+      lastSeenTs = req.ts;
+      tryClaimAndOpen(req);
+    }
+  }, 1000);
+}
+
+if (location.hostname === 'app.partstech.com') {
+  setTimeout(watchForPartsTechRequests, 500);
+} else {
+  waitForPageReady(init);
+}
 
 })();
