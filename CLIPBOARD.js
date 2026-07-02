@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.16
+// @version      5.17
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1111,7 +1111,8 @@ if (IS_RECONVISION) {
     // RV BUCKET MOVER PILLS (24 HR / OVER 24 HR)
     // Only on work order edit pages
     // =============================================
-    if (IS_RV_WO_EDIT) {
+    function initBucketPills() {
+        if (document.getElementById('rv-bucket-pills')) return; // already injected
 
         GM_addStyle(`
             #rv-bucket-pills {
@@ -1463,6 +1464,31 @@ if (IS_RECONVISION) {
 
         btn24.addEventListener('click', () => addServiceToBucket('Parts - 24 Hours', btn24));
         btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
+    }
+
+    // ReconVision navigates between work orders client-side (no full page
+    // reload), so a one-time IS_RV_WO_EDIT check at script load misses every
+    // WO viewed after the first via in-app navigation. Poll pathname to
+    // catch those transitions and inject/remove the pills live.
+    if (IS_RECONVISION) {
+        let lastPath = location.pathname;
+
+        if (IS_RV_WO_EDIT) {
+            initBucketPills();
+        }
+
+        setInterval(() => {
+            if (location.pathname !== lastPath) {
+                lastPath = location.pathname;
+                const nowOnWoEdit = /\/work_orders\/\d+\/edit/.test(lastPath);
+                const existing = document.getElementById('rv-bucket-pills');
+                if (nowOnWoEdit && !existing) {
+                    initBucketPills();
+                } else if (!nowOnWoEdit && existing) {
+                    existing.remove();
+                }
+            }
+        }, 500);
     }
 }
 
