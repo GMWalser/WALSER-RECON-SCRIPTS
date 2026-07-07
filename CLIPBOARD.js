@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.17
+// @version      5.18
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1113,6 +1113,15 @@ if (IS_RECONVISION) {
     // =============================================
     function initBucketPills() {
         if (document.getElementById('rv-bucket-pills')) return; // already injected
+        if (!document.body) {
+            // @run-at document-start means this can execute before the parser
+            // has reached <body> yet -- confirmed via a live error: "Cannot
+            // read properties of null (reading 'appendChild')" at the
+            // document.body.appendChild call below. Retry shortly instead
+            // of throwing and silently aborting pill creation for this load.
+            setTimeout(initBucketPills, 50);
+            return;
+        }
 
         GM_addStyle(`
             #rv-bucket-pills {
