@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.10
+// @version      3.12
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -276,53 +276,66 @@ async function runScan(btn, status, isAuto) {
   }
 
   let scanned = 0;
-  for (const row of toScan) {
-    if (status) status.textContent = `Scanning ${scanned + 1} of ${toScan.length}...`;
-    const result = await fetchWorkOrderStatus(row.woId);
-    scanned++;
+  const BATCH_SIZE = 4; // moderate concurrency -- was fully sequential before
+  for (let i = 0; i < toScan.length; i += BATCH_SIZE) {
+    const batch = toScan.slice(i, i + BATCH_SIZE);
+    if (status) status.textContent = `Scanning ${scanned + 1}-${Math.min(scanned + batch.length, toScan.length)} of ${toScan.length}...`;
 
-    if (!result) continue;
+    await Promise.all(batch.map(async (row) => {
+      const result = await fetchWorkOrderStatus(row.woId);
+      scanned++;
 
-    // Re-read cache fresh right before writing, so a manual Can't Move toggle
-    // (or PDR count edit) made while this scan was awaiting the fetch isn't
-    // clobbered by a stale in-memory snapshot.
-    cache = getCache();
-    const cantMove = cache[row.woId] && cache[row.woId].cantMove;
+      if (!result) return;
 
-    const tiresBlockAlloy = !!result._tiresBlockAlloy;
-    const trackedKeys = Object.keys(result).filter(k => k !== '_tiresBlockAlloy');
-    if (!trackedKeys.length) {
-      // Vehicle has no tracked departments at all anymore -> fully clean,
-      // clear everything including the PDR count badge.
-      delete cache[row.woId];
+      // Re-read cache fresh right before writing, so a manual Can't Move toggle
+      // (or PDR count edit) made while this scan was awaiting the fetch isn't
+      // clobbered by a stale in-memory snapshot. Safe under concurrency: once
+      // a fetch resolves, everything from here through saveCache() runs as
+      // one uninterrupted synchronous block (no further await), so JS's
+      // single-threaded execution guarantees no other vehicle's update can
+      // interleave in the middle of this read-modify-write.
+      let cache = getCache();
+      const cantMove = cache[row.woId] && cache[row.woId].cantMove;
+
+      const tiresBlockAlloy = !!result._tiresBlockAlloy;
+      const trackedKeys = Object.keys(result).filter(k => k !== '_tiresBlockAlloy');
+      if (!trackedKeys.length) {
+        // Vehicle has no tracked departments at all anymore -> fully clean,
+        // clear everything including the PDR count badge.
+        delete cache[row.woId];
+        saveCache(cache);
+        applyHighlights();
+        return;
+      }
+
+      const anyIncomplete = trackedKeys.some(k => result[k].incomplete);
+
+      if (anyIncomplete) {
+        const depts = {};
+        trackedKeys.forEach(k => { depts[k] = result[k]; });
+        cache[row.woId] = {
+          stock: row.stock,
+          depts: depts,
+          cantMove: cantMove || false,
+          tiresBlockAlloy: tiresBlockAlloy,
+          pdrCount: (cache[row.woId] && typeof cache[row.woId].pdrCount === "number") ? cache[row.woId].pdrCount : undefined,
+          lastScanned: Date.now()
+        };
+      } else {
+        // All tracked departments are now complete -> fully clean, clear
+        // the cache entry entirely (including the PDR count badge).
+        delete cache[row.woId];
+      }
       saveCache(cache);
       applyHighlights();
-      continue;
+    }));
+
+    // Delay BETWEEN batches now, not after every single vehicle -- still a
+    // deliberate pause so this doesn't hammer the page, just less throttled
+    // than the previous fully-sequential one-at-a-time version.
+    if (i + BATCH_SIZE < toScan.length) {
+      await new Promise(r => setTimeout(r, 150));
     }
-
-    const anyIncomplete = trackedKeys.some(k => result[k].incomplete);
-
-    if (anyIncomplete) {
-      const depts = {};
-      trackedKeys.forEach(k => { depts[k] = result[k]; });
-      cache[row.woId] = {
-        stock: row.stock,
-        depts: depts,
-        cantMove: cantMove || false,
-        tiresBlockAlloy: tiresBlockAlloy,
-        pdrCount: (cache[row.woId] && typeof cache[row.woId].pdrCount === "number") ? cache[row.woId].pdrCount : undefined,
-        lastScanned: Date.now()
-      };
-    } else {
-      // All tracked departments are now complete -> fully clean, clear
-      // the cache entry entirely (including the PDR count badge).
-      delete cache[row.woId];
-    }
-    saveCache(cache);
-    applyHighlights();
-
-    // Small delay so this never feels like it's hammering the page
-    await new Promise(r => setTimeout(r, 150));
   }
 
   if (status) status.textContent = `Scan complete — ${Object.keys(getCache()).length} flagged.`;
@@ -420,12 +433,6 @@ function applyHighlights() {
                 return;
               }
 
-              // Pre-open a blank window NOW while still in the synchronous
-              // click context. After an async operation (await) or a prompt(),
-              // browsers block window.open as a popup. We navigate this
-              // pre-opened window to the real URL at the end.
-              const newWin = window.open('', '_blank');
-
               // The cached flag can be stale -- the task may have been
               // completed on the work order page itself since the last
               // scan, and the bucket page has no way to know that until
@@ -443,8 +450,6 @@ function applyHighlights() {
               tag.textContent = origText;
 
               if (!stillIncomplete) {
-                // Already complete -- close the pre-opened blank tab and don't proceed.
-                if (newWin && !newWin.closed) newWin.close();
                 tag.remove();
                 alert(`${key} is already complete on this vehicle. Refreshing its status.`);
                 const c = getCache();
@@ -463,19 +468,27 @@ function applyHighlights() {
               // PDR has a hard cap: only move the vehicle if the current PDR
               // count entered is under 30. The count is asked every time and
               // also stored on the vehicle so it travels with it afterward.
+              //
+              // CONFIRMED FIX: this prompt() must run BEFORE any window.open()
+              // call. Previously window.open('', '_blank') ran first (to dodge
+              // popup blocking), which immediately steals focus to the new
+              // blank tab -- causing Chrome to silently SUPPRESS this prompt()
+              // with "page not the active tab of the front window," returning
+              // null. The code then treated that null as a cancelled prompt
+              // and aborted, closing the blank tab -- confirmed via live
+              // console error, this was the actual cause of tags appearing
+              // to open and close too fast to even read.
               if (key === 'PDR') {
                 const raw = prompt('Current PDR count in your bucket (required to move to PDR):', '');
-                if (raw === null) { if (newWin && !newWin.closed) newWin.close(); return; } // cancelled
+                if (raw === null) return; // cancelled
                 const count = parseInt(raw, 10);
                 if (isNaN(count)) {
-                  if (newWin && !newWin.closed) newWin.close();
                   alert('Enter a number for the current PDR count.');
                   return;
                 }
                 if (count >= 30) {
                   // Still save the count so the badge reflects it, but
                   // don't lock the button out since the move never happened.
-                  if (newWin && !newWin.closed) newWin.close();
                   const c = getCache();
                   if (c[row.woId]) {
                     c[row.woId].pdrCount = count;
@@ -502,12 +515,13 @@ function applyHighlights() {
               const url = deptId
                 ? `https://app.reconvision.com/work_orders/${row.woId}/edit#rv_auto_move=${deptId}`
                 : `https://app.reconvision.com/work_orders/${row.woId}/edit`;
-              // Navigate the pre-opened window to the real URL
-              if (newWin && !newWin.closed) {
-                newWin.location.href = url;
-              } else {
-                window.open(url, '_blank'); // fallback if pre-open failed
-              }
+              // Open and navigate directly now -- all dialogs (alert/prompt)
+              // are already resolved at this point, so this window.open()
+              // is the last user-gesture-adjacent action and its own dialogs
+              // (none expected) won't get suppressed. A popup-blocked
+              // notification here would be a normal, visible browser icon,
+              // not a silent failure like the prompt() suppression was.
+              window.open(url, '_blank');
             }, true);
             tagRow.appendChild(tag);
           });
