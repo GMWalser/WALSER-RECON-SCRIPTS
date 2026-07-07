@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.18
+// @version      5.19
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -624,7 +624,17 @@ if (IS_RO_SALES) {
     }
     setInterval(scanVehicleFields, 500);
 
-    function autoFetchDrawerData(link) {} // no-op
+    // Auto-open the vehicle drawer so the existing DOM poller (above, watches
+    // #vehicleDetailsOverviewTrim / #vehicleDetailsOverviewVehicleStockNumber
+    // every 500ms) has something to find. Then close the drawer.
+    // Guarded per-link so it only fires once per vehicle link element.
+    function autoFetchDrawerData(link) {
+        link.click();
+        setTimeout(function() {
+            const closeBtn = document.querySelector('.ant-drawer-close');
+            if (closeBtn) closeBtn.click();
+        }, 2000);
+    }
 
     let vehicleLinkAttached = null;
     function attachVehicleHover() {
@@ -1194,16 +1204,12 @@ if (IS_RECONVISION) {
         btnOver24.textContent = 'OVER 24';
         pillContainer.appendChild(btnOver24);
 
-        // Position pills above whichever RV element is highest on screen:
-        // - If PreLoader panel is open (visible), sit above it
-        // - Otherwise sit above the rv-toggle pill
         function positionBucketPills() {
             const rvToggle = document.getElementById('rv-toggle');
             const rvPanel  = document.getElementById('rv-pt-panel');
 
             let anchorTop = null;
 
-            // Match width of PartsTech toggle pill exactly
             if (rvToggle) {
                 const toggleW = rvToggle.offsetWidth;
                 if (toggleW > 0) {
@@ -1213,7 +1219,6 @@ if (IS_RECONVISION) {
                 }
             }
 
-            // Check if panel is visible (display not none and has height)
             if (rvPanel && rvPanel.style.display !== 'none' && rvPanel.offsetHeight > 0) {
                 const r = rvPanel.getBoundingClientRect();
                 anchorTop = r.top;
@@ -1227,23 +1232,19 @@ if (IS_RECONVISION) {
             } else {
                 pillContainer.style.bottom = '100px';
             }
-            // Always align right edge with PartsTech pill (right:20px)
             pillContainer.style.right = '20px';
             pillContainer.style.top = 'auto';
             pillContainer.style.left = 'auto';
         }
 
-        // Position on load and on resize
         setTimeout(positionBucketPills, 1000);
         window.addEventListener('resize', positionBucketPills);
 
-        // Re-position when panel or toggle style changes — observe only those two elements directly
         const positionObserver = new MutationObserver(() => positionBucketPills());
         const observeEl = (id) => {
             const el = document.getElementById(id);
             if (el) positionObserver.observe(el, { attributes: true, attributeFilter: ['style'] });
         };
-        // Also watch body childList (not subtree) so we catch when rv-toggle/rv-pt-panel are injected
         const bodyObserver = new MutationObserver(() => {
             observeEl('rv-pt-panel');
             observeEl('rv-toggle');
@@ -1266,24 +1267,11 @@ if (IS_RECONVISION) {
             });
         }
 
-        function waitForElGone(selector, timeout) {
-            return new Promise((resolve, reject) => {
-                if (!document.querySelector(selector)) return resolve();
-                const obs = new MutationObserver(() => {
-                    if (!document.querySelector(selector)) { obs.disconnect(); resolve(); }
-                });
-                obs.observe(document.body, { childList: true, subtree: true });
-                setTimeout(() => { obs.disconnect(); reject(new Error('Timeout waiting for removal: ' + selector)); }, timeout || 10000);
-            });
-        }
-
-        // Find section header by text, return that header element
         function findSectionHeader(text) {
             const headers = document.querySelectorAll('.service-search h2, .popup__content h2, .service-search [class*="header"], .popup__content [class*="section"]');
             for (const h of headers) {
                 if (h.innerText && h.innerText.trim() === text) return h;
             }
-            // Fallback: any element whose trimmed text exactly matches
             const all = document.querySelectorAll('*');
             for (const el of all) {
                 if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
@@ -1293,33 +1281,10 @@ if (IS_RECONVISION) {
             return null;
         }
 
-        // Find all checkboxes in the section following the header
-        function getCheckboxesInSection(headerEl) {
-            // Walk siblings/descendants after the header until the next same-level section
-            const parent = headerEl.closest('.service-search') || headerEl.closest('.popup__content') || headerEl.parentElement;
-            if (!parent) return [];
-            const checkboxes = [];
-            // Collect all unchecked checkboxes after the header within the parent
-            const allCheckboxes = parent.querySelectorAll('input[type="checkbox"]');
-            let headerPassed = false;
-            for (const cb of allCheckboxes) {
-                if (!headerPassed) {
-                    if (headerEl.compareDocumentPosition(cb) & Node.DOCUMENT_POSITION_FOLLOWING) {
-                        headerPassed = true;
-                    }
-                }
-                if (headerPassed) checkboxes.push(cb);
-            }
-            return checkboxes;
-        }
-
-        // Find first unchecked checkbox in a named section
         function findFirstUncheckedInSection(sectionText) {
-            // Strategy: find all checkboxes in the modal, group by section
             const modal = document.querySelector('.service-search, #service-search, .popup__content, .mfp-content');
             if (!modal) return null;
 
-            // Find the section heading
             let sectionHeader = null;
             const allEls = modal.querySelectorAll('*');
             for (const el of allEls) {
@@ -1334,7 +1299,6 @@ if (IS_RECONVISION) {
                 return null;
             }
 
-            // Get all checkboxes that come after this header and before the next same-level header
             const allCheckboxes = Array.from(modal.querySelectorAll('input[type="checkbox"]'));
             let inSection = false;
             let foundHeader = false;
@@ -1347,8 +1311,6 @@ if (IS_RECONVISION) {
                 }
             }
 
-            // Fallback: if compareDocumentPosition didn't work, try text proximity
-            // Find all section headers in modal
             const sectionHeaders = [];
             for (const el of allEls) {
                 if (el.children.length === 0) {
@@ -1382,24 +1344,19 @@ if (IS_RECONVISION) {
             btnEl.textContent = '⏳ Opening';
 
             try {
-                // Step 1: Click Add Service button
                 const addServiceBtn = document.querySelector('button.add-service--toggle');
                 if (!addServiceBtn) throw new Error('Add Service button not found');
                 addServiceBtn.click();
 
-                // Step 2: Wait for modal content to actually load (search input appears inside modal)
                 btnEl.textContent = '⏳ Modal...';
                 await waitForEl('.mfp-wrap .service-search, .mfp-wrap #service-search, .mfp-wrap input[placeholder="Search"]', 10000);
                 await new Promise(r => setTimeout(r, 600));
 
-                // Step 3: Click "View All Services" — it's a div[data-button="view-all-services"]
                 btnEl.textContent = '⏳ Services...';
                 let viewAllBtn = null;
                 for (let i = 0; i < 30; i++) {
-                    // Primary: exact data attribute match
                     viewAllBtn = document.querySelector('[data-button="view-all-services"], [data-test="view-all-services"]');
                     if (!viewAllBtn) {
-                        // Fallback: any visible element whose text is exactly "View All Services"
                         const all = document.querySelectorAll('div, button, a, span');
                         for (const el of all) {
                             if ((el.innerText || '').trim() === 'View All Services') { viewAllBtn = el; break; }
@@ -1411,11 +1368,9 @@ if (IS_RECONVISION) {
                 if (!viewAllBtn) throw new Error('"View All Services" not found');
                 viewAllBtn.click();
 
-                // Step 4: Wait for full list to load (Parts - 24 Hours section appears)
                 btnEl.textContent = '⏳ Loading...';
                 await new Promise(r => setTimeout(r, 1200));
 
-                // Step 5: Find first unchecked checkbox in the target section
                 btnEl.textContent = '⏳ Searching';
                 let targetCb = null;
                 for (let attempt = 0; attempt < 15; attempt++) {
@@ -1426,14 +1381,12 @@ if (IS_RECONVISION) {
 
                 if (!targetCb) throw new Error('No available checkbox in "' + sectionText + '"');
 
-                // Step 6: Check it
                 btnEl.textContent = '⏳ Selecting';
                 targetCb.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 await new Promise(r => setTimeout(r, 300));
                 targetCb.click();
                 await new Promise(r => setTimeout(r, 300));
 
-                // Step 7: Click + ADD SERVICE
                 btnEl.textContent = '⏳ Adding';
                 let addBtn = null;
                 const candidates = document.querySelectorAll('button, input[type="submit"]');
@@ -1446,7 +1399,6 @@ if (IS_RECONVISION) {
                 if (!addBtn) throw new Error('+ ADD SERVICE button not found');
                 addBtn.click();
 
-                // Step 8: Wait for modal to close
                 await new Promise(r => setTimeout(r, 1000));
 
                 btnEl.textContent = '✓ Done!';
@@ -1475,10 +1427,6 @@ if (IS_RECONVISION) {
         btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
     }
 
-    // ReconVision navigates between work orders client-side (no full page
-    // reload), so a one-time IS_RV_WO_EDIT check at script load misses every
-    // WO viewed after the first via in-app navigation. Poll pathname to
-    // catch those transitions and inject/remove the pills live.
     if (IS_RECONVISION) {
         let lastPath = location.pathname;
 
