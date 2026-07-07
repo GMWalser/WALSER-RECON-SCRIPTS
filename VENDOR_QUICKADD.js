@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -32,8 +32,11 @@
     [
       { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC' },
       { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE' },
+      { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE' },
       { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD' },
       { label: 'HON',      search: '1259',        match: 'WALSER HONDA' },
+    ],
+    [
       { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE' },
       { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN' },
       { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL' },
@@ -44,13 +47,15 @@
       { label: 'PAMS',  search: '1261',      match: 'PAM' },
       { label: 'LKQ',   search: '1030',      match: 'LKQ SMART PARTS' },
       { label: 'KEY',   search: '1114IL',    match: 'KEYSTONE' },
+      { label: 'USAF',  search: '1279',      match: 'US AUTO FORCE' },
     ],
   ];
 
   const ROW_COLORS = [
     { bg: '#1d4ed8' },   // row 1 - deep blue (parts distributors)
-    { bg: '#0f766e' },   // row 2 - deep teal (Walser dealerships + Ford)
-    { bg: '#15803d' },   // row 3 - deep green (junkyards)
+    { bg: '#0f766e' },   // row 2 - deep teal (Walser dealerships + Ford, part 1)
+    { bg: '#0f766e' },   // row 3 - deep teal (Walser dealerships, part 2)
+    { bg: '#15803d' },   // row 4 - deep green (junkyards)
   ];
 
   function log(...args) {
@@ -207,6 +212,19 @@
     });
 
     scrollContainer.appendChild(wrapper);
+
+    // Align every row's left AND right edges: find the widest row's natural
+    // width, lock the wrapper to that width, then switch each row from a
+    // fixed gap to space-between so the first/last button in every row
+    // flush against the same edges regardless of how many buttons it has.
+    const rowEls = Array.from(wrapper.children);
+    const maxRowWidth = Math.max(...rowEls.map(r => r.getBoundingClientRect().width));
+    wrapper.style.width = maxRowWidth + 'px';
+    rowEls.forEach(r => {
+      r.style.justifyContent = 'space-between';
+      r.style.gap = '0';
+    });
+
     log("Injected vendor quick-add buttons.");
   }
 
