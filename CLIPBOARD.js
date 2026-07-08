@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.19
+// @version      5.28
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -47,15 +47,18 @@ if (IS_TEKION) {
     // Fetch trim + stock directly from Tekion's inventory search API using GM_xmlhttpRequest.
     // Runs once per VIN per session, uses browser session cookies automatically.
     (function startVehicleDataCapture() {
-        function saveVehicleData(trim, stock, vin) {
-            if (!trim && !stock) return;
+        function saveVehicleData(trim, stock, vin, mileage) {
+            if (!trim && !stock && !mileage) return;
             const key = 'rv_veh_' + (vin || 'last');
+            console.log('[RV Save] saving to key:', key, '- trim:', trim, '- stock:', stock, '- mileage:', mileage);
             try {
                 const existing = JSON.parse(GM_getValue(key, '{}'));
                 if (trim)  existing.trim  = trim;
                 if (stock) existing.stock = stock;
+                if (mileage) existing.mileage = mileage;
                 GM_setValue(key, JSON.stringify(existing));
-            } catch(e) {}
+                console.log('[RV Save] now stored under', key, ':', GM_getValue(key, '{}'));
+            } catch(e) { console.log('[RV Save] ERROR:', e.message); }
         }
         function getCookieVal(name) {
             const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
@@ -111,16 +114,18 @@ if (IS_TEKION) {
         setInterval(function() {
             const trimEl  = document.querySelector('#vehicleDetailsOverviewTrim');
             const stockEl = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
-            if (!trimEl && !stockEl) return;
+            const mileageEl = document.querySelector('#vehicleDetailsOverviewLastOdometerReadingMiles');
+            if (!trimEl && !stockEl && !mileageEl) return;
             const trim  = trimEl  ? (trimEl.value  || trimEl.innerText  || '').trim() : '';
             const stock = stockEl ? (stockEl.value || stockEl.innerText || '').trim() : '';
+            const mileage = mileageEl ? (mileageEl.value || mileageEl.innerText || '').trim() : '';
             let vin = '';
             document.querySelectorAll('span,div,input').forEach(el => {
                 if (vin) return;
                 const t = (el.value || el.textContent || '').trim();
                 if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
             });
-            saveVehicleData(trim, stock, vin);
+            saveVehicleData(trim, stock, vin, mileage);
         }, 500);
         // Retry every 2s. A VIN is only marked done AFTER the API returns a hit.
         // Failed lookups retry up to 3x per VIN. Keyed per VIN so SPA nav to a new RO works.
@@ -558,7 +563,7 @@ if (IS_RO_SALES) {
     document.body.appendChild(rvVehicleTooltip);
 
     function getVehicleData() {
-        const data = { vin: '', stock: '', vehicle: '', trim: '' };
+        const data = { vin: '', stock: '', vehicle: '', trim: '', mileage: '' };
         const modelBtn = document.querySelector('[data-test-id="undefined-modelButton"]');
         if (modelBtn) data.vehicle = modelBtn.innerText.trim();
         // VIN: scan for standalone 17-char VIN
@@ -568,12 +573,14 @@ if (IS_RO_SALES) {
             const m = t.trim().match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
             if (m) data.vin = m[1];
         });
-        // Load trim+stock from GM storage (saved by global scanner on any Tekion page)
+        // Load trim+stock+mileage from GM storage (saved by global scanner on any Tekion page)
         try {
             const key = 'rv_veh_' + (data.vin || 'last');
             const saved = JSON.parse(GM_getValue(key, '{}'));
-            data.stock = saved.stock || '';
-            data.trim  = saved.trim  || '';
+            console.log('[RV Tooltip] reading key:', key, '- found:', GM_getValue(key, '{}'));
+            data.stock   = saved.stock   || '';
+            data.trim    = saved.trim    || '';
+            data.mileage = saved.mileage || '';
         } catch(e) {}
         return data;
     }
@@ -581,10 +588,11 @@ if (IS_RO_SALES) {
     function showVehicleTooltip(anchorEl) {
         const d = getVehicleData();
         const rows = [
-            { label: 'Vehicle', val: d.vehicle },
-            { label: 'VIN',     val: d.vin },
-            { label: 'Stock #', val: d.stock },
-            { label: 'Trim',    val: d.trim },
+            { label: 'Vehicle',  val: d.vehicle },
+            { label: 'VIN',      val: d.vin },
+            { label: 'Stock #',  val: d.stock },
+            { label: 'Trim',     val: d.trim },
+            { label: 'Mileage',  val: d.mileage },
         ];
         rvVehicleTooltip.innerHTML = rows.map(r =>
             `<div class="rv-vtt-row"><span class="rv-vtt-label">${r.label}</span>` +
@@ -629,17 +637,43 @@ if (IS_RO_SALES) {
     // every 500ms) has something to find. Then close the drawer.
     // Guarded per-link so it only fires once per vehicle link element.
     function autoFetchDrawerData(link) {
-        link.click();
-        setTimeout(function() {
-            const closeBtn = document.querySelector('.ant-drawer-close');
-            if (closeBtn) closeBtn.click();
-        }, 2000);
+        const modelBtn = link.querySelector('[data-test-id="undefined-modelButton"]') || link;
+        console.log('[RV Drawer] autoFetchDrawerData firing, clicking modelBtn:', modelBtn, '(fallback to link:', modelBtn === link, ')');
+        const rect = modelBtn.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        ['mousedown', 'mouseup', 'click'].forEach(type => {
+            modelBtn.dispatchEvent(new MouseEvent(type, {
+                bubbles: true, cancelable: true,
+                clientX: x, clientY: y
+            }));
+        });
+        // Poll for the trim field to actually appear (load time varies) instead
+        // of closing on a fixed timer, which was closing the drawer before
+        // slower-loading vehicles finished populating their data.
+        let attempts = 0;
+        const maxAttempts = 20; // 20 * 300ms = 6s max wait
+        const pollForData = setInterval(function() {
+            attempts++;
+            const trimEl = document.querySelector('#vehicleDetailsOverviewTrim');
+            const mileageEl = document.querySelector('#vehicleDetailsOverviewLastOdometerReadingMiles');
+            const ready = !!(trimEl && trimEl.value);
+            console.log('[RV Drawer] poll attempt', attempts, '- trim present:', !!trimEl, 'value:', trimEl ? trimEl.value : null, '- mileage present:', !!mileageEl, 'value:', mileageEl ? mileageEl.value : null);
+            if (ready || attempts >= maxAttempts) {
+                clearInterval(pollForData);
+                const closeBtn = document.querySelector('.ant-drawer-mask');
+                console.log('[RV Drawer] closing now (ready:', ready, ', attempts:', attempts, ') - mask found:', !!closeBtn);
+                if (closeBtn) closeBtn.click();
+            }
+        }, 300);
     }
 
     let vehicleLinkAttached = null;
     function attachVehicleHover() {
         const link = document.querySelector('[data-test-id="undefined-link"]');
-        if (!link || link === vehicleLinkAttached) return;
+        if (!link) { console.log('[RV Drawer] vehicle link not found on page'); return; }
+        if (link === vehicleLinkAttached) return;
+        console.log('[RV Drawer] new vehicle link found, attaching + scheduling auto-open');
         vehicleLinkAttached = link;
         link.addEventListener('mouseenter', () => showVehicleTooltip(link));
         link.addEventListener('mouseleave', () => { rvVehicleTooltip.style.display = 'none'; });
