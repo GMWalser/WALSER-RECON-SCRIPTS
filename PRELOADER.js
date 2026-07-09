@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision → PartsTech Pre-Loader
 // @namespace    http://tampermonkey.net/
-// @version      9.15
+// @version      9.16
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
@@ -139,9 +139,19 @@ function scrapeVIN() {
 function getMechanicalContainer() {
   for (const h2 of document.querySelectorAll('h2.collapsible__toggle')) {
     if (/mechanical.?repair/i.test(h2.innerText.trim())) {
-      const th = h2.closest('th');
-      const tbl = th ? th.closest('table') : null;
-      if (tbl && tbl.nextElementSibling) return tbl.nextElementSibling;
+      // CONFIRMED (7/9/26): don't grab "whatever comes right after the
+      // header table" -- that broke the moment Budget Tracker started
+      // inserting its own widget in that exact spot. The header itself
+      // already tells us the container's real id via aria-controls
+      // (confirmed matches data-target too), so grab it directly by id
+      // instead. This is immune to anything else being inserted nearby,
+      // now or in the future.
+      const targetId = h2.getAttribute('aria-controls') ||
+        (h2.getAttribute('data-target') || '').replace('#', '');
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) return el;
+      }
     }
   }
   return null;
