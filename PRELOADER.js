@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision → PartsTech Pre-Loader
 // @namespace    http://tampermonkey.net/
-// @version      9.14
+// @version      9.15
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
@@ -35,8 +35,8 @@ const SKIP = [
 ];
 
 const SPLIT_RULES = [
-  {p:/wiper.*rear|rear.*wiper/i, parts:['Wiper Blade']},
   {p:/wiper.?motor|motor.?wiper/i, parts:['Wiper Motor']},
+  {p:/wiper.*rear|rear.*wiper/i, parts:['Wiper Blade']},
   {p:/wiper.?blade|\bwipers?\b/i, parts:['Wiper Blade']},
   {p:/pads?\s*[&,]\s*rotors?|rotors?\s*[&,]\s*pads?/i, parts:['Brake Pad','Disc Brake Rotor']},
   {p:/shoes?\s*[&,]\s*(drums?|hardware)/i, parts:['Brake Shoe','Brake Drum','Brake Hardware Kit']},
@@ -52,9 +52,9 @@ const SPLIT_RULES = [
 ];
 
 const REMAP = [
+  {p:/\bcabin\b/i, term:'Cabin Air Filter'},
   {p:/air.?filter/i, term:'Air Filter'},
   {p:/\bbattery\b/i, term:'Vehicle Battery'},
-  {p:/cabin.?filter/i, term:'Cabin Air Filter'},
   {p:/wiper.?motor|motor.?wiper/i, term:'Wiper Motor'},
   {p:/wiper.?blade|\bwipers?\b/i, term:'Wiper Blade'},
   {p:/fog.?light.*(assembly|assy|housing)|(assembly|assy|housing).*fog.?light/i, term:'Fog Light Assembly'},
@@ -64,7 +64,8 @@ const REMAP = [
   {p:/\bstrut\b/i, term:'Suspension Strut and Coil Spring Assembly'},
   {p:/repl\.?\s*rotor|rotors?\s*replace/i, term:'Disc Brake Rotor'},
   {p:/mirror.?switch|power.?mirror/i, term:'Door Mirror Switch'},
-  {p:/oil.?cooler|oil.?filter.?adapter/i, term:'Engine Oil Filter Adapter'},
+  {p:/oil.?cooler/i, term:'Oil Cooler'},
+  {p:/oil.?filter.?adapter/i, term:'Engine Oil Filter Adapter'},
   {p:/oil.?pan/i, term:'Engine Oil Pan Gasket Set'},
   {p:/serp.?belt|serpentine/i, term:'Serpentine Belt'},
   {p:/brake.?actuator/i, term:'Brake Actuators'},
@@ -88,6 +89,12 @@ const REMAP = [
   {p:/headlight.?selector|headlight.?switch|head.?light.?switch/i, term:'Headlight Switch'},
   {p:/back.?up.?camera|backup.?camera|rear.?view.?camera|reverse.?camera/i, term:'Park Assist Camera'},
   {p:/blower.?motor/i, term:'HVAC Blower Motor'},
+  {p:/timing.?cover/i, term:'Timing Cover Gasket Set'},
+  {p:/tie.?rod/i, term:'Steering Tie Rod End'},
+  {p:/coil.?spring/i, term:'Coil Spring Set'},
+  {p:/lug.?nut/i, term:'Wheel Lug Nut'},
+  {p:/axle.?assembly|axle.?shaft|cv.?axle/i, term:'CV Axle Shaft'},
+  {p:/spark.?plug|\bplugs?\b/i, term:'Spark Plugs'},
 ];
 
 const STRIP = [
