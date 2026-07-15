@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.44
+// @version      5.46
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -168,6 +168,11 @@ if (IS_TEKION) {
                 if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
             });
             if (!vin) return;
+            // FIXED (7/9/26): GM_setValue is private to THIS script --
+            // another userscript (PO Vendor Quick-Add) can never read it,
+            // even on the same page. Using plain localStorage instead,
+            // which is shared by every script running on this site.
+            localStorage.setItem('rv_last_vin_seen', vin);
             const state = _vinAttempts[vin];
             if (state === 'done' || (state || 0) >= 3) return;
             // Already have complete cached data for this VIN?
