@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.42
+// @version      5.44
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -596,6 +596,18 @@ if (IS_RO_SALES) {
 
     // VEHICLE HOVER TOOLTIP
     GM_addStyle(`
+        /* TEST (7/9/26): only applied during our own silent background
+           drawer fetch, removed immediately after. Does NOT affect a real,
+           user-initiated drawer open. This is a re-test of a technique that
+           broke data capture before -- console logging added this time to
+           prove definitively whether trim/mileage still populate while
+           hidden, before trusting it. */
+        body.rv-hide-drawer-test .ant-drawer-content-wrapper,
+        body.rv-hide-drawer-test .ant-drawer-mask {
+            opacity: 0 !important;
+            transition: none !important;
+            pointer-events: none !important;
+        }
         #rv-vehicle-tooltip {
             position:fixed;z-index:999999;
             background:#111;border:1px solid #1e4d8c;border-radius:8px;
@@ -690,7 +702,21 @@ if (IS_RO_SALES) {
     // #vehicleDetailsOverviewTrim / #vehicleDetailsOverviewVehicleStockNumber
     // every 500ms) has something to find. Then close the drawer.
     // Guarded per-link so it only fires once per vehicle link element.
+    let drawerFetchBusy = false;
     function autoFetchDrawerData(link) {
+        if (drawerFetchBusy) { console.log('[Vehicle Hover] Skipped -- a drawer fetch is already in progress'); return; }
+        // Re-check right before actually firing, not just when we first
+        // decided to schedule this -- tab state can change during the
+        // 1500ms delay between scheduling and firing.
+        const poTabOpenNow = !!document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+        if (poTabOpenNow) { console.log('[Vehicle Hover] PO tab open at fire-time -- aborting'); return; }
+        drawerFetchBusy = true;
+        // TEST (7/9/26): re-attempting the hide technique that broke data
+        // capture before, but this time instrumented so we can SEE whether
+        // the trim/mileage fields actually populate while hidden, instead
+        // of just assuming. If logs show they never populate, revert again.
+        document.body.classList.add('rv-hide-drawer-test');
+        console.log('[Vehicle Hover TEST] Drawer hidden, opening...');
         const modelBtn = link.querySelector('[data-test-id="undefined-modelButton"]') || link;
         const rect = modelBtn.getBoundingClientRect();
         const x = rect.left + rect.width / 2;
@@ -709,16 +735,22 @@ if (IS_RO_SALES) {
         const pollForData = setInterval(function() {
             attempts++;
             const trimEl = document.querySelector('#vehicleDetailsOverviewTrim');
+            const stockEl = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
             const ready = !!(trimEl && trimEl.value);
+            console.log('[Vehicle Hover TEST] attempt ' + attempts + ' -- trimEl exists:', !!trimEl, '-- trim value:', trimEl ? trimEl.value : '(n/a)', '-- stock value:', stockEl ? stockEl.value : '(n/a)');
             if (ready || attempts >= maxAttempts) {
                 clearInterval(pollForData);
+                console.log('[Vehicle Hover TEST] Finished after ' + attempts + ' attempts -- final trim value:', trimEl ? trimEl.value : '(none)', '-- SUCCESS:', ready);
                 const closeBtn = document.querySelector('.ant-drawer-mask');
                 if (closeBtn) closeBtn.click();
+                document.body.classList.remove('rv-hide-drawer-test');
+                drawerFetchBusy = false;
             }
         }, 300);
     }
 
     let vehicleLinkAttached = null;
+    let drawerFetchScheduled = false;
     function attachVehicleHover() {
         const link = document.querySelector('[data-test-id="undefined-link"]');
         if (!link) { return; }
@@ -732,8 +764,18 @@ if (IS_RO_SALES) {
         vehicleLinkAttached = link;
         link.addEventListener('mouseenter', () => showVehicleTooltip(link));
         link.addEventListener('mouseleave', () => { rvVehicleTooltip.style.display = 'none'; });
-        // Auto-open drawer to fetch trim/stock, then close it
-        setTimeout(() => autoFetchDrawerData(link), 1500);
+        // Prevent stacking multiple scheduled fetches -- Tekion's tab
+        // switching fires this function many times in quick succession via
+        // the body-wide MutationObserver below, and each re-render can give
+        // us a "new" link reference, defeating the vehicleLinkAttached
+        // check above. Without this, several overlapping fetch attempts
+        // could pile up during a single tab switch.
+        if (drawerFetchScheduled) return;
+        drawerFetchScheduled = true;
+        setTimeout(() => {
+            drawerFetchScheduled = false;
+            autoFetchDrawerData(link);
+        }, 1500);
     }
     attachVehicleHover();
     new MutationObserver(attachVehicleHover).observe(document.body, { childList: true, subtree: true });
