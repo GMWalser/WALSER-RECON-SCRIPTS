@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.31
+// @version      5.42
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -25,7 +25,12 @@ const IS_TEKION      = location.hostname.includes('tekion');
 const IS_RECONVISION = location.hostname.includes('reconvision');
 const IS_USAUTOFORCE = location.hostname.includes('usautoforce');
 const IS_PI          = IS_TEKION && location.pathname.includes('/parts/inventory/part');
-const IS_PO          = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && new URLSearchParams(location.search).get('create') === 'true';
+// CONFIRMED (7/9/26): the PO form is rendered as a TAB inside Tekion's
+// single-page app -- the URL never changes when you open it, it stays
+// identical to the RO Sales page URL. The old IS_PO check (looking for
+// ?create=true in the URL) could therefore never become true. Removed
+// entirely in favor of DOM-based detection at the point of use, since
+// that's the only reliable signal in a tabbed SPA like this.
 const IS_RO_SALES    = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && !IS_PI;
 const IS_RV_WO_EDIT  = IS_RECONVISION && /\/work_orders\/\d+\/edit/.test(location.pathname);
 
@@ -39,6 +44,27 @@ function getClip() {
 function setClip(part, price) {
     if (part  !== null) GM_setValue('clip_part',  part);
     if (price !== null) GM_setValue('clip_price', price);
+}
+
+// SEPARATE storage for the RO-Sales-selling-price -> RV-paste flow.
+// CONFIRMED BUG (7/9/26): this used to share the same clip_part/clip_price
+// slot as the PartsTech-cost -> Tekion-cost-price auto-fill flow. Since a
+// background watcher on the RO Sales page continuously grabs whatever is
+// in clip_price and auto-types it into Tekion's own Cost Price field the
+// moment it sees anything there, right-clicking a SELLING price could get
+// silently consumed/overwritten by that watcher, or leftover cost data
+// could leak into the "paste onto line in RV" flow. Completely separate
+// keys means these two flows can never collide again.
+function getSellingClip() {
+    return {
+        part:  GM_getValue('clip_selling_part', ''),
+        price: GM_getValue('clip_selling_price', '')
+    };
+}
+
+function setSellingClip(part, price) {
+    if (part  !== null) GM_setValue('clip_selling_part',  part);
+    if (price !== null) GM_setValue('clip_selling_price', price);
 }
 
 // Cache logged-in user name
@@ -164,9 +190,11 @@ if (IS_TEKION) {
             const t = (s.getAttribute('title') || '').trim();
             if (t && t.includes(' ') && t.length > 4 && t.length < 40) {
                 cachedTekionUserName = t;
+                console.log('[PO Fill] cacheUserName found:', t);
                 return;
             }
         }
+        console.log('[PO Fill] cacheUserName found nothing yet, retrying in 500ms. span[title] count:', spans.length);
         setTimeout(cacheUserName, 500);
     };
     setTimeout(cacheUserName, 100);
@@ -346,19 +374,36 @@ if (IS_RO_SALES) {
     setPill('Click Select field to arm', 'idle', false);
 
     document.addEventListener('contextmenu', (e) => {
-        const cell = e.target.closest('[data-test-id*="field-bin-sellingPrice"]');
-        if (!cell) return;
+        const cell = e.target.closest('[data-test-id*="sellingPrice-cell"]');
+        if (!cell) {
+            console.log('[RO Sales Capture] Right-click did NOT match a sellingPrice cell. Target was:', e.target.tagName, e.target.className);
+            // Walk up every ancestor and log its data-test-id so we can see
+            // the REAL attribute Tekion is actually using on this page,
+            // instead of guessing again.
+            let walk = e.target;
+            let depth = 0;
+            while (walk && depth < 10) {
+                console.log('[RO Sales Capture] ancestor depth ' + depth + ':', walk.tagName, '-- data-test-id:', walk.getAttribute && walk.getAttribute('data-test-id'), '-- class:', walk.className);
+                walk = walk.parentElement;
+                depth++;
+            }
+            return;
+        }
+        console.log('[RO Sales Capture] Matched sellingPrice cell:', cell.getAttribute('data-test-id'));
         e.preventDefault();
         // Try editable input first, then fall back to displayed text
         const input = cell.querySelector('.ant-input-number-input');
         let price = '';
         if (input) {
             price = input.value.trim().replace('$', '');
+            console.log('[RO Sales Capture] Read from editable input:', price);
         } else {
             // Read-only / saved state — grab text content
             price = cell.innerText.trim().replace(/[$,\s]/g, '');
+            console.log('[RO Sales Capture] Read from displayed text:', price);
         }
         if (!price || price === '0' || price === '0.00') {
+            console.log('[RO Sales Capture] Price is empty/zero -- NOT saving');
             setPill('⚠ Selling price is $0 — not copied', 'warn', false, 4000);
             return;
         }
@@ -368,22 +413,34 @@ if (IS_RO_SALES) {
         let partNum = '';
         const rowContainer = cell.parentElement;
         if (rowContainer) {
-            const itemNameCell = rowContainer.querySelector('[data-test-id*="field-bin-itemName"]');
+            const itemNameCell = rowContainer.querySelector('[data-test-id*="itemName-cell"]');
             if (itemNameCell) {
                 const partInput = itemNameCell.querySelector('input');
+                console.log('[RO Sales Capture] itemName cell found -- has input:', !!partInput, '-- input.value:', partInput ? partInput.value : '(n/a)', '-- innerText:', itemNameCell.innerText.trim());
                 if (partInput && partInput.value.trim()) {
                     partNum = partInput.value.trim().split(' - ')[0].trim();
                 } else {
                     const text = itemNameCell.innerText.trim();
                     if (text) partNum = text.split(' - ')[0].trim();
                 }
+            } else {
+                // Same fix pattern as sellingPrice -- log every cell in this
+                // row with its REAL data-test-id so we can find the actual
+                // item name cell instead of guessing at the attribute name.
+                console.log('[RO Sales Capture] itemName cell not found -- logging all cells in row:');
+                Array.from(rowContainer.children).forEach((child, i) => {
+                    console.log('[RO Sales Capture] row cell ' + i + ':', child.tagName, '-- data-test-id:', child.getAttribute('data-test-id'), '-- text:', (child.innerText || '').trim().slice(0, 60));
+                });
             }
         }
+        console.log('[RO Sales Capture] Found partNum:', partNum || '(none found in row)');
         if (partNum) {
-            setClip(partNum, price);
+            setSellingClip(partNum, price);
+            console.log('[RO Sales Capture] Saved to selling slot:', getSellingClip());
             setPill('✓ ' + partNum + ' | $' + price + ' copied', 'ready', false, 30000);
         } else {
-            setClip(null, price);
+            setSellingClip(null, price);
+            console.log('[RO Sales Capture] Saved (no part#) to selling slot:', getSellingClip());
             setPill('✓ Selling price $' + price + ' copied', 'ready', false, 30000);
         }
     });
@@ -666,6 +723,12 @@ if (IS_RO_SALES) {
         const link = document.querySelector('[data-test-id="undefined-link"]');
         if (!link) { return; }
         if (link === vehicleLinkAttached) return;
+        // CONFIRMED (7/9/26): the PO tab shares the exact same URL as this
+        // RO Sales page, so we can't tell them apart from the URL at all.
+        // Instead check for a real field that only exists when the PO tab
+        // is actually the one currently open/rendered.
+        const poTabOpen = !!document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+        if (poTabOpen) { console.log('[Vehicle Hover] PO tab is open -- skipping auto-fetch drawer'); return; }
         vehicleLinkAttached = link;
         link.addEventListener('mouseenter', () => showVehicleTooltip(link));
         link.addEventListener('mouseleave', () => { rvVehicleTooltip.style.display = 'none'; });
@@ -679,7 +742,7 @@ if (IS_RO_SALES) {
 // =============================================
 // PO AUTOFILL
 // =============================================
-if (IS_PO) {
+if (IS_RO_SALES) {
 
     GM_addStyle(`
         #po-fill-pill {
@@ -758,24 +821,28 @@ if (IS_PO) {
     let poFilled = false;
 
     async function fillPO() {
-        if (poFilled) return;
+        if (poFilled) { console.log('[PO Fill] Ignored -- already filled/filling'); return; }
         poFilled = true;
         poPill.classList.add('filling');
         const roNumber = getRoNumber();
+        console.log('[PO Fill] Starting -- roNumber:', roNumber, '-- cachedTekionUserName (initial):', cachedTekionUserName);
 
         let userName = cachedTekionUserName;
         for (let i = 0; i < 15 && !userName; i++) {
             await new Promise(r => setTimeout(r, 200));
             userName = cachedTekionUserName;
         }
+        console.log('[PO Fill] userName after wait:', userName || '(still empty)');
 
         try {
             const controlField = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
+            console.log('[PO Fill] controlField found:', !!controlField);
             if (controlField && roNumber) {
                 poPill.textContent = '⏳ RO# ' + roNumber + '...';
                 controlField.focus();
                 poNativeSet(controlField, '');
                 poNativeSet(controlField, roNumber);
+                console.log('[PO Fill] RO# set to:', roNumber);
                 // No blur dispatch — causes Tekion to treat form as abandoned
             }
 
@@ -786,6 +853,7 @@ if (IS_PO) {
                 '[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-requestedBy-advancedSelect"] [class*="tekion-select"][class*="control"], ' +
                 '#requestedByUserId [class*="control"]'
             );
+            console.log('[PO Fill] reqControl found:', !!reqControl);
             if (reqControl && userName) {
                 reqControl.click();
                 await new Promise(r => setTimeout(r, 400));
@@ -795,6 +863,7 @@ if (IS_PO) {
                     '#requestedByUserId input, ' +
                     '[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-requestedBy-advancedSelect"] input'
                 );
+                console.log('[PO Fill] reqInput found after click:', !!reqInput);
                 if (reqInput) {
                     reqInput.focus();
                     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -813,6 +882,7 @@ if (IS_PO) {
                         '[id^="react-select"] [class*="option"], ' +
                         'div[role="option"]'
                     );
+                    if (i === 0) console.log('[PO Fill] dropdown options found on first check:', options.length, Array.from(options).map(o => (o.innerText||'').trim().slice(0,40)));
                     for (const opt of options) {
                         const txt = (opt.innerText || opt.textContent || '').trim();
                         if (txt && (txt === userName || txt.includes(userName.split(' ')[0]))) {
@@ -824,9 +894,11 @@ if (IS_PO) {
                     if (nameSelected) break;
                     await new Promise(r => setTimeout(r, 200));
                 }
+                console.log('[PO Fill] nameSelected:', nameSelected);
                 if (!nameSelected) {
                     // Last resort keyboard fallback
                     const inp = document.querySelector('#requestedByUserId input');
+                    console.log('[PO Fill] Falling back to keyboard nav -- input found:', !!inp);
                     if (inp) {
                         poPressKey(inp, 'ArrowDown', 40);
                         await new Promise(r => setTimeout(r, 150));
@@ -839,6 +911,7 @@ if (IS_PO) {
             poPill.classList.remove('filling');
             poPill.classList.add('done');
             poPill.textContent = userName ? '✓ Done — select vendor' : '✓ RO# filled — enter name manually';
+            console.log('[PO Fill] Finished. Final state -- userName:', userName, '-- roNumber:', roNumber);
             setTimeout(() => { poPill.style.display = 'none'; }, 5000);
 
         } catch(err) {
@@ -861,7 +934,13 @@ if (IS_PO) {
             poPill.textContent = '⏳ Waiting...';
             // Poll until the field is actually interactive (not disabled, React ready)
             // rather than waiting a fixed delay -- fires immediately when ready.
+            // Extended from 6s to 15s: on a day when Tekion itself is slow to
+            // render, 6s wasn't enough and this used to fail completely
+            // silently, leaving the pill stuck on "Waiting..." forever with
+            // no indication anything went wrong. Now it also shows a clear,
+            // clickable failure state instead of silently giving up.
             let readyAttempts = 0;
+            const maxReadyAttempts = 100; // 100 * 150ms = 15s max wait
             const waitForReady = setInterval(() => {
                 readyAttempts++;
                 const f = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
@@ -871,9 +950,19 @@ if (IS_PO) {
                 );
                 // Ready when: control field exists, is not disabled, and Requested By control is also present
                 const ready = f && !f.disabled && reqControl;
-                if (ready || readyAttempts >= 40) {
+                if (ready || readyAttempts >= maxReadyAttempts) {
                     clearInterval(waitForReady);
-                    if (ready) fillPO();
+                    console.log('[PO Fill] Readiness poll finished after ' + readyAttempts + ' attempts -- controlField:', !!f, '-- reqControl:', !!reqControl, '-- calling fillPO:', !!ready);
+                    if (ready) {
+                        fillPO();
+                    } else {
+                        // Don't fail silently -- Tekion may just be slow today.
+                        // Show a clear, clickable retry state instead of
+                        // leaving the pill stuck on "Waiting..." forever.
+                        poPill.classList.remove('filling');
+                        poPill.classList.add('error');
+                        poPill.textContent = '⚠ Didn\'t load — click to retry';
+                    }
                 }
             }, 150);
         }
@@ -1113,16 +1202,27 @@ if (IS_RECONVISION) {
 
     document.addEventListener('focusin', (e) => {
         const el = e.target;
-        if (
-            el.tagName === 'TEXTAREA' &&
+        const isMatch = el.tagName === 'TEXTAREA' &&
             (el.getAttribute('data-field-name') === 'partNumber' ||
              el.id.includes('part_number') ||
-             el.placeholder === 'Add Part#')
+             el.placeholder === 'Add Part#');
+        if (el.tagName === 'TEXTAREA') {
+            console.log('[RV Paste] Focused a TEXTAREA -- id:', el.id, '-- data-field-name:', el.getAttribute('data-field-name'), '-- placeholder:', el.placeholder, '-- matched:', isMatch);
+        }
+        if (
+            isMatch
         ) {
-            if (filling) return;
-            const { part, price } = getClip();
-            if (!part) return;
+            if (filling) { console.log('[RV Paste] Ignored -- already filling'); return; }
+            let { part, price } = getSellingClip();
+            console.log('[RV Paste] selling slot:', part, price);
+            if (!part) {
+                const fallback = getClip();
+                part = fallback.part; price = fallback.price;
+                console.log('[RV Paste] selling slot empty, fallback slot:', part, price);
+            }
+            if (!part) { console.log('[RV Paste] Both slots empty -- nothing to paste'); return; }
             filling = true;
+            console.log('[RV Paste] Setting part# field to:', part);
             nativeSet(el, part);
             setTimeout(() => {
                 const row = el.closest('tr') || el.closest('[data-id]') || el.parentElement;
@@ -1132,11 +1232,16 @@ if (IS_RECONVISION) {
                         'input[data-field-name="partPrice"], ' +
                         'input[id*="part_price"]'
                     );
+                console.log('[RV Paste] row found:', !!row, '-- priceInput found:', !!priceInput);
                 if (priceInput && price) {
+                    console.log('[RV Paste] Setting price field to:', price);
                     nativeSet(priceInput, price);
+                    GM_setValue('clip_selling_price', '');
                     GM_setValue('clip_price', '');
+                } else if (!priceInput) {
+                    console.log('[RV Paste] NO PRICE FIELD FOUND -- part# alone was set, price left untouched');
                 }
-                // Clear part# only after we've used both values
+                GM_setValue('clip_selling_part', '');
                 GM_setValue('clip_part', '');
                 setTimeout(() => { filling = false; }, 800);
             }, 300);
