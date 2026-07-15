@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.9
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
-// @description  Quick-add buttons for the 18 most-used vendors on Tekion's PO Create Miscellaneous Order screen
+// @description  Quick-add buttons for the 18 most-used vendors on Tekion's PO Create Miscellaneous Order screen. Selecting a vendor with a known email opens a pre-filled Outlook draft (To/CC/Subject only) using the VIN Recon Clipboard last saw.
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle
@@ -20,36 +20,43 @@
   // NOTE: search = text typed into the Vendor input to filter react-select's
   // option list. match = case-insensitive substring checked against the
   // rendered option's text to confirm we clicked the right one.
+  // TODO(Gabe): fill in the real email address for each vendor below.
+  // Leave blank ('') for any vendor you don't have an address for yet --
+  // the button will still select the vendor normally, it just won't try
+  // to open an email for that one until an address is added.
   const VENDOR_ROWS = [
     [
-      { label: 'FMP',    search: 'WT29322',     match: 'FACTORY MOTOR PARTS' },
-      { label: 'NAPA',   search: '1097',         match: 'NAPA AUTO PARTS' },
-      { label: 'AZ',     search: 'WT44699',     match: 'AUTOZONE' },
-      { label: 'OR',     search: '1390',         match: "O'REILLY AUTO PARTS" },
-      { label: 'WP',     search: '5226',         match: 'WORLDPAC' },
-      { label: '1-800',  search: '452',          match: '1-800-RADIATOR' },
+      { label: 'FMP',    search: 'WT29322',     match: 'FACTORY MOTOR PARTS',   email: '' },
+      { label: 'NAPA',   search: '1097',         match: 'NAPA AUTO PARTS',      email: '' },
+      { label: 'AZ',     search: 'WT44699',     match: 'AUTOZONE',              email: '' },
+      { label: 'OR',     search: '1390',         match: "O'REILLY AUTO PARTS", email: '' },
+      { label: 'WP',     search: '5226',         match: 'WORLDPAC',             email: '' },
+      { label: '1-800',  search: '452',          match: '1-800-RADIATOR',       email: '' },
     ],
     [
-      { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC' },
-      { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE' },
-      { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE' },
-      { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD' },
-      { label: 'HON',      search: '1259',        match: 'WALSER HONDA' },
+      { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC',                    email: 'bgbparts@walser.com' },
+      { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE',           email: 'cjdparts@walser.com' },
+      { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE', email: 'gtidrick@dodgeofburnsville.com' },
+      { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD',                    email: 'WalserReconParts@appleautos.com' },
+      { label: 'HON',      search: '1259',        match: 'WALSER HONDA',                  email: 'HONParts@walser.com' },
     ],
     [
-      { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE' },
-      { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN' },
-      { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL' },
-      { label: 'TOY',      search: '1385',        match: 'WALSER TOYOTA' },
+      { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE',              email: 'parts.invergrovemazda@morries.com' },
+      { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN',       email: 'NISParts@walser.com' },
+      { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL',      email: 'SPMNSUParts@walser.com' },
+      { label: 'TOY',      search: '1385',        match: 'WALSER TOYOTA',       email: 'TOYParts@walser.com' },
     ],
     [
-      { label: 'AAA',   search: 'WT48419',  match: 'AAA SALVAGE' },
-      { label: 'PAMS',  search: '1261',      match: 'PAM' },
-      { label: 'LKQ',   search: '1030',      match: 'LKQ SMART PARTS' },
-      { label: 'KEY',   search: '1114IL',    match: 'KEYSTONE' },
-      { label: 'USAF',  search: '1279',      match: 'US AUTO FORCE' },
+      { label: 'AAA',   search: 'WT48419',  match: 'AAA SALVAGE',     email: '' },
+      { label: 'PAMS',  search: '1261',      match: 'PAM',            email: '' },
+      { label: 'LKQ',   search: '1030',      match: 'LKQ SMART PARTS',email: '' },
+      { label: 'KEY',   search: '1114IL',    match: 'KEYSTONE',       email: '' },
+      { label: 'USAF',  search: '1279',      match: 'US AUTO FORCE',  email: '' },
     ],
   ];
+
+  // Recon Out Parts CC address
+  const RECON_OUT_PARTS_CC = 'reconoutparts@thewalserway.onmicrosoft.com';
 
   const ROW_COLORS = [
     { bg: '#1d4ed8' },   // row 1 - deep blue (parts distributors)
@@ -69,7 +76,13 @@
   }
 
   function fireMouseEvent(el, type) {
-    el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+    // CONFIRMED (7/9/26): including view:window here throws "Failed to
+    // convert value to 'Window'" in this Tampermonkey sandbox -- same
+    // issue documented elsewhere in these scripts. Must omit it entirely
+    // (it's an optional property). This was silently crashing every
+    // single vendor click before either vendor-select or email-open could
+    // ever run.
+    el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
   }
 
   function waitFor(checkFn, timeoutMs, intervalMs) {
@@ -98,6 +111,39 @@
     return container.querySelector('input');
   }
 
+  function openVendorEmail(vendorConfig) {
+    if (!vendorConfig.email) {
+      log(`No email address set for ${vendorConfig.label} yet -- skipping email, vendor was still selected normally.`);
+      return;
+    }
+    // FIXED (7/9/26): GM_getValue only reads THIS script's own private
+    // storage -- it can never see values saved by a different script
+    // (Recon Clipboard uses GM_setValue too, but that's a separate,
+    // isolated bucket). Reading from localStorage instead, which both
+    // scripts can actually share since they run on the same site.
+    const vin = localStorage.getItem('rv_last_vin_seen') || '';
+    if (!vin) {
+      log(`No VIN available yet (rv_last_vin_seen empty) -- skipping email for ${vendorConfig.label}.`);
+      return;
+    }
+    const subject = 'PARTS ORDER - ' + vin;
+    // CONFIRMED (7/9/26): Outlook Web's compose deep link does not support
+    // a cc parameter at all -- this is a documented limitation of Outlook
+    // itself (multiple independent reports confirm cc/bcc are simply not
+    // implemented on this link, unlike Gmail's compose links). Adding
+    // Recon Out Parts as a second comma-separated address in "to" instead,
+    // since that's the only field Outlook actually honors here.
+    let toField = vendorConfig.email;
+    if (RECON_OUT_PARTS_CC) {
+      toField += ',' + RECON_OUT_PARTS_CC;
+    }
+    const composeUrl = 'https://outlook.cloud.microsoft/mail/deeplink/compose?to='
+      + encodeURIComponent(toField)
+      + '&subject=' + encodeURIComponent(subject);
+    log(`Opening Outlook Web compose for ${vendorConfig.label} -- VIN: ${vin}`);
+    window.open(composeUrl, '_blank');
+  }
+
   async function selectVendor(vendorConfig) {
     const input = getVendorInput();
     if (!input) {
@@ -123,6 +169,9 @@
       fireMouseEvent(option, 'mousedown');
       fireMouseEvent(option, 'mouseup');
       fireMouseEvent(option, 'click');
+
+      // Vendor successfully selected -- now open the pre-filled email.
+      openVendorEmail(vendorConfig);
 
     } catch (e) {
       log(`ERROR: Could not find matching option for ${vendorConfig.label} within timeout.`, e);
