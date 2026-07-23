@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      1.9
+// @version      2.0
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
-// @description  Quick-add buttons for the 18 most-used vendors on Tekion's PO Create Miscellaneous Order screen. Selecting a vendor with a known email opens a pre-filled Outlook draft (To/CC/Subject only) using the VIN Recon Clipboard last saw.
+// @description  Quick-add buttons for the 18 most-used vendors on Tekion's PO Create Miscellaneous Order screen. Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle
@@ -16,6 +16,39 @@
 
   const LOG_PREFIX = "[PO-Vendor-QuickAdd]";
   const WRAPPER_ID = "rv-po-vendor-btn-wrapper";
+
+  // v2.0: VIN now comes straight from Tekion's own RO/fulfillment header
+  // (the "1FTFW1ED6NFB60477" shown next to the vehicle name), captured
+  // continuously whenever it's visible on screen. This is always the
+  // vehicle actually being worked, so the old bug where a previous
+  // vehicle's VIN (held over in Recon Clipboard's rv_last_vin_seen)
+  // ended up in the email can no longer happen. Clipboard's stored VIN
+  // is no longer read at all.
+  let currentVin = '';
+
+  // Standard VIN: 17 chars, A-Z and 0-9, never contains I, O, or Q.
+  const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
+
+  function captureVinFromHeader() {
+    // The VIN in the RO header sits in its own small element whose entire
+    // text content is exactly the 17-char VIN. Scan for that rather than a
+    // hardcoded class name, since Tekion's CSS-module hashes change on
+    // redeploy. Only leaf-ish elements with short text are checked, so
+    // this stays cheap.
+    const els = document.querySelectorAll('span, div, p, a, h1, h2, h3, h4');
+    for (const el of els) {
+      if (el.children.length > 0) continue;       // leaf elements only
+      const text = (el.textContent || '').trim();
+      if (text.length !== 17) continue;
+      if (VIN_REGEX.test(text)) {
+        if (currentVin !== text) {
+          currentVin = text;
+          log('Captured VIN from RO header:', currentVin);
+        }
+        return;
+      }
+    }
+  }
 
   // NOTE: search = text typed into the Vendor input to filter react-select's
   // option list. match = case-insensitive substring checked against the
@@ -116,14 +149,11 @@
       log(`No email address set for ${vendorConfig.label} yet -- skipping email, vendor was still selected normally.`);
       return;
     }
-    // FIXED (7/9/26): GM_getValue only reads THIS script's own private
-    // storage -- it can never see values saved by a different script
-    // (Recon Clipboard uses GM_setValue too, but that's a separate,
-    // isolated bucket). Reading from localStorage instead, which both
-    // scripts can actually share since they run on the same site.
-    const vin = localStorage.getItem('rv_last_vin_seen') || '';
+    // v2.0: VIN comes from Tekion's own RO header (captured continuously
+    // by captureVinFromHeader), NOT from Recon Clipboard's stored value.
+    const vin = currentVin;
     if (!vin) {
-      log(`No VIN available yet (rv_last_vin_seen empty) -- skipping email for ${vendorConfig.label}.`);
+      log(`No VIN captured from RO header yet -- skipping email for ${vendorConfig.label}.`);
       return;
     }
     const subject = 'PARTS ORDER - ' + vin;
@@ -287,8 +317,10 @@
   const observer = new MutationObserver(() => {
     cleanupIfOrphaned();
     injectButtons();
+    captureVinFromHeader();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   injectButtons();
+  captureVinFromHeader();
 })();
