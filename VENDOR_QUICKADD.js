@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.3
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -17,37 +17,28 @@
   const LOG_PREFIX = "[PO-Vendor-QuickAdd]";
   const WRAPPER_ID = "rv-po-vendor-btn-wrapper";
 
-  // v2.0: VIN now comes straight from Tekion's own RO/fulfillment header
-  // (the "1FTFW1ED6NFB60477" shown next to the vehicle name), captured
-  // continuously whenever it's visible on screen. This is always the
-  // vehicle actually being worked, so the old bug where a previous
-  // vehicle's VIN (held over in Recon Clipboard's rv_last_vin_seen)
-  // ended up in the email can no longer happen. Clipboard's stored VIN
-  // is no longer read at all.
-  let currentVin = '';
-
-  // Standard VIN: 17 chars, A-Z and 0-9, never contains I, O, or Q.
+  // v2.3: The VIN header is visible on the Orders/Fulfillment screen but
+  // disappears when the PO form opens. So we continuously read it while
+  // it's visible (via MutationObserver), and hold onto the last value
+  // when it's gone. The targeted selector (copyToClipboard_labelContent)
+  // only matches Tekion's real header VIN element — can't grab stale
+  // VINs from other DOM nodes.
+  let lastKnownVin = '';
   const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
 
-  function captureVinFromHeader() {
-    // The VIN in the RO header sits in its own small element whose entire
-    // text content is exactly the 17-char VIN. Scan for that rather than a
-    // hardcoded class name, since Tekion's CSS-module hashes change on
-    // redeploy. Only leaf-ish elements with short text are checked, so
-    // this stays cheap.
-    const els = document.querySelectorAll('span, div, p, a, h1, h2, h3, h4');
-    for (const el of els) {
-      if (el.children.length > 0) continue;       // leaf elements only
+  function refreshVin() {
+    const candidates = document.querySelectorAll('span[class*="copyToClipboard_labelContent"]');
+    for (const el of candidates) {
       const text = (el.textContent || '').trim();
-      if (text.length !== 17) continue;
-      if (VIN_REGEX.test(text)) {
-        if (currentVin !== text) {
-          currentVin = text;
-          log('Captured VIN from RO header:', currentVin);
+      if (text.length === 17 && VIN_REGEX.test(text)) {
+        if (lastKnownVin !== text) {
+          lastKnownVin = text;
+          log('VIN updated from header:', lastKnownVin);
         }
         return;
       }
     }
+    // Header not visible (PO screen) — keep existing cached value
   }
 
   // NOTE: search = text typed into the Vendor input to filter react-select's
@@ -149,9 +140,8 @@
       log(`No email address set for ${vendorConfig.label} yet -- skipping email, vendor was still selected normally.`);
       return;
     }
-    // v2.0: VIN comes from Tekion's own RO header (captured continuously
-    // by captureVinFromHeader), NOT from Recon Clipboard's stored value.
-    const vin = currentVin;
+    // v2.3: VIN read fresh from header when visible, cached for PO screen.
+    const vin = lastKnownVin;
     if (!vin) {
       log(`No VIN captured from RO header yet -- skipping email for ${vendorConfig.label}.`);
       return;
@@ -317,10 +307,10 @@
   const observer = new MutationObserver(() => {
     cleanupIfOrphaned();
     injectButtons();
-    captureVinFromHeader();
+    refreshVin();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   injectButtons();
-  captureVinFromHeader();
+  refreshVin();
 })();
