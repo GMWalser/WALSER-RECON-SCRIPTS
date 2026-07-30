@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.46
+// @version      5.47
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -793,6 +793,7 @@ if (IS_RO_SALES) {
 
     GM_addStyle(`
         #po-fill-pill {
+            display:none !important; /* Gabe never needs to see this — fillPO() still runs automatically in the background */
             position:fixed;z-index:999999;
             background:#2563eb;color:#fff;font-weight:700;font-size:11px;
             padding:6px 14px;border-radius:20px;cursor:pointer;
