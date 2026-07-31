@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.11
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -21,12 +21,11 @@ const IS_TK = location.hostname.includes('tekion');
 const IS_RV = location.hostname.includes('reconvision');
 const BRIDGE_KEY = 'parts_bridge_data';
 const NA_LABEL = '— N/A / Skip —';
-// Valid, selectable part statuses (values 7-10 are disabled error states in RV, never offered)
+// Only the 4 statuses Gabe actually uses — values kept matched to RV's real
+// option numbers (2=Backordered and 4=In Transit exist in RV but aren't offered here).
 const STATUS_OPTIONS = [
   { value: '1', label: 'Action Required' },
-  { value: '2', label: 'Backordered' },
   { value: '3', label: 'Ordered' },
-  { value: '4', label: 'In Transit' },
   { value: '5', label: 'Arrived' },
   { value: '6', label: 'In Stock' },
 ];
@@ -54,7 +53,44 @@ const RV_SKIP_LINES = [
   'photos/fees',
   'coon rapids hyundai - 26',
   'delivered to lot',
+  'part i', // not a real service line
 ];
+
+// Dealership / destination codes (where the vehicle is going), not real service
+// lines — a part should never be added to one of these. List sourced from the
+// same vendor codes used in PO Vendor Quick-Add, plus KIA per Gabe.
+const DEALER_DESTINATION_CODES = [
+  'kia', 'fmp', 'napa', 'az', 'or', 'wp', '1-800',
+  'bgb', 'cjd', 'dob', 'ford', 'hon', 'maz igh', 'nis', 'sub stp', 'toy',
+  'aaa', 'pams', 'lkq', 'key', 'usaf',
+];
+// Catches destination codes not yet catalogued above, e.g. "KIA-29", "HON-14" —
+// short letters followed by a dash and a number. No real service line looks like this.
+const DEALER_CODE_WITH_NUMBER_PATTERN = /^[a-z]{2,6}-\d{1,4}$/i;
+
+// Matches "Rob's Line", "Chaz's Line", "Andres Line" (no apostrophe), etc. —
+// any single name followed by an optional 's and the word "Line" — so a new
+// person's line is excluded automatically without needing their name added here.
+const PERSONAL_LINE_PATTERN = /^[a-z]+'?s?\s+line$/i;
+
+function isSkipLine(serviceName) {
+  const normalized = (serviceName || '').toLowerCase().trim();
+  if (RV_SKIP_LINES.includes(normalized)) return true;
+  if (PERSONAL_LINE_PATTERN.test(normalized)) return true;
+  if (DEALER_DESTINATION_CODES.includes(normalized)) return true;
+  if (DEALER_CODE_WITH_NUMBER_PATTERN.test(normalized)) return true;
+  return false;
+}
+
+// Oil filters, drain plug gaskets, and oil itself all belong on the "LOF"
+// (Lube, Oil, Filter) line — which may or may not also say "Fast Pass".
+const OIL_PART_KEYWORDS = ['oil filter', 'drain plug gasket', 'oil'];
+const LOF_WORD_PATTERN = /\blof\b/i;
+
+function isOilRelatedText(text) {
+  const t = (text || '').toLowerCase();
+  return OIL_PART_KEYWORDS.some(kw => t.includes(kw));
+}
 
 function getBridgeData() {
   try { return JSON.parse(GM_getValue(BRIDGE_KEY, '[]')); } catch(e) { return []; }
@@ -79,15 +115,26 @@ function matchScore(tekionJob, rvService) {
   return hits / Math.max(tWords.length, rWords.length);
 }
 
-function findBestMatch(tekionJob, rvServices) {
+function findBestMatch(tekionJob, rvServices, partDescription) {
   if (!tekionJob || tekionJob === '(unknown)') return -1;
   const skipJobs = ['recon fees', 'estimate parts', 'retail inspection', 'complete exterior & interior detail'];
   if (skipJobs.includes(tekionJob.toLowerCase().replace(/\*/g, '').trim())) return -1;
 
+  // Oil filters, drain plug gaskets, and oil itself go on whichever line has
+  // "LOF" in it — that's a fixed abbreviation (Lube, Oil, Filter), so normal
+  // word-overlap fuzzy matching won't find it on its own (the line rarely
+  // spells out "oil" or "filter"). Check this first and short-circuit if found.
+  if (isOilRelatedText(partDescription)) {
+    for (let idx = 0; idx < rvServices.length; idx++) {
+      if (isSkipLine(rvServices[idx][0])) continue;
+      if (LOF_WORD_PATTERN.test(rvServices[idx][0])) return idx;
+    }
+  }
+
   let bestIdx = -1;
   let bestScore = 0;
   rvServices.forEach((svc, idx) => {
-    if (RV_SKIP_LINES.includes(svc[0].toLowerCase().trim())) return;
+    if (isSkipLine(svc[0])) return;
     const score = matchScore(tekionJob, svc[0]);
     if (score > bestScore) {
       bestScore = score;
@@ -372,7 +419,19 @@ if (IS_TK) {
     if (document.getElementById(PANEL_ID)) return; // full panel open, don't rescan
     tkScheduleEntryCheck();
   });
-  tkObs.observe(document.body, { childList: true, subtree: true });
+  // characterData catches cases where Tekion updates existing row text in place
+  // rather than adding/removing DOM nodes, which plain childList would miss.
+  tkObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  // Safety net: re-check every 3s regardless of whether a mutation fired at all.
+  // Without a console capture of exactly how Tekion renders a newly-added part
+  // row, this is the reliable fix rather than a guess at the precise mutation
+  // pattern — it guarantees the pill's count catches up shortly either way.
+  setInterval(() => {
+    if (document.getElementById(PANEL_ID)) return; // full panel open, don't rescan
+    tkEnsureEntryPoint();
+  }, 3000);
+
   setTimeout(tkEnsureEntryPoint, 2000);
 }
 
@@ -403,9 +462,12 @@ if (IS_RV) {
     const keywords = ((partDesc || '') + ' ' + (tekionJob || ''))
       .toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
 
+    const oilRelated = isOilRelatedText(partDesc);
+
     const scored = services.map((svc, idx) => {
-      if (RV_SKIP_LINES.includes(svc[0].toLowerCase().trim())) return { svc, idx, score: 0 };
+      if (isSkipLine(svc[0])) return { svc, idx, score: 0 };
       const svcLower = svc[0].toLowerCase();
+      if (oilRelated && LOF_WORD_PATTERN.test(svcLower)) return { svc, idx, score: 999 }; // guaranteed top suggestion
       let score = 0;
       for (const kw of keywords) {
         if (svcLower.includes(kw)) score++;
@@ -481,6 +543,7 @@ if (IS_RV) {
 
       if (lf) {
         services.forEach((svc, idx) => {
+          if (isSkipLine(svc[0])) return; // never selectable, not just deprioritized
           if (!svc[0].toLowerCase().includes(lf)) return;
           addOption(svc, idx);
         });
@@ -506,12 +569,13 @@ if (IS_RV) {
       }
 
       services.forEach((svc, idx) => {
+        if (isSkipLine(svc[0])) return; // never selectable, not just deprioritized
         if (relevant.some(r => r.idx === idx)) return;
         addOption(svc, idx, false);
       });
     }
 
-    input.onfocus = () => { renderOptions(input.value === NA_LABEL ? '' : input.value); dropdown.style.display = 'block'; };
+    input.onfocus = () => { renderOptions(''); dropdown.style.display = 'block'; };
     input.oninput = () => { renderOptions(input.value); dropdown.style.display = 'block'; };
     input.onblur = () => setTimeout(() => dropdown.style.display = 'none', 200);
 
@@ -631,10 +695,16 @@ if (IS_RV) {
     let pushed = 0;
     let skipped = 0;
     let failed = 0;
+    let disarmed = 0;
 
     for (let i = 0; i < matches.length; i++) {
       const m = matches[i];
       if (m.done) continue; // already imported individually
+
+      if (!m.checked) {
+        disarmed++;
+        continue; // unchecked = already added to RO previously, never touch it
+      }
 
       if (!m.serviceId) {
         skipped++;
@@ -669,8 +739,9 @@ if (IS_RV) {
       await delay(400); // let field fills settle before next Add Part click
     }
 
+    const disarmedLine = disarmed ? `\nUnchecked (not sent, left alone): ${disarmed}` : '';
     const failLine = failed ? `\nFailed (row never rendered in time): ${failed}` : '';
-    alert(`Push All complete.\n\nAdded to RO: ${pushed}\nSkipped (no service line selected): ${skipped}${failLine}`);
+    alert(`Push All complete.\n\nAdded to RO: ${pushed}\nSkipped (no service line selected): ${skipped}${disarmedLine}${failLine}`);
     log('Push All done. Pushed:', pushed, 'Skipped:', skipped, 'Failed:', failed);
   }
 
@@ -691,7 +762,7 @@ if (IS_RV) {
 
     const matches = parts.map(p => {
       log('Matching tekionJob:', JSON.stringify(p.tekionJob), 'against', services.length, 'RV services');
-      const bestIdx = findBestMatch(p.tekionJob, services);
+      const bestIdx = findBestMatch(p.tekionJob, services, p.description);
       if (bestIdx >= 0) {
         log('  → MATCHED:', services[bestIdx][0], '(id:', services[bestIdx][1], ')');
       } else {
@@ -703,6 +774,7 @@ if (IS_RV) {
         serviceId: bestIdx >= 0 ? String(services[bestIdx][1]) : '',
         serviceName: bestIdx >= 0 ? services[bestIdx][0] : '',
         statusValue: DEFAULT_STATUS,
+        checked: true,
         done: false,
       };
     });
@@ -728,20 +800,40 @@ if (IS_RV) {
     header.appendChild(closeBtn);
     panel.appendChild(header);
 
+    const controls = document.createElement('div');
+    controls.style.cssText = 'padding:6px 16px;background:#111;border-bottom:1px solid #222;display:flex;gap:8px;align-items:center;';
+    const selectAllCb = document.createElement('input');
+    selectAllCb.type = 'checkbox';
+    selectAllCb.checked = true;
+    selectAllCb.id = 'pb-rv-select-all';
+    const selectAllLabel = document.createElement('label');
+    selectAllLabel.htmlFor = 'pb-rv-select-all';
+    selectAllLabel.textContent = `Select all (${parts.length}) — uncheck parts already added to skip re-adding them`;
+    selectAllLabel.style.cssText = 'color:#888;font-size:11px;cursor:pointer;';
+    controls.appendChild(selectAllCb);
+    controls.appendChild(selectAllLabel);
+    panel.appendChild(controls);
+
     const tableWrap = document.createElement('div');
     tableWrap.style.cssText = 'overflow-y:auto;flex:1;padding:8px 0;';
 
     const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:grid;grid-template-columns:110px 1fr 100px 50px 70px 40px;gap:8px;padding:4px 16px;color:#666;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #222;';
-    headerRow.innerHTML = '<span>Part#</span><span>Service Line</span><span>Status</span><span>Qty</span><span>Price</span><span></span>';
+    headerRow.style.cssText = 'display:grid;grid-template-columns:24px 110px 1fr 100px 50px 70px 40px;gap:8px;padding:4px 16px;color:#666;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #222;';
+    headerRow.innerHTML = '<span></span><span>Part#</span><span>Service Line</span><span>Status</span><span>Qty</span><span>Price</span><span></span>';
     tableWrap.appendChild(headerRow);
 
     const rowEls = [];
+    const rowCheckboxes = [];
 
     matches.forEach((m, idx) => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:grid;grid-template-columns:110px 1fr 100px 50px 70px 40px;gap:8px;padding:6px 16px;align-items:center;border-bottom:1px solid #111;';
+      row.style.cssText = 'display:grid;grid-template-columns:24px 110px 1fr 100px 50px 70px 40px;gap:8px;padding:6px 16px;align-items:center;border-bottom:1px solid #111;';
       rowEls[idx] = row;
+
+      const rowCb = document.createElement('input');
+      rowCb.type = 'checkbox';
+      rowCb.checked = true;
+      rowCheckboxes[idx] = rowCb;
 
       const partDiv = document.createElement('div');
       partDiv.innerHTML = `<div style="font-weight:700;color:#60a5fa;font-family:monospace;font-size:11px;">${m.part.partNumber}</div><div style="color:#555;font-size:9px;">${m.part.description}</div>`;
@@ -787,6 +879,7 @@ if (IS_RV) {
       importOne.title = 'Import this part';
       importOne.style.cssText = 'background:#1a3a1a;color:#4ade80;border:1px solid #22c55e;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 6px;';
       importOne.onclick = () => {
+        if (!m.checked) { alert('This part is unchecked (disarmed) — check it first if you want to import it.'); return; }
         if (!m.serviceId) { alert('Pick a service line or N/A first.'); return; }
         const clicked = rvClickAddPart();
         if (!clicked) { alert('Add Part button not found.'); return; }
@@ -801,6 +894,12 @@ if (IS_RV) {
         }, 400);
       };
 
+      rowCb.onchange = () => {
+        m.checked = rowCb.checked;
+        row.style.opacity = m.checked ? '1' : '0.3';
+      };
+
+      row.appendChild(rowCb);
       row.appendChild(partDiv);
       row.appendChild(serviceDiv);
       row.appendChild(statusSelect);
@@ -812,10 +911,19 @@ if (IS_RV) {
 
     panel.appendChild(tableWrap);
 
+    selectAllCb.onchange = () => {
+      rowCheckboxes.forEach((cb, idx) => {
+        cb.checked = selectAllCb.checked;
+        matches[idx].checked = selectAllCb.checked;
+        rowEls[idx].style.opacity = selectAllCb.checked ? '1' : '0.3';
+      });
+    };
+
     const footer = document.createElement('div');
     footer.style.cssText = 'padding:10px 16px;background:#1a1a1a;border-top:1px solid #222;color:#666;font-size:11px;';
     footer.innerHTML = `
-      <div>Click ➜ to import one part, or use Push All below to import every part with a service line selected.</div>
+      <div>Click ➜ to import one part, or use Push All below to import every checked part with a service line selected.</div>
+      <div>Uncheck a part if it's already been added to the RO — unchecked parts are never touched by Push All.</div>
       <div>Parts left as <b>${NA_LABEL}</b> or with no line picked are skipped and NOT added to the RO.</div>
       <div style="margin-top:8px;display:flex;gap:8px;">
         <button id="pb-push-all" style="flex:1;background:#3b82f6;color:#fff;border:none;border-radius:4px;padding:8px;cursor:pointer;font-size:12px;font-weight:700;">⚡ Push All</button>
