@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.16
+// @version      2.19
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -1085,6 +1085,131 @@ if (IS_RV) {
   }
 
   setInterval(rvCheckForOpenRequest, 1000);
+
+  // Small cosmetic easter egg: on click N of Bucket Scanner's "Open in
+  // Tekion" button (id="rv-tekion-btn" — we don't own it, just piggyback an
+  // extra listener alongside its real one), the little progress-meter car
+  // drives fast off the right edge, "explodes" on impact, and the debris
+  // falls to the bottom. We never touch the real #car element or its
+  // position logic — this animates a visual clone instead, so the actual
+  // progress meter is never at risk of breaking.
+  function rvSpawnCarFlyby() {
+    const realCar = document.querySelector('#progress-meter-bin #car img, #car img');
+    if (!realCar) return;
+    const rect = realCar.getBoundingClientRect();
+    const startTop = rect.top;
+    const startLeft = rect.left;
+    const w = rect.width;
+    const h = rect.height;
+
+    const clone = document.createElement('img');
+    clone.src = realCar.src;
+    clone.style.cssText = `
+      position:fixed;top:${startTop}px;left:${startLeft}px;
+      width:${w}px;height:${h}px;
+      z-index:2147483647;pointer-events:none;user-select:none;
+      animation:pbCarDriveOff 0.45s cubic-bezier(.55,0,.85,.35) forwards;
+    `;
+    const driveDist = window.innerWidth - startLeft + 60;
+    const driveStyle = document.createElement('style');
+    driveStyle.textContent = `
+      @keyframes pbCarDriveOff {
+        0%   { transform:translateX(0); }
+        100% { transform:translateX(${driveDist}px); }
+      }
+    `;
+    document.head.appendChild(driveStyle);
+    document.body.appendChild(clone);
+
+    setTimeout(() => {
+      clone.remove();
+      driveStyle.remove();
+      rvSpawnExplosion(window.innerWidth - 15, startTop + h / 2);
+    }, 450);
+  }
+
+  function rvSpawnExplosion(x, y) {
+    // Impact flash
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+      position:fixed;top:${y - 25}px;left:${x - 25}px;width:50px;height:50px;
+      border-radius:50%;z-index:2147483647;pointer-events:none;
+      background:radial-gradient(circle, #fff7c0 0%, #ff8a3d 45%, transparent 72%);
+      animation:pbFlash 0.35s ease-out forwards;
+    `;
+    const flashStyle = document.createElement('style');
+    flashStyle.textContent = `
+      @keyframes pbFlash {
+        0%   { transform:scale(0.3); opacity:1; }
+        100% { transform:scale(2.4); opacity:0; }
+      }
+    `;
+    document.head.appendChild(flashStyle);
+    document.body.appendChild(flash);
+
+    // Debris: bursts outward first, then gravity pulls it down to the bottom
+    const colors = ['#ff5533', '#ffaa33', '#ffe066', '#9aa0a6', '#c7cbd0'];
+    const count = 14;
+    const particles = [];
+    const particleStyle = document.createElement('style');
+    let keyframes = '';
+
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.5 - 0.25);
+      const burstDist = 35 + Math.random() * 55;
+      const burstX = Math.cos(angle) * burstDist;
+      const burstY = Math.sin(angle) * burstDist;
+      const fallY = window.innerHeight - y + 40 + Math.random() * 60;
+      const rot = (Math.random() * 720 - 360).toFixed(0);
+      const size = (6 + Math.random() * 10).toFixed(1);
+      const color = colors[i % colors.length];
+      const name = `pbDebris${i}`;
+
+      keyframes += `
+        @keyframes ${name} {
+          0%   { transform:translate(0,0) rotate(0deg); opacity:1; }
+          25%  { transform:translate(${burstX.toFixed(1)}px, ${burstY.toFixed(1)}px) rotate(${(rot / 2).toFixed(0)}deg); opacity:1; }
+          100% { transform:translate(${(burstX * 1.3).toFixed(1)}px, ${fallY.toFixed(1)}px) rotate(${rot}deg); opacity:0; }
+        }
+      `;
+
+      const p = document.createElement('div');
+      p.style.cssText = `
+        position:fixed;top:${y}px;left:${x}px;
+        width:${size}px;height:${size}px;background:${color};
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+        z-index:2147483647;pointer-events:none;
+        animation:${name} 1.1s cubic-bezier(.3,.7,.4,1) forwards;
+      `;
+      particles.push(p);
+    }
+
+    particleStyle.textContent = keyframes;
+    document.head.appendChild(particleStyle);
+    particles.forEach(p => document.body.appendChild(p));
+
+    setTimeout(() => {
+      flash.remove();
+      flashStyle.remove();
+      particles.forEach(p => p.remove());
+      particleStyle.remove();
+    }, 1300);
+  }
+
+  function rvAttachTekionBtnWatcher() {
+    const btn = document.getElementById('rv-tekion-btn');
+    if (!btn || btn.dataset.pbListenerAttached) return;
+    btn.dataset.pbListenerAttached = 'true';
+    btn.addEventListener('click', () => {
+      const count = (parseInt(GM_getValue('pb_tekion_btn_click_count', '0'), 10) || 0) + 1;
+      GM_setValue('pb_tekion_btn_click_count', String(count));
+      if (count % 20 === 0) { // fires every 20th click, forever
+        rvSpawnCarFlyby();
+      }
+    });
+  }
+
+  setInterval(rvAttachTekionBtnWatcher, 1000);
 }
 
 })();
