@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.49
+// @version      5.56
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1074,36 +1074,6 @@ if (IS_PI) {
         });
     }
 
-    // Small cosmetic easter egg for every 15th RV paste — a little X-wing-style
-    // ship flies across the screen and removes itself. No effect on any real
-    // functionality. This is an original abstract shape, not copied artwork.
-    function spawnXWingEasterEgg() {
-        const ship = document.createElement('div');
-        ship.style.cssText = `
-            position:fixed;top:${15 + Math.random() * 55}%;left:-140px;z-index:2147483647;
-            width:120px;height:60px;pointer-events:none;user-select:none;
-            animation:pbXWingFly 1.5s linear forwards;
-        `;
-        ship.innerHTML = `
-            <svg width="120" height="60" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
-                <rect x="-34" y="27" width="36" height="6" fill="#ffaa33" opacity="0.75"/>
-                <ellipse cx="6" cy="30" rx="12" ry="5" fill="#ff5533" opacity="0.85"/>
-                <polygon points="55,30 106,6 100,13 60,30" fill="#cdd0d4"/>
-                <polygon points="55,30 106,54 100,47 60,30" fill="#cdd0d4"/>
-                <polygon points="55,30 4,6 10,13 60,30" fill="#cdd0d4"/>
-                <polygon points="55,30 4,54 10,47 60,30" fill="#cdd0d4"/>
-                <rect x="34" y="25" width="46" height="10" rx="4" fill="#e9eaed"/>
-                <polygon points="80,25 100,30 80,35" fill="#e9eaed"/>
-                <circle cx="64" cy="30" r="4" fill="#2a6fb0"/>
-            </svg>
-        `;
-        const styleTag = document.createElement('style');
-        styleTag.textContent = `@keyframes pbXWingFly { from { left:-140px; } to { left:110vw; } }`;
-        document.head.appendChild(styleTag);
-        document.body.appendChild(ship);
-        setTimeout(() => { ship.remove(); styleTag.remove(); }, 1700);
-    }
-
     function nativeSet(el, value) {
         const proto = el.tagName === 'TEXTAREA'
             ? window.HTMLTextAreaElement.prototype
@@ -1263,6 +1233,59 @@ if (IS_PI) {
 // RECONVISION SIDE
 // =============================================
 if (IS_RECONVISION) {
+
+    // Small cosmetic easter egg for every 15th RV paste — a little X-wing-style
+    // ship flies straight across the screen and removes itself. No effect
+    // on any real functionality. Original abstract shape, not copied artwork.
+    function spawnXWingEasterEgg() {
+        const ship = document.createElement('div');
+        ship.style.cssText = `
+            position:fixed;top:${15 + Math.random() * 55}%;left:-90px;z-index:2147483647;
+            width:80px;height:40px;pointer-events:none;user-select:none;
+            animation:pbXWingFly 1.6s linear forwards;
+        `;
+        ship.innerHTML = `
+            <svg width="80" height="40" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <g class="pb-flame">
+                    <rect x="-25" y="46" width="45" height="8" fill="#ffaa33" opacity="0.55"/>
+                    <ellipse cx="15" cy="50" rx="12" ry="5" fill="#ff5533" opacity="0.85"/>
+                </g>
+                <polygon points="88,44 150,8 154,14 96,54" fill="#c7cbd0"/>
+                <polygon points="88,56 150,92 154,86 96,46" fill="#c7cbd0"/>
+                <polygon points="92,44 30,8 26,14 84,54" fill="#c7cbd0"/>
+                <polygon points="92,56 30,92 26,86 84,46" fill="#c7cbd0"/>
+                <ellipse cx="163" cy="1"   rx="13" ry="4.5" fill="#8b9096" transform="rotate(-35 163 1)"/>
+                <ellipse cx="163" cy="99"  rx="13" ry="4.5" fill="#8b9096" transform="rotate(35 163 99)"/>
+                <ellipse cx="17"  cy="1"   rx="13" ry="4.5" fill="#8b9096" transform="rotate(35 17 1)"/>
+                <ellipse cx="17"  cy="99"  rx="13" ry="4.5" fill="#8b9096" transform="rotate(-35 17 99)"/>
+                <polygon points="60,42 168,42 178,46 178,54 168,58 60,58" fill="#e7e5e2"/>
+                <polygon points="178,44 178,56 200,50" fill="#e7e5e2"/>
+                <polygon points="90,42 110,42 106,29 96,29" fill="#26445e"/>
+                <rect x="96" y="31" width="6" height="2" fill="#ffffff" opacity="0.4"/>
+            </svg>
+        `;
+        const styleTag = document.createElement('style');
+        // Straight left-to-right flight — nose already points right by default
+        // in this shape, so no rotation is needed, just a plain left offset.
+        // Engine flame flickers rapidly via stepped (non-smooth) keyframes.
+        styleTag.textContent = `
+            @keyframes pbXWingFly { from { left:-90px; } to { left:110vw; } }
+            @keyframes pbFlameFlicker {
+                0%   { opacity:0.9; }
+                15%  { opacity:0.55; }
+                30%  { opacity:1; }
+                45%  { opacity:0.65; }
+                60%  { opacity:1; }
+                75%  { opacity:0.5; }
+                90%  { opacity:0.95; }
+                100% { opacity:0.8; }
+            }
+            .pb-flame { animation:pbFlameFlicker 0.18s steps(1) infinite; transform-origin:30px 50px; }
+        `;
+        document.head.appendChild(styleTag);
+        document.body.appendChild(ship);
+        setTimeout(() => { ship.remove(); styleTag.remove(); }, 1800);
+    }
 
     function nativeSet(el, value) {
         const proto = el.tagName === 'TEXTAREA'
