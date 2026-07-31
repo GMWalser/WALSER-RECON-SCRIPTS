@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.47
+// @version      5.49
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1074,6 +1074,36 @@ if (IS_PI) {
         });
     }
 
+    // Small cosmetic easter egg for every 15th RV paste — a little X-wing-style
+    // ship flies across the screen and removes itself. No effect on any real
+    // functionality. This is an original abstract shape, not copied artwork.
+    function spawnXWingEasterEgg() {
+        const ship = document.createElement('div');
+        ship.style.cssText = `
+            position:fixed;top:${15 + Math.random() * 55}%;left:-140px;z-index:2147483647;
+            width:120px;height:60px;pointer-events:none;user-select:none;
+            animation:pbXWingFly 1.5s linear forwards;
+        `;
+        ship.innerHTML = `
+            <svg width="120" height="60" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                <rect x="-34" y="27" width="36" height="6" fill="#ffaa33" opacity="0.75"/>
+                <ellipse cx="6" cy="30" rx="12" ry="5" fill="#ff5533" opacity="0.85"/>
+                <polygon points="55,30 106,6 100,13 60,30" fill="#cdd0d4"/>
+                <polygon points="55,30 106,54 100,47 60,30" fill="#cdd0d4"/>
+                <polygon points="55,30 4,6 10,13 60,30" fill="#cdd0d4"/>
+                <polygon points="55,30 4,54 10,47 60,30" fill="#cdd0d4"/>
+                <rect x="34" y="25" width="46" height="10" rx="4" fill="#e9eaed"/>
+                <polygon points="80,25 100,30 80,35" fill="#e9eaed"/>
+                <circle cx="64" cy="30" r="4" fill="#2a6fb0"/>
+            </svg>
+        `;
+        const styleTag = document.createElement('style');
+        styleTag.textContent = `@keyframes pbXWingFly { from { left:-140px; } to { left:110vw; } }`;
+        document.head.appendChild(styleTag);
+        document.body.appendChild(ship);
+        setTimeout(() => { ship.remove(); styleTag.remove(); }, 1700);
+    }
+
     function nativeSet(el, value) {
         const proto = el.tagName === 'TEXTAREA'
             ? window.HTMLTextAreaElement.prototype
@@ -1272,6 +1302,16 @@ if (IS_RECONVISION) {
             filling = true;
             console.log('[RV Paste] Setting part# field to:', part);
             nativeSet(el, part);
+
+            // Small easter egg: every 15th successful RV paste, a little ship
+            // flies across the screen. Purely cosmetic, easy to remove later —
+            // just delete this block and the spawnXWingEasterEgg function.
+            const rvPasteCount = (parseInt(GM_getValue('clip_rv_paste_count', '0'), 10) || 0) + 1;
+            GM_setValue('clip_rv_paste_count', String(rvPasteCount));
+            if (rvPasteCount % 15 === 0) {
+                spawnXWingEasterEgg();
+            }
+
             setTimeout(() => {
                 const row = el.closest('tr') || el.closest('[data-id]') || el.parentElement;
                 const priceInput = (row && row.querySelector('input[id*="part_price"]'))
