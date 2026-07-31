@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.12
+// @version      2.16
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -184,7 +184,16 @@ if (IS_TK) {
     log('Part cells found (itemName-cell):', partCells.length);
 
     partCells.forEach((cell) => {
-      const rawText = cell.textContent.trim();
+      let rawText = cell.textContent.trim();
+      if (!rawText || rawText === 'Select') {
+        // Freshly-typed rows show a live, still-editable combobox instead of
+        // static text — the part# + description sits in the input's value
+        // property, which textContent can't see at all. Fall back to it.
+        const liveInput = cell.querySelector('input[data-test-id*="partSelect"]');
+        if (liveInput && liveInput.value) {
+          rawText = liveInput.value.trim();
+        }
+      }
       if (!rawText || rawText === 'Select' || rawText.length < 3) return;
       if (rawText.toUpperCase().includes('PULSE')) return;
 
@@ -354,7 +363,16 @@ if (IS_TK) {
       if (!toSend.length) { alert('No parts selected.'); return; }
       saveBridgeData(toSend);
       GM_setValue('pb_open_request', JSON.stringify({ ts: Date.now() }));
-      sendBtn.textContent = `✓ ${toSend.length} parts sent!` + (newlyFound.length ? ` (${newlyFound.length} new)` : '');
+
+      // Small easter egg: on exactly the 5th time this button has ever been
+      // clicked (persisted across reloads), swap the confirmation label once.
+      // Easy to remove later — just delete this block.
+      const clickCount = (parseInt(GM_getValue('pb_send_click_count', '0'), 10) || 0) + 1;
+      GM_setValue('pb_send_click_count', String(clickCount));
+      sendBtn.textContent = clickCount === 5
+        ? 'Just Gonna Send It!'
+        : `✓ ${toSend.length} parts sent!` + (newlyFound.length ? ` (${newlyFound.length} new)` : '');
+
       sendBtn.style.background = '#14532d';
       sendBtn.style.color = '#4ade80';
       log('Sent', toSend.length, 'parts to bridge storage.');
@@ -596,7 +614,7 @@ if (IS_RV) {
     return wrapper;
   }
 
-  function rvFillPartRow(part, serviceId, statusValue) {
+  function rvFillPartRow(part, serviceId, statusValue, miscValue) {
     const modal = document.getElementById('parts_modal');
     if (!modal) { log('Parts modal not found'); return false; }
 
@@ -673,6 +691,20 @@ if (IS_RV) {
           log('Status select not found in row');
         }
       }
+
+      if (miscValue) {
+        const miscField = newRow.querySelector('td.save_value.misc input');
+        if (miscField) {
+          const miscSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+          miscField.focus();
+          miscSetter.call(miscField, miscValue);
+          miscField.dispatchEvent(new Event('input', { bubbles: true }));
+          miscField.dispatchEvent(new Event('change', { bubbles: true }));
+          log('Set source (misc):', miscValue);
+        } else {
+          log('Misc/source field not found in row');
+        }
+      }
     }, 200);
 
     return true;
@@ -735,7 +767,7 @@ if (IS_RV) {
         continue;
       }
 
-      const ok = rvFillPartRow(m.part, m.serviceId, m.statusValue);
+      const ok = rvFillPartRow(m.part, m.serviceId, m.statusValue, m.miscValue);
       if (ok) {
         pushed++;
         m.done = true;
@@ -786,6 +818,7 @@ if (IS_RV) {
         serviceId: bestIdx >= 0 ? String(services[bestIdx][1]) : '',
         serviceName: bestIdx >= 0 ? services[bestIdx][0] : '',
         statusValue: DEFAULT_STATUS,
+        miscValue: '',
         checked: true,
         done: false,
       };
@@ -795,7 +828,7 @@ if (IS_RV) {
     panel.id = IMPORT_PANEL_ID;
     panel.style.cssText = `
       position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      z-index:999999;width:700px;max-height:80vh;
+      z-index:999999;width:950px;max-height:80vh;
       background:#0d0d0d;border:2px solid #3b82f6;border-radius:12px;
       font-family:'Segoe UI',sans-serif;font-size:12px;color:#e0e0e0;
       box-shadow:0 8px 40px rgba(0,0,0,.8);overflow:hidden;
@@ -830,8 +863,8 @@ if (IS_RV) {
     tableWrap.style.cssText = 'overflow-y:auto;flex:1;padding:8px 0;';
 
     const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:grid;grid-template-columns:24px 110px 1fr 100px 50px 70px 40px;gap:8px;padding:4px 16px;color:#666;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #222;';
-    headerRow.innerHTML = '<span></span><span>Part#</span><span>Service Line</span><span>Status</span><span>Qty</span><span>Price</span><span></span>';
+    headerRow.style.cssText = 'display:grid;grid-template-columns:28px 130px 1fr 90px 120px 60px 90px 50px;gap:8px;padding:4px 16px;color:#666;font-size:10px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #222;';
+    headerRow.innerHTML = '<span></span><span>Part#</span><span>Service Line</span><span>Source</span><span>Status</span><span>Qty</span><span>Price</span><span></span>';
     tableWrap.appendChild(headerRow);
 
     const rowEls = [];
@@ -839,7 +872,7 @@ if (IS_RV) {
 
     matches.forEach((m, idx) => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:grid;grid-template-columns:24px 110px 1fr 100px 50px 70px 40px;gap:8px;padding:6px 16px;align-items:center;border-bottom:1px solid #111;';
+      row.style.cssText = 'display:grid;grid-template-columns:28px 130px 1fr 90px 120px 60px 90px 50px;gap:8px;padding:6px 16px;align-items:center;border-bottom:1px solid #111;';
       rowEls[idx] = row;
 
       const rowCb = document.createElement('input');
@@ -861,6 +894,13 @@ if (IS_RV) {
           m.serviceName = services[newIdx][0];
         }
       }, m.part.description, m.part.tekionJob);
+
+      const sourceInput = document.createElement('input');
+      sourceInput.type = 'text';
+      sourceInput.placeholder = 'FMP, AZ...';
+      sourceInput.value = m.miscValue;
+      sourceInput.style.cssText = 'width:100%;padding:4px;background:#1a1a1a;color:#e0e0e0;border:1px solid #333;border-radius:4px;font-size:11px;box-sizing:border-box;';
+      sourceInput.onchange = () => { m.miscValue = sourceInput.value; };
 
       const statusSelect = document.createElement('select');
       statusSelect.style.cssText = 'width:100%;padding:4px;background:#1a1a1a;color:#e0e0e0;border:1px solid #333;border-radius:4px;font-size:11px;box-sizing:border-box;';
@@ -896,7 +936,7 @@ if (IS_RV) {
         const clicked = rvClickAddPart();
         if (!clicked) { alert('Add Part button not found.'); return; }
         setTimeout(() => {
-          const ok = rvFillPartRow(m.part, m.serviceId, m.statusValue);
+          const ok = rvFillPartRow(m.part, m.serviceId, m.statusValue, m.miscValue);
           if (ok) {
             importOne.textContent = '✓';
             importOne.style.background = '#14532d';
@@ -914,6 +954,7 @@ if (IS_RV) {
       row.appendChild(rowCb);
       row.appendChild(partDiv);
       row.appendChild(serviceDiv);
+      row.appendChild(sourceInput);
       row.appendChild(statusSelect);
       row.appendChild(qtyInput);
       row.appendChild(priceInput);
@@ -956,9 +997,8 @@ if (IS_RV) {
       const btn = document.getElementById('pb-push-all');
       btn.disabled = true;
       btn.textContent = 'Pushing...';
-      await rvPushAll(matches, rowEls);
-      btn.textContent = '⚡ Push All';
-      btn.disabled = false;
+      await rvPushAll(matches, rowEls); // blocks here until the completion alert's OK is clicked
+      panel.remove(); // then close this whole import panel automatically
     };
 
     log('Import panel built with', matches.length, 'parts.');
