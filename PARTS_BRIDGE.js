@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.11
+// @version      2.12
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -339,13 +339,25 @@ if (IS_TK) {
       checkboxes.forEach(cb => {
         if (cb.checked) selected.push(parts[parseInt(cb.dataset.idx)]);
       });
-      if (!selected.length) { alert('No parts selected.'); return; }
-      saveBridgeData(selected);
+
+      // Re-scan right before sending — if a part was added to Tekion after this
+      // panel opened, this catches it automatically instead of sending a stale
+      // snapshot. New parts are included by default (nothing to uncheck yet).
+      const freshParts = tkScrapeJobs();
+      const alreadyKnown = new Set(parts.map(p => p.partNumber));
+      const newlyFound = freshParts.filter(fp => !alreadyKnown.has(fp.partNumber));
+      if (newlyFound.length) {
+        log('Found', newlyFound.length, 'new part(s) added since this panel opened — including automatically:', newlyFound.map(p => p.partNumber).join(', '));
+      }
+
+      const toSend = selected.concat(newlyFound);
+      if (!toSend.length) { alert('No parts selected.'); return; }
+      saveBridgeData(toSend);
       GM_setValue('pb_open_request', JSON.stringify({ ts: Date.now() }));
-      sendBtn.textContent = `✓ ${selected.length} parts sent!`;
+      sendBtn.textContent = `✓ ${toSend.length} parts sent!` + (newlyFound.length ? ` (${newlyFound.length} new)` : '');
       sendBtn.style.background = '#14532d';
       sendBtn.style.color = '#4ade80';
-      log('Sent', selected.length, 'parts to bridge storage.');
+      log('Sent', toSend.length, 'parts to bridge storage.');
       setTimeout(() => { panel.remove(); tkEnsureEntryPoint(); }, 1500);
     };
 
