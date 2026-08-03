@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.19
+// @version      2.20
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -828,7 +828,7 @@ if (IS_RV) {
     panel.id = IMPORT_PANEL_ID;
     panel.style.cssText = `
       position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      z-index:999999;width:950px;max-height:80vh;
+      z-index:999999;width:950px;max-height:90vh;
       background:#0d0d0d;border:2px solid #3b82f6;border-radius:12px;
       font-family:'Segoe UI',sans-serif;font-size:12px;color:#e0e0e0;
       box-shadow:0 8px 40px rgba(0,0,0,.8);overflow:hidden;
