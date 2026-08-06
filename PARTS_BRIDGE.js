@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.20
+// @version      2.21
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -643,6 +643,18 @@ if (IS_RV) {
     partField.dispatchEvent(new Event('change', { bubbles: true }));
     partField.dispatchEvent(new Event('keyup', { bubbles: true }));
     log('Set part number:', part.partNumber);
+
+    const descField = newRow.querySelector('td.save_value.description textarea');
+    if (descField && part.description) {
+      const descSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      descField.focus();
+      descSetter.call(descField, part.description);
+      descField.dispatchEvent(new Event('input', { bubbles: true }));
+      descField.dispatchEvent(new Event('change', { bubbles: true }));
+      log('Set description:', part.description);
+    } else if (!descField) {
+      log('Description field not found in row');
+    }
 
     setTimeout(() => {
       const priceField = newRow.querySelector('td.save_value.part_price input, td.part_price input, input[id*="part_price"]');
