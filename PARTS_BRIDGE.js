@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV-Tekion Parts Bridge
 // @namespace    http://tampermonkey.net/
-// @version      2.21
+// @version      2.22
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_BRIDGE.js
@@ -645,13 +645,13 @@ if (IS_RV) {
     log('Set part number:', part.partNumber);
 
     const descField = newRow.querySelector('td.save_value.description textarea');
-    if (descField && part.description) {
+    if (descField && miscValue) {
       const descSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
       descField.focus();
-      descSetter.call(descField, part.description);
+      descSetter.call(descField, miscValue);
       descField.dispatchEvent(new Event('input', { bubbles: true }));
       descField.dispatchEvent(new Event('change', { bubbles: true }));
-      log('Set description:', part.description);
+      log('Set description from Source field:', miscValue);
     } else if (!descField) {
       log('Description field not found in row');
     }
