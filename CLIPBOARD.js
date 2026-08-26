@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.62
+// @version      5.66
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -601,26 +601,43 @@ if (IS_RO_SALES) {
         const saveBtn = document.querySelector(
             '[data-test-id="@tekion-parts-roSalesDetailedView-modal-updatePrice-container-submitButton"]'
         );
-        if (!saveBtn || saveBtn._piListening) return;
+        if (!saveBtn) return;
+        if (saveBtn._piListening) return;
         saveBtn._piListening = true;
+        console.log('[PI-Cost] Save button found -- listener attached.');
         saveBtn.addEventListener('click', () => {
+            console.log('[PI-Cost] Save button clicked.');
             // Read cost from the field at click time
             const costEl = document.querySelector('[data-test-id="@tekion-parts-partsRosales-costPrice"]');
             const cost = costEl ? costEl.value.trim() : '';
+            console.log('[PI-Cost] costEl found:', !!costEl, '-- cost value:', cost);
             // Read part# from modal header
-            const modalHeader = document.querySelector('.ant-modal-header');
+            // FIX (8/26/26): confirmed via real DOM inspection -- Tekion's
+            // AntD v5 upgrade renamed ant-modal-header to
+            // ant-v5-modal-header, same pattern as everywhere else this
+            // session. Also scoping to the modal's own stable data-test-id
+            // (@tekion-parts-roSalesDetailedView-modal-updatePrice-container)
+            // as a safer anchor than a bare AntD class.
+            const modalHeader = document.querySelector(
+                '[data-test-id="@tekion-parts-roSalesDetailedView-modal-updatePrice-container"] .ant-v5-modal-header, ' +
+                '.ant-v5-modal-header, .ant-modal-header'
+            );
+            console.log('[PI-Cost] modalHeader found (.ant-modal-header):', !!modalHeader, '-- text:', modalHeader ? modalHeader.innerText : '(n/a)');
             let partNum = '';
             if (modalHeader) {
                 const match = modalHeader.innerText.match(/Update\s+(\S+)/i);
                 if (match) partNum = match[1];
             }
+            console.log('[PI-Cost] partNum parsed:', partNum || '(empty)');
             if (!partNum || !cost) {
                 setPill('⚠ Could not read part# or cost', 'warn', false, 5000);
+                console.log('[PI-Cost] STOPPED -- missing partNum or cost, not opening P&I.');
                 return;
             }
             GM_setValue('pi_update_part', partNum);
             GM_setValue('pi_update_cost', cost);
             setPill('✓ Saved — opening P&I...', 'ready', false, 10000);
+            console.log('[PI-Cost] Opening P&I tab for part:', partNum, 'cost:', cost);
             setTimeout(() => {
                 const piUrl = 'https://app.tekioncloud.com/parts/inventory/part';
                 if (window._piTab && !window._piTab.closed) {
@@ -1201,7 +1218,18 @@ if (IS_PI) {
     async function runPIUpdate(partNum, cost) {
         try {
             setPill('Searching ' + partNum + '...', 'ready');
-            const searchBox = await waitFor('input.ant-input[placeholder="Type Here"]', 8000);
+            // FIX (8/26/26): confirmed via real DOM inspection -- Tekion's
+            // AntD v5 upgrade renamed ant-input to ant-v5-input, same
+            // pattern as everywhere else this session. This is why the
+            // whole P&I auto-navigate flow silently died right after
+            // opening the tab -- it waited 8s for a selector that no
+            // longer existed. Anchoring primarily on the input's own
+            // stable data-test-id instead.
+            const searchBox = await waitFor(
+                '[data-test-id="@tekion-universalComponents-input"], input.ant-v5-input[placeholder="Type Here"], input.ant-input[placeholder="Type Here"]',
+                8000
+            );
+            console.log('[PI-Cost] Search box found, typing part#:', partNum);
             searchBox.focus();
             nativeSet(searchBox, partNum);
 
@@ -1295,11 +1323,24 @@ if (IS_PI) {
             costField.select();
 
             new MutationObserver((_, obs) => {
-                const save = document.querySelector('button.ant-btn-primary[type="button"]:not([disabled])');
+                // FIX (8/26/26): confirmed via real DOM inspection --
+                // Tekion's AntD v5 upgrade renamed ant-btn-primary to
+                // ant-v5-btn-primary. Also confirmed this is the same
+                // Edit/Save toggle button
+                // (data-test-id ...-partDetailsTab-editPartButton), so
+                // anchoring on that stable data-test-id instead of a
+                // generic "any primary button" selector.
+                const save = document.querySelector(
+                    '[data-test-id="@tekion-parts-partsAndInventory-partsTab-partDetailsTab-editPartButton"]:not([disabled]), ' +
+                    'button.ant-v5-btn-primary[type="button"]:not([disabled]), ' +
+                    'button.ant-btn-primary[type="button"]:not([disabled])'
+                );
                 if (!save || save._piClosing) return;
                 save._piClosing = true;
                 obs.disconnect();
+                console.log('[PI-Cost] Save/Edit toggle button found, listener attached.');
                 save.addEventListener('click', () => {
+                    console.log('[PI-Cost] Save button clicked -- closing tab in 2s.');
                     setPill('✓ Saved — closing...', 'ready');
                     setTimeout(() => window.close(), 2000);
                 }, { once: true });
