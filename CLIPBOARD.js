@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.57
+// @version      5.62
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -189,17 +189,50 @@ if (IS_TEKION) {
         }, 2000);
     })();
 
+    // BUG FIX: this used to retry forever with no cap -- confirmed via
+    // console evidence it was running constantly (every 500ms, indefinitely)
+    // on pages like the RO List/Quotes view where this span[title] pattern
+    // never appears at all (that page doesn't show the user name this way).
+    // Capped at 40 attempts (~20s) -- long enough for a real RO/PO page to
+    // finish rendering, short enough to stop the endless background churn
+    // on pages where it will never find anything.
+    let cacheUserNameAttempts = 0;
     const cacheUserName = () => {
-        const spans = document.querySelectorAll('span[title]');
-        for (const s of spans) {
-            const t = (s.getAttribute('title') || '').trim();
-            if (t && t.includes(' ') && t.length > 4 && t.length < 40) {
-                cachedTekionUserName = t;
-                console.log('[PO Fill] cacheUserName found:', t);
-                return;
+        cacheUserNameAttempts++;
+        // FIX (8/26/26): the old span[title]-shaped heuristic was matching
+        // the WRONG element (confirmed via console: it grabbed "S - STOCK"
+        // from some unrelated title attribute, which then made "Requested
+        // By" fall back to blindly picking the first name in the
+        // dropdown). Replaced with an anchored search: confirmed via real
+        // DOM inspection that Tekion's header shows a "Current User" label
+        // directly above the actual name heading. Find that label's exact
+        // text first, then read the name from its own header-element
+        // wrapper -- much more specific than guessing at any name-shaped
+        // title attribute on the page.
+        let found = '';
+        const allEls = document.querySelectorAll('div, span');
+        for (const el of allEls) {
+            if (el.childElementCount === 0 && (el.textContent || '').trim() === 'Current User') {
+                const wrapper = el.closest('[class*="parts_commonHeaderElement_wrapper"]') || el.parentElement;
+                const heading = wrapper && wrapper.querySelector('[class*="root_heading_h2"], [class*="mainHeading"]');
+                const name = heading ? (heading.textContent || '').trim() : '';
+                if (name && name.includes(' ') && name.length > 4 && name.length < 40) {
+                    found = name;
+                }
+                break;
             }
         }
-        console.log('[PO Fill] cacheUserName found nothing yet, retrying in 500ms. span[title] count:', spans.length);
+        if (found) {
+            cachedTekionUserName = found;
+            try { GM_setValue('tekion_user_name', found); } catch(e) {}
+            console.log('[PO Fill] cacheUserName found (anchored on "Current User" label):', found);
+            return;
+        }
+        if (cacheUserNameAttempts >= 40) {
+            console.log('[PO Fill] cacheUserName gave up after', cacheUserNameAttempts, 'attempts -- no "Current User" label found on this page.');
+            return;
+        }
+        console.log('[PO Fill] cacheUserName: "Current User" label not found yet, retrying in 500ms.');
         setTimeout(cacheUserName, 500);
     };
     setTimeout(cacheUserName, 100);
@@ -607,8 +640,15 @@ if (IS_RO_SALES) {
            broke data capture before -- console logging added this time to
            prove definitively whether trim/mileage still populate while
            hidden, before trusting it. */
+        /* Covers both Ant Design v4 (ant-drawer-*) and v5 (ant-v5-drawer-*)
+           class names -- Tekion upgraded to v5 (confirmed via real DOM
+           inspection), which renamed every drawer/select class with a
+           "v5-" prefix. Keeping both here so this survives any page that
+           hasn't been upgraded yet, or if Tekion partially reverts. */
         body.rv-hide-drawer-test .ant-drawer-content-wrapper,
-        body.rv-hide-drawer-test .ant-drawer-mask {
+        body.rv-hide-drawer-test .ant-drawer-mask,
+        body.rv-hide-drawer-test .ant-v5-drawer-content-wrapper,
+        body.rv-hide-drawer-test .ant-v5-drawer-mask {
             opacity: 0 !important;
             transition: none !important;
             pointer-events: none !important;
@@ -760,16 +800,21 @@ if (IS_RO_SALES) {
         // is actually gone from the DOM before revealing anything, retry
         // the close click a few times if not, and log clearly if it never
         // closes so this is diagnosable from a saved console log later.
+        // BUG FIX (confirmed via real DOM inspection): Tekion upgraded to
+        // Ant Design v5, which renamed .ant-drawer-mask to
+        // .ant-v5-drawer-mask. The old selector matched nothing, so the
+        // close click silently did nothing -- explains the drawer staying
+        // open. Now tries both class names.
         function closeDrawerAndVerify(closeAttempt) {
             closeAttempt = closeAttempt || 1;
-            const closeBtn = document.querySelector('.ant-drawer-mask');
+            const closeBtn = document.querySelector('.ant-drawer-mask, .ant-v5-drawer-mask');
             if (closeBtn) closeBtn.click();
             // Also try Escape -- antd drawers/modals generally close on it too,
             // as a second independent mechanism in case the mask click misses.
             document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
 
             setTimeout(function() {
-                const stillOpen = !!document.querySelector('.ant-drawer-content-wrapper, .ant-drawer-mask');
+                const stillOpen = !!document.querySelector('.ant-drawer-content-wrapper, .ant-drawer-mask, .ant-v5-drawer-content-wrapper, .ant-v5-drawer-mask');
                 if (!stillOpen) {
                     console.log('[Vehicle Hover TEST] Drawer confirmed closed after ' + closeAttempt + ' attempt(s).');
                     document.body.classList.remove('rv-hide-drawer-test');
@@ -918,6 +963,15 @@ if (IS_RO_SALES) {
         for (let i = 0; i < 15 && !userName; i++) {
             await new Promise(r => setTimeout(r, 200));
             userName = cachedTekionUserName;
+        }
+        // FIX (8/26/26): live DOM-scan (cacheUserName) confirmed failing
+        // to find anything on this page (console showed zero activity).
+        // Fall back to the last known-good name already sitting in GM
+        // storage from a previous successful scan, instead of leaving
+        // "Requested By" blank.
+        if (!userName) {
+            try { userName = GM_getValue('tekion_user_name', ''); } catch(e) {}
+            console.log('[PO Fill] live scan empty -- fell back to stored tekion_user_name:', userName || '(none stored either)');
         }
         console.log('[PO Fill] userName after wait:', userName || '(still empty)');
 
