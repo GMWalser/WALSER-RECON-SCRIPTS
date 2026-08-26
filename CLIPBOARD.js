@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.56
+// @version      5.57
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -736,7 +736,7 @@ if (IS_RO_SALES) {
         // of closing on a fixed timer, which was closing the drawer before
         // slower-loading vehicles finished populating their data.
         let attempts = 0;
-        const maxAttempts = 20; // 20 * 300ms = 6s max wait
+        const maxAttempts = 20; // 20 * 300ms = 6s max wait for trim to populate
         const pollForData = setInterval(function() {
             attempts++;
             const trimEl = document.querySelector('#vehicleDetailsOverviewTrim');
@@ -746,12 +746,51 @@ if (IS_RO_SALES) {
             if (ready || attempts >= maxAttempts) {
                 clearInterval(pollForData);
                 console.log('[Vehicle Hover TEST] Finished after ' + attempts + ' attempts -- final trim value:', trimEl ? trimEl.value : '(none)', '-- SUCCESS:', ready);
-                const closeBtn = document.querySelector('.ant-drawer-mask');
-                if (closeBtn) closeBtn.click();
-                document.body.classList.remove('rv-hide-drawer-test');
-                drawerFetchBusy = false;
+                closeDrawerAndVerify();
             }
         }, 300);
+
+        // BUG FIX: the old code clicked .ant-drawer-mask once and then
+        // UNCONDITIONALLY removed the CSS class hiding the drawer, whether
+        // or not that click actually closed it. If the click ever failed
+        // (wrong timing, an extra mask element, anything), the drawer was
+        // still open underneath -- and removing the hide class made that
+        // still-open drawer visible again. This is exactly "the vehicle
+        // info screen opens and doesn't close." Now we verify the drawer
+        // is actually gone from the DOM before revealing anything, retry
+        // the close click a few times if not, and log clearly if it never
+        // closes so this is diagnosable from a saved console log later.
+        function closeDrawerAndVerify(closeAttempt) {
+            closeAttempt = closeAttempt || 1;
+            const closeBtn = document.querySelector('.ant-drawer-mask');
+            if (closeBtn) closeBtn.click();
+            // Also try Escape -- antd drawers/modals generally close on it too,
+            // as a second independent mechanism in case the mask click misses.
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+
+            setTimeout(function() {
+                const stillOpen = !!document.querySelector('.ant-drawer-content-wrapper, .ant-drawer-mask');
+                if (!stillOpen) {
+                    console.log('[Vehicle Hover TEST] Drawer confirmed closed after ' + closeAttempt + ' attempt(s).');
+                    document.body.classList.remove('rv-hide-drawer-test');
+                    drawerFetchBusy = false;
+                    return;
+                }
+                if (closeAttempt < 5) {
+                    console.log('[Vehicle Hover TEST] Drawer still open after close attempt ' + closeAttempt + ' -- retrying.');
+                    closeDrawerAndVerify(closeAttempt + 1);
+                } else {
+                    // Give up trying to close it, but DO NOT reveal it either --
+                    // leaving it hidden (opacity:0, pointer-events:none) is a much
+                    // safer failure mode than showing an unwanted open drawer on
+                    // top of the user's work. Logged clearly so a saved console
+                    // export from an affected machine can confirm this is what
+                    // happened, without needing live access to that machine.
+                    console.log('[Vehicle Hover TEST] FAILED to close drawer after ' + closeAttempt + ' attempts -- leaving it hidden rather than exposing an open drawer. Needs real investigation if this fires.');
+                    drawerFetchBusy = false;
+                }
+            }, 250);
+        }
     }
 
     let vehicleLinkAttached = null;
