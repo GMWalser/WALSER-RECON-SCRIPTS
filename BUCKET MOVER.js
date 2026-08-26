@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.12
+// @version      3.16
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -740,34 +740,81 @@ function runTekionFulfillment(roNumber) {
   let stage = 'navigateIfNeeded';
   let attempts = 0;
   const maxAttempts = 100;
+  console.log('[Tekion Fulfillment] Starting for RO#', roNumber);
   const tick = setInterval(() => {
     attempts++;
-    if (attempts > maxAttempts) { clearInterval(tick); return; }
+    if (attempts > maxAttempts) {
+      clearInterval(tick);
+      console.log('[Tekion Fulfillment] TIMED OUT at stage:', stage, '-- selector never matched, needs real DOM inspection at this stage.');
+      return;
+    }
     if (stage === 'navigateIfNeeded') {
       if (!location.pathname.includes('/parts/ro-sales/parts-fulfillment')) {
         GM_setValue('rv_tekion_pending_ro', roNumber);
         location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
         clearInterval(tick); return;
       }
-      stage = 'waitForCreateFulfillment'; return;
+      stage = 'waitForCreateFulfillment'; console.log('[Tekion Fulfillment] stage ->', stage); return;
     }
     if (stage === 'waitForCreateFulfillment') {
       const btn = document.querySelector('[data-test-id="@tekion-parts-partsRoSales-common-createGroupedPartRequestsModalButton"]');
-      if (btn) { btn.click(); stage = 'waitForRoInput'; } return;
+      if (btn) { btn.click(); stage = 'waitForRoInput'; console.log('[Tekion Fulfillment] stage ->', stage); } return;
     }
     if (stage === 'waitForRoInput') {
-      const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field, input.ant-select-search__field');
-      if (inp) { inp.focus(); setNativeValue(inp, roNumber); stage = 'waitForDropdownOption'; } return;
+      // BUG FIX (confirmed via real DOM inspection): querySelector with a
+      // comma-separated list does NOT try the first pattern and fall back
+      // to the second -- it matches ANY of them and returns whichever
+      // appears first in document order. The old "fallback" bare
+      // input.ant-v5-select-selection-search-input matched Tekion's
+      // ALWAYS-PRESENT header search-type dropdown (the "All" field
+      // selector) instead of the actual modal's search field, since that
+      // class is generic and shared by every searchable select on the
+      // page, not unique to this modal. This is why focusing/typing landed
+      // on the wrong field and opened the header dropdown instead. Now
+      // ONLY the properly scoped selector is used -- if the modal isn't
+      // open yet, this correctly finds nothing and keeps waiting instead
+      // of grabbing an unrelated field.
+      const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
+      if (inp) { inp.focus(); setNativeValue(inp, roNumber); stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage); } return;
     }
     if (stage === 'waitForDropdownOption') {
-      const opts = document.querySelectorAll('.ant-select-item-option, .ant-select-dropdown li, [role="option"]');
-      let match = null;
-      opts.forEach(o => { if (!match && o.textContent && o.textContent.includes(roNumber)) match = o; });
-      if (match) { match.click(); stage = 'waitForSubmit'; } return;
+      // BUG FIX (confirmed via real DOM inspection, session 8/26/26):
+      // #SearchList is NOT unique to the header dropdown -- the correct
+      // RO-suggestion row for THIS modal also renders inside a container
+      // with id="SearchList". The previous exclusion `.filter(o =>
+      // !o.closest('#SearchList'))` was filtering out the exact element we
+      // need to click, which is why waitForDropdownOption always timed
+      // out. There is also no role="option" attribute on these rows at
+      // all, so that part of the old selector list was dead weight too.
+      // Simple fix: match the option directly by its title attribute,
+      // which the real DOM shows is set to the exact RO number
+      // (title="7322992"). No container/ID guessing needed.
+      const opts = Array.from(document.querySelectorAll(`.ant-v5-select-item-option[title="${roNumber}"], .ant-select-item-option[title="${roNumber}"]`));
+      let match = opts[0] || null;
+      if (match) {
+        // FIX: a bare .click() on this React-controlled option was landing
+        // inconsistently (sometimes selecting on hover, sometimes needing a
+        // manual click, sometimes leaving the RO in a state where Save
+        // Draft failed afterward). Using the same full mousedown/mouseup/
+        // click dispatch with real coordinates that already works reliably
+        // for Clipboard.js's drawer-opening button, instead of guessing at
+        // something new.
+        const rect = match.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        ['mousedown', 'mouseup', 'click'].forEach(type => {
+          match.dispatchEvent(new MouseEvent(type, {
+            bubbles: true, cancelable: true, clientX: x, clientY: y
+          }));
+        });
+        stage = 'waitForSubmit';
+        console.log('[Tekion Fulfillment] stage ->', stage);
+      }
+      return;
     }
     if (stage === 'waitForSubmit') {
       const btn = document.querySelector('[data-test-id="@tekion-parts-roSalesDetailedView-createGroupedPartRequestsModal-container-submitButton"]');
-      if (btn && !btn.disabled) { clearInterval(tick); btn.click(); } return;
+      if (btn && !btn.disabled) { clearInterval(tick); console.log('[Tekion Fulfillment] Submitting.'); btn.click(); } return;
     }
   }, 250);
 }
