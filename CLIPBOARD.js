@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.66
+// @version      5.69
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1562,6 +1562,15 @@ if (IS_RECONVISION) {
                 background:#14b8a6;
                 box-shadow:0 2px 16px rgba(45,212,191,0.6);
             }
+            #rv-btn-quote {
+                background:#d946ef;
+                color:#000;
+                box-shadow:0 2px 12px rgba(217,70,239,0.4);
+            }
+            #rv-btn-quote:hover:not(:disabled) {
+                background:#c026d3;
+                box-shadow:0 2px 16px rgba(217,70,239,0.6);
+            }
         `);
 
         const pillContainer = document.createElement('div');
@@ -1580,6 +1589,12 @@ if (IS_RECONVISION) {
         btnOver24.textContent = 'OVER 24';
         pillContainer.appendChild(btnOver24);
 
+        const btnQuote = document.createElement('button');
+        btnQuote.id = 'rv-btn-quote';
+        btnQuote.className = 'rv-bucket-btn';
+        btnQuote.textContent = 'QUOTE';
+        pillContainer.appendChild(btnQuote);
+
         function positionBucketPills() {
             const rvToggle = document.getElementById('rv-toggle');
             const rvPanel  = document.getElementById('rv-pt-panel');
@@ -1592,6 +1607,7 @@ if (IS_RECONVISION) {
                     pillContainer.style.width = toggleW + 'px';
                     btn24.style.width = '100%';
                     btnOver24.style.width = '100%';
+                    btnQuote.style.width = '100%';
                 }
             }
 
@@ -1801,6 +1817,29 @@ if (IS_RECONVISION) {
 
         btn24.addEventListener('click', () => addServiceToBucket('Parts - 24 Hours', btn24));
         btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
+        btnQuote.addEventListener('click', () => {
+            const vin = getPageVin();
+            const subject = 'PART QUOTE - ' + vin;
+            const body = 'WE NEED A QUOTE FOR:';
+            const composeUrl = 'https://outlook.cloud.microsoft/mail/deeplink/compose?to='
+                + encodeURIComponent(RECON_OUT_PARTS_EMAIL)
+                + '&subject=' + encodeURIComponent(subject)
+                + '&body=' + encodeURIComponent(body);
+            console.log('[RV Quote] Opening quote email -- VIN:', vin);
+            window.open(composeUrl, '_blank');
+        });
+    }
+
+    // NEW (8/26/26): single "Request Quote" pill (added to the existing
+    // 24HR/OVER24 pill stack above) opens a quote-request email prefilled
+    // with the page's VIN. Confirmed via real DOM inspection: VIN lives in
+    // .info-bar__item--vin (text prefixed "VIN " -- stripped below).
+    const RECON_OUT_PARTS_EMAIL = 'reconoutparts@thewalserway.onmicrosoft.com';
+
+    function getPageVin() {
+        const el = document.querySelector('.info-bar__item--vin');
+        if (!el) return '';
+        return (el.textContent || '').replace(/^\s*VIN\s*/i, '').trim();
     }
 
     if (IS_RECONVISION) {
