@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.69
+// @version      5.71
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1131,6 +1131,168 @@ if (IS_RO_SALES) {
         poPill.classList.remove('done', 'error', 'filling');
         fillPO();
     };
+}
+
+// =============================================
+// PULSE BILLING BUTTON
+// =============================================
+// NEW (9/16/26): Tekion's job description heading confirmed via real DOM
+// inspection: div[class*="parts_roSalesPartsRequestTable_jobDescription"]
+// holds the job title text (e.g. "INSTALL PULSE"). Its status pill
+// ("Not Started" etc) sits in a sibling div[class*="root_statusItem_statusItem"]
+// within the same job section. Button is injected right after that status
+// pill on any job whose title contains "PULSE".
+//
+// Excel Online (SharePoint) renders its grid on canvas -- there is no DOM
+// to type into or detect a "finished filling" state, so this does NOT
+// autofill the sheet directly. It copies a tab-separated row
+// (Date\tUser\tRO#\tColor) to the clipboard and opens the tracker so the
+// user can paste it into the first empty row themselves.
+if (IS_RO_SALES) {
+    const PULSE_SHEET_URL = 'https://thewalserway.sharepoint.com/:x:/r/dealerships/recon/_layouts/15/doc2.aspx?sourcedoc=%7Beec18d58-56c3-4f23-a552-9c414a448a06%7D&action=edit&CID=547b8c22-ec2c-5a3c-9879-3732df119c56';
+
+    GM_addStyle(`
+        .rv-pulse-btn {
+            pointer-events:all;
+            border:none;
+            border-radius:14px;
+            padding:4px 12px;
+            margin-left:10px;
+            font-family:'Segoe UI',sans-serif;
+            font-size:11px;
+            font-weight:700;
+            cursor:pointer;
+            white-space:nowrap;
+            background:#7c3aed;
+            color:#fff;
+        }
+        .rv-pulse-btn:hover { background:#6d28d9; }
+        .rv-pulse-popup {
+            position:absolute;
+            z-index:99999;
+            background:#1a1a1a;
+            border:2px solid #7c3aed;
+            border-radius:10px;
+            padding:8px;
+            display:flex;
+            gap:6px;
+            box-shadow:0 4px 16px rgba(0,0,0,0.5);
+        }
+        .rv-pulse-popup button {
+            border:none;
+            border-radius:8px;
+            padding:6px 14px;
+            font-family:'Segoe UI',sans-serif;
+            font-size:12px;
+            font-weight:700;
+            cursor:pointer;
+            color:#fff;
+        }
+        .rv-pulse-popup .grey-btn { background:#6b7280; }
+        .rv-pulse-popup .grey-btn:hover { background:#4b5563; }
+        .rv-pulse-popup .black-btn { background:#111827; border:1px solid #444; }
+        .rv-pulse-popup .black-btn:hover { background:#000; }
+    `);
+
+    function getRoNumberFromUrl() {
+        const m = location.pathname.match(/parts-fulfillment\/(\d+)/);
+        return m ? m[1] : '';
+    }
+
+    function getCurrentUserName() {
+        if (cachedTekionUserName) return cachedTekionUserName;
+        try {
+            const stored = GM_getValue('tekion_user_name', '');
+            if (stored) return stored;
+        } catch (e) {}
+        return '';
+    }
+
+    function closePulsePopup() {
+        const existing = document.querySelector('.rv-pulse-popup');
+        if (existing) existing.remove();
+    }
+
+    function logPulseRow(color, btnEl) {
+        const date = new Date().toLocaleDateString('en-US');
+        const fullUser = getCurrentUserName() || '(unknown user)';
+        const user = fullUser.split(' ')[0];
+        const ro = getRoNumberFromUrl() || '(unknown RO)';
+        const row = [date, user, ro, color].join('\t').toUpperCase();
+
+        navigator.clipboard.writeText(row).then(() => {
+            console.log('[Pulse Billing] Copied to clipboard:', row);
+            btnEl.textContent = '✓ Copied';
+            setTimeout(() => { btnEl.textContent = 'Bill Pulse'; }, 2000);
+            window.open(PULSE_SHEET_URL, '_blank');
+        }).catch(err => {
+            console.error('[Pulse Billing] Clipboard write failed:', err);
+            btnEl.textContent = '⚠ Copy failed';
+            setTimeout(() => { btnEl.textContent = 'Bill Pulse'; }, 2000);
+        });
+    }
+
+    function showPulsePopup(btnEl) {
+        closePulsePopup();
+        const popup = document.createElement('div');
+        popup.className = 'rv-pulse-popup';
+
+        const rect = btnEl.getBoundingClientRect();
+        popup.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+        popup.style.left = (window.scrollX + rect.left) + 'px';
+
+        const greyBtn = document.createElement('button');
+        greyBtn.className = 'grey-btn';
+        greyBtn.textContent = 'GREY';
+        greyBtn.onclick = (e) => { e.stopPropagation(); closePulsePopup(); logPulseRow('Grey', btnEl); };
+
+        const blackBtn = document.createElement('button');
+        blackBtn.className = 'black-btn';
+        blackBtn.textContent = 'BLACK';
+        blackBtn.onclick = (e) => { e.stopPropagation(); closePulsePopup(); logPulseRow('Black', btnEl); };
+
+        popup.appendChild(greyBtn);
+        popup.appendChild(blackBtn);
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            document.addEventListener('click', function outside(e) {
+                if (!popup.contains(e.target) && e.target !== btnEl) {
+                    closePulsePopup();
+                    document.removeEventListener('click', outside);
+                }
+            });
+        }, 0);
+    }
+
+    function injectPulseButtons() {
+        const headings = document.querySelectorAll('[class*="parts_roSalesPartsRequestTable_jobDescription"]');
+        headings.forEach(heading => {
+            const text = (heading.textContent || '').toUpperCase();
+            if (!text.includes('PULSE')) return;
+
+            const jobSection = heading.closest('[id^="Job"]') || heading.closest('[class*="root_section_container"]');
+            if (!jobSection) return;
+
+            const statusItem = jobSection.querySelector('[class*="root_statusItem_statusItem"]');
+            if (!statusItem) return;
+            if (statusItem.parentElement.querySelector('.rv-pulse-btn')) return; // already injected
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rv-pulse-btn';
+            btn.textContent = 'Bill Pulse';
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showPulsePopup(btn);
+            });
+            statusItem.insertAdjacentElement('afterend', btn);
+        });
+    }
+
+    injectPulseButtons();
+    new MutationObserver(injectPulseButtons).observe(document.body, { childList: true, subtree: true });
 }
 
 // =============================================
