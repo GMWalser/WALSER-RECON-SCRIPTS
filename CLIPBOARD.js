@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.71
+// @version      5.72
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2004,11 +2004,113 @@ if (IS_RECONVISION) {
         return (el.textContent || '').replace(/^\s*VIN\s*/i, '').trim();
     }
 
+    // NEW (9/18/26): Mechanical repair line titles can be changed by techs
+    // after the fact with no record of what they originally said. On page
+    // load, snapshot every un-marked mechanical line's current title into
+    // its own Notes popup, then prepend "*" to the title itself as the
+    // permanent, server-saved marker that this line has already been
+    // snapshotted -- works across any computer/coworker since it's saved
+    // on the RO, not local browser storage. Idempotent: any line already
+    // starting with "*" is skipped.
+    //
+    // REAL UNKNOWN, confirm on first test: the title input's onchange
+    // handler (onchange="updateTitle(this)") may or may not persist the
+    // rename to the server by itself. After this runs, refresh the page
+    // and confirm the "*" is still there -- if it reverts, the rename
+    // isn't actually saving and this needs a different approach.
+    function waitForCondition(checkFn, timeoutMs) {
+        return new Promise((resolve) => {
+            const start = Date.now();
+            const timer = setInterval(() => {
+                const result = checkFn();
+                if (result) {
+                    clearInterval(timer);
+                    resolve(result);
+                } else if (Date.now() - start > timeoutMs) {
+                    clearInterval(timer);
+                    resolve(null);
+                }
+            }, 150);
+        });
+    }
+
+    function rvNativeSetValue(el, value) {
+        const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setter.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function initMechanicalLineSnapshot() {
+        async function processRow(row) {
+            const nameInput = row.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
+            if (!nameInput) return;
+            const currentTitle = (nameInput.value || '').trim();
+            if (!currentTitle || currentTitle.startsWith('*')) return; // blank, or already snapshotted
+
+            const serviceId = row.getAttribute('data-service-id');
+            const notesLink = row.querySelector(`a[data-target="#notes-line-item-modal"][data-id="${serviceId}"]`);
+            if (!notesLink) return;
+
+            console.log('[RV Line Snapshot] Processing:', currentTitle, '(service', serviceId, ')');
+            notesLink.click();
+
+            const hiddenIdField = await waitForCondition(() => {
+                const el = document.querySelector('#work_order_line_items_attributes_id');
+                return (el && el.value === String(serviceId)) ? el : null;
+            }, 4000);
+            if (!hiddenIdField) {
+                console.log('[RV Line Snapshot] Modal did not open/update for', serviceId, '-- skipping this line.');
+                return;
+            }
+
+            const textarea = document.querySelector('#work_order_line_items_attributes_comments_attributes_0_comment');
+            if (!textarea) {
+                console.log('[RV Line Snapshot] Notes textarea not found -- skipping this line.');
+                return;
+            }
+            rvNativeSetValue(textarea, 'Line title snapshot (Parts): ' + currentTitle);
+
+            const saveBtn = document.querySelector('#save-note');
+            if (!saveBtn) {
+                console.log('[RV Line Snapshot] Save button not found -- skipping this line.');
+                return;
+            }
+            saveBtn.click();
+            console.log('[RV Line Snapshot] Clicked Save for:', currentTitle);
+            await new Promise(r => setTimeout(r, 1500)); // let the AJAX save + modal close complete
+
+            // Only mark with "*" AFTER the save click, so a failed save
+            // never gets silently marked as done.
+            rvNativeSetValue(nameInput, '*' + currentTitle);
+            console.log('[RV Line Snapshot] Marked title with * for:', currentTitle);
+
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        async function runSnapshotPass() {
+            const sections = document.querySelectorAll('[class*="work-order-mechanical-repairs"]');
+            const rows = [];
+            sections.forEach(sec => {
+                sec.querySelectorAll('tr.table__row--content[data-service-id]').forEach(r => rows.push(r));
+            });
+            console.log('[RV Line Snapshot] Found', rows.length, 'mechanical line(s) to check.');
+            for (const row of rows) {
+                await processRow(row);
+            }
+            console.log('[RV Line Snapshot] Pass complete.');
+        }
+
+        setTimeout(runSnapshotPass, 2000); // let the page settle first
+    }
+
     if (IS_RECONVISION) {
         let lastPath = location.pathname;
 
         if (IS_RV_WO_EDIT) {
             initBucketPills();
+            initMechanicalLineSnapshot();
         }
 
         setInterval(() => {
@@ -2018,6 +2120,7 @@ if (IS_RECONVISION) {
                 const existing = document.getElementById('rv-bucket-pills');
                 if (nowOnWoEdit && !existing) {
                     initBucketPills();
+                    initMechanicalLineSnapshot();
                 } else if (!nowOnWoEdit && existing) {
                     existing.remove();
                 }
