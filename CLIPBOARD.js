@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.72
+// @version      5.73
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2046,6 +2046,15 @@ if (IS_RECONVISION) {
         async function processRow(row) {
             const nameInput = row.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
             if (!nameInput) return;
+            if (nameInput.readOnly || nameInput.hasAttribute('readonly')) {
+                // Locked/advisor-placeholder lines (e.g. "Team 4 Steve's Line")
+                // are readonly -- confirmed via real DOM that RV resets their
+                // `value` property back to server state independent of the
+                // `title` attribute, which silently undoes our "*" marker and
+                // causes this line to be re-snapshotted forever. These also
+                // aren't real mechanical work items, so skip them entirely.
+                return;
+            }
             const currentTitle = (nameInput.value || '').trim();
             if (!currentTitle || currentTitle.startsWith('*')) return; // blank, or already snapshotted
 
