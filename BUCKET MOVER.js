@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.16
+// @version      3.17
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -775,7 +775,27 @@ function runTekionFulfillment(roNumber) {
       // open yet, this correctly finds nothing and keeps waiting instead
       // of grabbing an unrelated field.
       const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
-      if (inp) { inp.focus(); setNativeValue(inp, roNumber); stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage); } return;
+      if (inp) {
+        // FIX: a plain .focus() wasn't reliably activating the field the
+        // same way a real mouse click does (confirmed by user -- manually
+        // clicking into the field worked when the script's .focus() alone
+        // did not). Same root cause and same fix already confirmed working
+        // for the dropdown option click just below: dispatch a real
+        // mousedown/mouseup/click sequence with real coordinates before
+        // typing, instead of relying on .focus() alone.
+        const rect = inp.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        ['mousedown', 'mouseup', 'click'].forEach(type => {
+          inp.dispatchEvent(new MouseEvent(type, {
+            bubbles: true, cancelable: true, clientX: x, clientY: y
+          }));
+        });
+        inp.focus();
+        setNativeValue(inp, roNumber);
+        stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage);
+      }
+      return;
     }
     if (stage === 'waitForDropdownOption') {
       // BUG FIX (confirmed via real DOM inspection, session 8/26/26):
