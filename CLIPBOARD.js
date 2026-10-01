@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.73
+// @version      5.74
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2088,14 +2088,29 @@ if (IS_RECONVISION) {
             }
             saveBtn.click();
             console.log('[RV Line Snapshot] Clicked Save for:', currentTitle);
-            await new Promise(r => setTimeout(r, 1500)); // let the AJAX save + modal close complete
+
+            // SPEEDUP (10/2/26): previously a blind 1500ms wait on every
+            // single line, which is why this felt slow on ROs with many
+            // mechanical lines. Now polls for the modal to actually close
+            // (confirmed via real DOM: open modal has class "...modal-custom
+            // in" and inline style "display: block;" -- closed modals lose
+            // both) and moves on as soon as that happens, instead of always
+            // waiting the full worst-case time. Same 1500ms ceiling as
+            // before if the modal is ever slow to close, so nothing gets
+            // less safe -- just faster in the common case.
+            await waitForCondition(() => {
+                const modal = document.getElementById('notes-line-item-modal');
+                if (!modal) return true;
+                const stillOpen = modal.classList.contains('in') || modal.style.display === 'block';
+                return !stillOpen;
+            }, 1500);
 
             // Only mark with "*" AFTER the save click, so a failed save
             // never gets silently marked as done.
             rvNativeSetValue(nameInput, '*' + currentTitle);
             console.log('[RV Line Snapshot] Marked title with * for:', currentTitle);
 
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 150));
         }
 
         async function runSnapshotPass() {
