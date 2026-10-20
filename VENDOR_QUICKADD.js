@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
-// @description  Quick-add buttons for the 18 most-used vendors on Tekion's PO Create Miscellaneous Order screen. Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
+// @description  Quick-add buttons for the most-used vendors on Tekion's PO Create Miscellaneous Order screen (now including the European OEM dealers and Hyundai/Kia). Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle
@@ -48,14 +48,22 @@
   // Leave blank ('') for any vendor you don't have an address for yet --
   // the button will still select the vendor normally, it just won't try
   // to open an email for that one until an address is added.
+  //
+  // v2.4 (10/20/26): added the European OEM dealer vendors (row 4, purple --
+  // same vendor list/search/match/email values as RV Euro Filter Order's
+  // EURO_VENDORS) and Hyundai + Kia (added into the Walser-dealer teal row
+  // alongside Mazda/Nissan/Subaru/Toyota). Row order is now: blue
+  // (distributors), teal x2 (Walser dealerships), purple (Euro dealerships),
+  // green (junkyards).
+  // v2.4: each row below is in alphabetical order by its button label.
   const VENDOR_ROWS = [
     [
+      { label: '1-800',  search: '452',          match: '1-800-RADIATOR',       email: '' },
+      { label: 'AZ',     search: 'WT44699',     match: 'AUTOZONE',              email: '' },
       { label: 'FMP',    search: 'WT29322',     match: 'FACTORY MOTOR PARTS',   email: '' },
       { label: 'NAPA',   search: '1097',         match: 'NAPA AUTO PARTS',      email: '' },
-      { label: 'AZ',     search: 'WT44699',     match: 'AUTOZONE',              email: '' },
       { label: 'OR',     search: '1390',         match: "O'REILLY AUTO PARTS", email: '' },
       { label: 'WP',     search: '5226',         match: 'WORLDPAC',             email: '' },
-      { label: '1-800',  search: '452',          match: '1-800-RADIATOR',       email: '' },
     ],
     [
       { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC',                    email: 'bgbparts@walser.com' },
@@ -65,16 +73,31 @@
       { label: 'HON',      search: '1259',        match: 'WALSER HONDA',                  email: 'HONParts@walser.com' },
     ],
     [
+      { label: 'HYU',      search: '1364',        match: 'WALSER HYUNDAI',      email: 'HYUParts@walser.com' },
+      { label: 'KIA',      search: '1143',        match: 'LUTHER NISSAN KIA',   email: 'parts@luthernissankia.com' },
       { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE',              email: 'parts.invergrovemazda@morries.com' },
       { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN',       email: 'NISParts@walser.com' },
       { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL',      email: 'SPMNSUParts@walser.com' },
       { label: 'TOY',      search: '1385',        match: 'WALSER TOYOTA',       email: 'TOYParts@walser.com' },
     ],
     [
+      { label: 'AUDI',    search: '3881',     match: 'AUDI RICHFIELD',            email: 'parts@audirichfield.com' },
+      { label: 'BMW',     search: 'WT53',     match: 'MOTORWERKS BMW',            email: 'epeterson@penskeautomotive.com,sgroth@penskeautomotive.com' },
+      { label: 'GENESIS', search: '5428',     match: 'LUTHER GENESIS',            email: 'Parts@LutherGenesis.com' },
+      { label: 'JLR',     search: '1264',     match: 'JAGUAR LAND ROVER',         email: 'Parts.JaguarLandRover@morries.com' },
+      { label: 'MERC',    search: 'WO1205',   match: 'SEARS IMPORTED',            email: 'william.wissbaum@searsimports.com' },
+    ],
+    [
+      { label: 'MINI',    search: 'WT53',     match: 'MOTORWERKS BMW',            email: 'MWminiparts@penskeautomotive.com' },
+      { label: 'PORSCHE', search: 'WZA362',   match: 'PORSCHE MINNEAPOLIS',       email: 'nathan.ahern@carouselmotor.com' },
+      { label: 'VOLVO',   search: 'WB935031', match: 'KLINE AUTOWORLD VOLVO',     email: 'volvoparts@klineautoworld.com' },
+      { label: 'VW',      search: 'WA58025',  match: 'VOLKSWAGEN OF INVER GROVE', email: 'brian@vwinvergrove.com' },
+    ],
+    [
       { label: 'AAA',   search: 'WT48419',  match: 'AAA SALVAGE',     email: '' },
-      { label: 'PAMS',  search: '1261',      match: 'PAM',            email: '' },
-      { label: 'LKQ',   search: '1030',      match: 'LKQ SMART PARTS',email: '' },
       { label: 'KEY',   search: '1114IL',    match: 'KEYSTONE',       email: '' },
+      { label: 'LKQ',   search: '1030',      match: 'LKQ SMART PARTS',email: '' },
+      { label: 'PAMS',  search: '1261',      match: 'PAM',            email: '' },
       { label: 'USAF',  search: '1279',      match: 'US AUTO FORCE',  email: '' },
     ],
   ];
@@ -85,8 +108,10 @@
   const ROW_COLORS = [
     { bg: '#1d4ed8' },   // row 1 - deep blue (parts distributors)
     { bg: '#0f766e' },   // row 2 - deep teal (Walser dealerships + Ford, part 1)
-    { bg: '#0f766e' },   // row 3 - deep teal (Walser dealerships, part 2)
-    { bg: '#15803d' },   // row 4 - deep green (junkyards)
+    { bg: '#0f766e' },   // row 3 - deep teal (Walser dealerships, part 2 + Hyundai/Kia)
+    { bg: '#5b21b6' },   // row 4 - deep purple (European OEM dealerships, part 1)
+    { bg: '#5b21b6' },   // row 5 - deep purple (European OEM dealerships, part 2)
+    { bg: '#15803d' },   // row 6 - deep green (junkyards)
   ];
 
   function log(...args) {
@@ -203,7 +228,7 @@
     btn.textContent = vendorConfig.label;
     btn.type = 'button';
     btn.style.cssText = `
-      padding: 8px 14px;
+      padding: 7px 12px;
       font-size: 14px;
       font-weight: 700;
       border-radius: 20px;
@@ -261,18 +286,23 @@
     wrapper.style.cssText = `
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
       position: absolute;
       top: ${anchorRect.top - containerRect.top + scrollContainer.scrollTop}px;
       left: ${anchorRect.right - containerRect.left + scrollContainer.scrollLeft + 78}px;
       z-index: 999;
     `;
 
+    // v2.4: rows are a plain tight left-aligned grid (fixed small gap, no
+    // stretch-to-match-widest-row) -- that stretch trick looked fine when
+    // every row had a similar button count, but the 9-button Euro row made
+    // the shorter rows spread out loose. Tight and left-aligned looks right
+    // regardless of how many buttons are in any given row.
     VENDOR_ROWS.forEach((rowConfigs, rowIndex) => {
       const rowEl = document.createElement('div');
       rowEl.style.cssText = `
         display: flex;
-        gap: 10px;
+        gap: 6px;
       `;
       rowConfigs.forEach((vendorConfig) => {
         rowEl.appendChild(makeButton(vendorConfig, ROW_COLORS[rowIndex]));
@@ -281,18 +311,6 @@
     });
 
     scrollContainer.appendChild(wrapper);
-
-    // Align every row's left AND right edges: find the widest row's natural
-    // width, lock the wrapper to that width, then switch each row from a
-    // fixed gap to space-between so the first/last button in every row
-    // flush against the same edges regardless of how many buttons it has.
-    const rowEls = Array.from(wrapper.children);
-    const maxRowWidth = Math.max(...rowEls.map(r => r.getBoundingClientRect().width));
-    wrapper.style.width = maxRowWidth + 'px';
-    rowEls.forEach(r => {
-      r.style.justifyContent = 'space-between';
-      r.style.gap = '0';
-    });
 
     log("Injected vendor quick-add buttons.");
   }
