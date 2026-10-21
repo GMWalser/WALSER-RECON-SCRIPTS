@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      3.0
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -268,17 +268,32 @@
   function injectButtons() {
     if (document.getElementById(WRAPPER_ID)) return; // already injected
 
+    // v3.0: "RV Euro Filter Order" (separate script) opens the Misc PO via
+    // its own flow and injects its OWN exclusive purple Euro-vendor buttons
+    // at this same anchor spot, tracked by its sessionStorage key
+    // 'rv_euro_filter_data'. When that's present, this is a Euro Filter
+    // order -- skip injecting our buttons entirely so theirs is the only
+    // set shown (confirmed via their EURO_FILTER_ORDER.js source).
+    if (sessionStorage.getItem('rv_euro_filter_data')) return;
+
     const vendorField = document.getElementById('VENDOR');
     if (!vendorField) return;
-    const vendorSiteField = document.getElementById('VENDOR_SITE');
-    if (!vendorSiteField) return;
+    // v2.9: id="VENDOR_SITE" only exists on the regular PO screen. The Misc
+    // PO screen has the same "Vendor Site" field in the same spot, but its
+    // wrapper carries data-field-id="SITES" instead (confirmed via DOM
+    // screenshot) -- no id of its own. Check both so buttons anchor off the
+    // right-column Vendor Site field on either screen; only fall back to
+    // VENDOR itself if neither is found.
+    const vendorSiteField = document.getElementById('VENDOR_SITE')
+      || document.querySelector('[data-field-id="SITES"]');
+    const anchorField = vendorSiteField || vendorField;
 
-    const scrollContainer = findScrollableAncestor(vendorSiteField);
+    const scrollContainer = findScrollableAncestor(anchorField);
     if (getComputedStyle(scrollContainer).position === 'static') {
       scrollContainer.style.position = 'relative';
     }
 
-    const anchorRect = vendorSiteField.getBoundingClientRect();
+    const anchorRect = anchorField.getBoundingClientRect();
     const containerRect = scrollContainer.getBoundingClientRect();
 
     const wrapper = document.createElement('div');
@@ -322,13 +337,50 @@
     }
   }
 
+  // v2.7: On the Miscellaneous PO create screen, the first Items List row
+  // starts totally blank (no part#, qty, or price) -- confirmed via DOM
+  // screenshot (row data-test-id ends in "-row-0", each cell has a
+  // data-column-id, inputs found inside via that). Prefill it with a
+  // placeholder part, qty 1, cost $1.00 so the row is never left empty.
+  // Only fills if still empty, and only once per row (flagged on the row
+  // element itself) so it doesn't fight the user retyping.
+  const MISC_PO_FILLED_FLAG = 'rvMiscPoDefaultsFilled';
+
+  function nativeSetNumberValue(input, value) {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function fillMiscPoDefaults() {
+    if (!location.pathname.includes('/parts/purchase-order/misc/')) return;
+
+    const row0 = document.querySelector('[data-test-id="@tekion-parts-purchaseOrder-partsPOFormPage-partsListTable-row-0"]');
+    if (!row0 || row0.dataset[MISC_PO_FILLED_FLAG]) return;
+
+    const itemNameInput = row0.querySelector('[data-column-id="itemName"] input');
+    const qtyInput = row0.querySelector('[data-column-id="requiredQuantity"] input');
+    const priceInput = row0.querySelector('[data-column-id="partPrice"] input');
+    if (!itemNameInput || !qtyInput || !priceInput) return;
+
+    if (!itemNameInput.value) nativeSetValue(itemNameInput, 'PART');
+    if (!qtyInput.value) nativeSetNumberValue(qtyInput, '1');
+    if (!priceInput.value) nativeSetNumberValue(priceInput, '1.00');
+
+    row0.dataset[MISC_PO_FILLED_FLAG] = '1';
+    log('Misc PO: filled default Part/Qty/Cost on first row.');
+  }
+
   const observer = new MutationObserver(() => {
     cleanupIfOrphaned();
     injectButtons();
     refreshVin();
+    fillMiscPoDefaults();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   injectButtons();
   refreshVin();
+  fillMiscPoDefaults();
 })();
