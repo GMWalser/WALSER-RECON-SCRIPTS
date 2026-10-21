@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.17
+// @version      3.19
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -107,10 +107,10 @@ GM_addStyleSafe(`
   .rv-pdr-note:hover { background:#2a2310; }
   #rv-tekion-btn {
     position:fixed;z-index:9999;
-    background:#0d0d0d;color:#5b9bd5;border:1px solid #1e4d8c;border-radius:8px;
-    padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;
+    background:#0d0d0d;color:#5b9bd5;border:1px solid #1e4d8c;border-radius:14px;
+    padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer;
     font-family:'Segoe UI',sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.4);
-    display:flex;align-items:center;gap:5px;white-space:nowrap;
+    display:flex;align-items:center;gap:4px;white-space:nowrap;
   }
   #rv-tekion-btn:hover { background:#13243a; }
   .rv-tekion-btn-error {
@@ -776,13 +776,11 @@ function runTekionFulfillment(roNumber) {
       // of grabbing an unrelated field.
       const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
       if (inp) {
-        // FIX: a plain .focus() wasn't reliably activating the field the
-        // same way a real mouse click does (confirmed by user -- manually
-        // clicking into the field worked when the script's .focus() alone
-        // did not). Same root cause and same fix already confirmed working
-        // for the dropdown option click just below: dispatch a real
-        // mousedown/mouseup/click sequence with real coordinates before
-        // typing, instead of relying on .focus() alone.
+        // FIX: clicking and typing in the SAME tick (synchronously, no gap)
+        // may beat Tekion's own dropdown-opening logic to the punch --
+        // splitting into two stages gives a natural ~250ms gap between the
+        // click and the typing, matching how a real user's click-then-type
+        // is never perfectly instantaneous either.
         const rect = inp.getBoundingClientRect();
         const x = rect.left + rect.width / 2;
         const y = rect.top + rect.height / 2;
@@ -792,6 +790,13 @@ function runTekionFulfillment(roNumber) {
           }));
         });
         inp.focus();
+        stage = 'typeIntoRoInput'; console.log('[Tekion Fulfillment] stage ->', stage);
+      }
+      return;
+    }
+    if (stage === 'typeIntoRoInput') {
+      const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
+      if (inp) {
         setNativeValue(inp, roNumber);
         stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage);
       }
@@ -811,6 +816,15 @@ function runTekionFulfillment(roNumber) {
       // (title="7322992"). No container/ID guessing needed.
       const opts = Array.from(document.querySelectorAll(`.ant-v5-select-item-option[title="${roNumber}"], .ant-select-item-option[title="${roNumber}"]`));
       let match = opts[0] || null;
+      if (!match && attempts % 8 === 0) {
+        // Diagnostic: every ~2s, log what options (if any) actually exist
+        // right now, regardless of whether they match roNumber -- so a
+        // future timeout shows real evidence (empty dropdown vs. wrong
+        // titles vs. right option just not being detected) instead of
+        // silence.
+        const anyOpts = Array.from(document.querySelectorAll('.ant-v5-select-item-option, .ant-select-item-option'));
+        console.log('[Tekion Fulfillment] Still waiting for option with title="' + roNumber + '" -- currently visible options:', anyOpts.map(o => o.getAttribute('title')));
+      }
       if (match) {
         // FIX: a bare .click() on this React-controlled option was landing
         // inconsistently (sometimes selecting on hover, sometimes needing a
