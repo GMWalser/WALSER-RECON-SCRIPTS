@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision → PartsTech Pre-Loader
 // @namespace    http://tampermonkey.net/
-// @version      9.16
+// @version      9.17
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRELOADER.js
@@ -186,9 +186,9 @@ function scrapeJobLines() {
 
 GM_addStyle(`
   #rv-pt-panel {
-    position:fixed;bottom:60px;right:20px;width:300px;background:#1a1a1a;
-    border:1px solid #333;border-radius:10px;font-family:'Segoe UI',sans-serif;
-    font-size:14px;color:#e0e0e0;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,.6);
+    position:fixed;bottom:60px;right:20px;width:180px;background:#1a1a1a;
+    border:1px solid #333;border-radius:9px;font-family:'Segoe UI',sans-serif;
+    font-size:13px;color:#e0e0e0;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,.6);
     overflow:hidden;display:none;
   }
   #rv-pt-drag-handle {
@@ -198,86 +198,87 @@ GM_addStyle(`
   #rv-pt-drag-handle:active { cursor:grabbing; }
   #rv-pt-drag-handle span { display:inline-block;width:4px;height:4px;background:#333;border-radius:50%; }
   #rv-pt-header {
-    background:#111;padding:8px 12px;font-weight:700;font-size:15px;color:#4ade80;
+    background:#111;padding:6px 10px;font-weight:700;font-size:13px;color:#4ade80;
     display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a2a;
   }
-  #rv-pt-header-right { display:flex;align-items:center;gap:10px; }
-  #rv-pt-collapse-chevron { font-size:13px;color:#555;cursor:pointer; }
-  #rv-pt-close {cursor:pointer;color:#888;font-size:17px;}
+  #rv-pt-header-right { display:flex;align-items:center;gap:8px; }
+  #rv-pt-collapse-chevron { font-size:12px;color:#555;cursor:pointer; }
+  #rv-pt-close {cursor:pointer;color:#888;font-size:15px;}
   #rv-pt-close:hover {color:#fff;}
-  #rv-pt-body {padding:10px 12px;}
+  #rv-pt-body {padding:8px 10px;}
   #rv-pt-toprow {
-    display:flex;gap:6px;margin-bottom:6px;align-items:center;
+    display:flex;gap:5px;margin-bottom:4px;align-items:center;
   }
   #rv-pt-vin {
-    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:5px 8px;
-    font-family:monospace;font-size:12px;color:#4ade80;word-break:break-all;flex:1;
+    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:4px 7px;
+    font-family:monospace;font-size:11px;color:#4ade80;word-break:break-all;flex:1;
+    margin-bottom:4px;
   }
   #rv-clip-status {
-    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:5px 8px;
-    font-size:12px;color:#888;margin-bottom:6px;display:flex;align-items:center;gap:5px;
+    background:#0d0d0d;border:1px solid #2a2a2a;border-radius:5px;padding:4px 7px;
+    font-size:11px;color:#888;margin-bottom:5px;display:flex;align-items:center;gap:5px;
   }
   #rv-clip-status .dot {width:6px;height:6px;border-radius:50%;background:#555;flex-shrink:0;}
   #rv-clip-status .dot.ready {background:#4ade80;}
-  #rv-pt-note {margin-bottom:6px;font-size:11px;color:#666;line-height:1.3;}
-  #rv-pt-lines {max-height:260px;overflow-y:auto;margin-bottom:8px;}
-  .rv-line {display:grid;grid-template-columns:16px 1fr;gap:6px;align-items:start;padding:5px 0;border-bottom:1px solid #222;}
+  #rv-pt-note {margin-bottom:5px;font-size:10px;color:#666;line-height:1.3;}
+  #rv-pt-lines {max-height:220px;overflow-y:auto;margin-bottom:6px;}
+  .rv-line {display:grid;grid-template-columns:15px 1fr;gap:5px;align-items:start;padding:4px 0;border-bottom:1px solid #222;}
   .rv-line:last-child {border-bottom:none;}
-  .rv-cb {accent-color:#4ade80;width:16px;height:16px;cursor:pointer;margin-top:2px;}
-  .rv-right {display:flex;flex-direction:column;gap:3px;}
-  .rv-orig {font-size:11px;color:#555;line-height:1.25;}
+  .rv-cb {accent-color:#4ade80;width:15px;height:15px;cursor:pointer;margin-top:2px;}
+  .rv-right {display:flex;flex-direction:column;gap:2px;}
+  .rv-orig {font-size:10px;color:#555;line-height:1.25;}
   .rv-input {
     background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;padding:3px 6px;
-    font-size:13px;color:#e0e0e0;width:100%;box-sizing:border-box;font-family:'Segoe UI',sans-serif;
+    font-size:12px;color:#e0e0e0;width:100%;box-sizing:border-box;font-family:'Segoe UI',sans-serif;
   }
   .rv-input:focus {outline:none;border-color:#4ade80;color:#fff;}
-  .rv-split {font-size:10px;color:#4ade80;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+  .rv-split {font-size:9px;color:#4ade80;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
   #rv-pt-btn {
-    width:100%;padding:8px;background:#4ade80;color:#000;font-weight:700;
-    font-size:14px;border:none;border-radius:6px;cursor:pointer;
+    width:100%;padding:7px;background:#4ade80;color:#000;font-weight:700;
+    font-size:13px;border:none;border-radius:6px;cursor:pointer;
   }
   #rv-pt-btn:hover {background:#22c55e;}
   #rv-pt-btn:disabled {background:#2a2a2a;color:#555;cursor:not-allowed;}
-  #rv-pt-status {margin-top:6px;font-size:11px;color:#888;text-align:center;min-height:14px;}
+  #rv-pt-status {margin-top:4px;font-size:10px;color:#888;text-align:center;min-height:13px;}
   #rv-toggle {
     position:fixed;bottom:20px;right:20px;background:#4ade80;color:#000;font-weight:700;
-    font-size:14px;padding:8px 14px;border-radius:20px;cursor:pointer;z-index:99999;
+    font-size:10px;padding:5px 8px;border-radius:16px;cursor:pointer;z-index:99999;
     box-shadow:0 2px 12px rgba(74,222,128,.4);
   }
-  #rv-manual-section {margin-bottom:8px;}
-  .rv-manual-label {font-size:11px;color:#555;text-transform:uppercase;margin-bottom:4px;}
-  #rv-filter-section {margin-bottom:8px;border:1px solid #1e4d8c;border-radius:6px;overflow:hidden;background:#0d1825;}
+  #rv-manual-section {margin-bottom:6px;}
+  .rv-manual-label {font-size:10px;color:#555;text-transform:uppercase;margin-bottom:3px;letter-spacing:.04em;}
+  #rv-filter-section {margin-bottom:6px;border:1px solid #1e4d8c;border-radius:6px;overflow:hidden;background:#0d1825;}
   #rv-filter-header {
-    background:#0f1f33;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;
-    font-size:12px;color:#5b9bd5;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;
+    background:#0f1f33;padding:4px 7px;display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;color:#5b9bd5;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;
   }
-  #rv-filter-header-left { display:flex;align-items:center;gap:6px; }
-  #rv-filter-chevron { font-size:11px;color:#5b9bd5;transition:transform 0.2s; }
+  #rv-filter-header-left { display:flex;align-items:center;gap:5px; }
+  #rv-filter-chevron { font-size:10px;color:#5b9bd5;transition:transform 0.2s; }
   #rv-filter-section.collapsed #rv-filter-chevron { transform:rotate(-90deg); }
   #rv-filter-section.collapsed #rv-filter-rows { display:none; }
   #rv-filter-master {
-    display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;
+    display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;
     color:#5b9bd5;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     background:none;border:none;padding:0;
   }
   #rv-filter-master .rv-toggle-track {
-    width:24px;height:13px;border-radius:7px;background:#1e3a5f;position:relative;
+    width:22px;height:12px;border-radius:6px;background:#1e3a5f;position:relative;
     transition:background 0.2s;flex-shrink:0;
   }
   #rv-filter-master.on .rv-toggle-track { background:#3b82f6; }
   #rv-filter-master .rv-toggle-thumb {
-    width:9px;height:9px;border-radius:50%;background:#fff;position:absolute;
+    width:8px;height:8px;border-radius:50%;background:#fff;position:absolute;
     top:2px;left:2px;transition:left 0.2s;
   }
-  #rv-filter-master.on .rv-toggle-thumb { left:13px; }
-  #rv-filter-rows {padding:4px 8px 3px;}
+  #rv-filter-master.on .rv-toggle-thumb { left:12px; }
+  #rv-filter-rows {padding:3px 7px 2px;}
   .rv-filter-row {
     display:flex;align-items:center;justify-content:space-between;
-    padding:3px 0;border-bottom:1px solid #14283f;
+    padding:2px 0;border-bottom:1px solid #14283f;
   }
   .rv-filter-row:last-child {border-bottom:none;}
-  .rv-filter-label {font-size:12px;color:#cfe0f5;}
-  .rv-filter-cb {accent-color:#3b82f6;width:14px;height:14px;cursor:pointer;}
+  .rv-filter-label {font-size:11px;color:#cfe0f5;}
+  .rv-filter-cb {accent-color:#3b82f6;width:13px;height:13px;cursor:pointer;}
 `);
 
 function buildPanel(vin, jobLines) {
@@ -346,15 +347,15 @@ function buildPanel(vin, jobLines) {
 
   // Select All / Deselect All
   const selectAllBar = document.createElement('div');
-  selectAllBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+  selectAllBar.style.cssText = 'display:flex;gap:5px;margin-bottom:5px;';
   const selAllBtn = document.createElement('button');
   selAllBtn.textContent = '✓ Select All';
-  selAllBtn.style.cssText = 'flex:1;padding:4px;background:#1a3a1a;color:#4ade80;border:1px solid #2a5a2a;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
+  selAllBtn.style.cssText = 'flex:1;padding:3px;background:#1a3a1a;color:#4ade80;border:1px solid #2a5a2a;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
   selAllBtn.onmouseover = () => selAllBtn.style.background = '#1f4a1f';
   selAllBtn.onmouseout  = () => selAllBtn.style.background = '#1a3a1a';
   const deselAllBtn = document.createElement('button');
   deselAllBtn.textContent = '✕ Deselect All';
-  deselAllBtn.style.cssText = 'flex:1;padding:4px;background:#1a1a1a;color:#888;border:1px solid #333;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
+  deselAllBtn.style.cssText = 'flex:1;padding:3px;background:#1a1a1a;color:#888;border:1px solid #333;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:Segoe UI,sans-serif;';
   deselAllBtn.onmouseover = () => deselAllBtn.style.background = '#222';
   deselAllBtn.onmouseout  = () => deselAllBtn.style.background = '#1a1a1a';
   selAllBtn.onclick   = () => document.querySelectorAll('#rv-pt-lines .rv-cb').forEach(cb => cb.checked = true);
@@ -427,7 +428,9 @@ function buildPanel(vin, jobLines) {
     filterRows.appendChild(row);
   });
   filterSection.appendChild(filterRows);
-  body.appendChild(filterSection);
+  // NOTE: not appended to body yet -- Manual Entry is appended first below,
+  // per Gabe's request to move it above Filter Lookups. filterSection is
+  // appended to body after the manual-entry block.
 
   masterBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -452,6 +455,7 @@ function buildPanel(vin, jobLines) {
   manualRows.id = 'rv-manual-rows';
   manualSection.appendChild(manualRows);
   body.appendChild(manualSection);
+  body.appendChild(filterSection); // Filter Lookups now renders below Manual Entry
 
   function addManualRow() {
     const row = document.createElement('div');
