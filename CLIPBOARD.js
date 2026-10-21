@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.74
+// @version      5.85
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -9,6 +9,7 @@
 // @match        https://app.tekioncloud.com/*
 // @match        https://*.reconvision.com/*
 // @match        https://shop.usautoforce.com/*
+// @match        https://repairlinkshop.com/*
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -24,6 +25,7 @@ const IS_PARTSTECH   = location.hostname.includes('partstech');
 const IS_TEKION      = location.hostname.includes('tekion');
 const IS_RECONVISION = location.hostname.includes('reconvision');
 const IS_USAUTOFORCE = location.hostname.includes('usautoforce');
+const IS_REPAIRLINK  = location.hostname.includes('repairlinkshop');
 const IS_PI          = IS_TEKION && location.pathname.includes('/parts/inventory/part');
 // CONFIRMED (7/9/26): the PO form is rendered as a TAB inside Tekion's
 // single-page app -- the URL never changes when you open it, it stays
@@ -258,6 +260,47 @@ if (IS_USAUTOFORCE) {
     });
 
     document.addEventListener('contextmenu', (e) => {
+        // NEW (10/20/26): Alt + right-click anywhere on a tire result copies
+        // its full description (Manufacturer, then Size, then Model) to the
+        // real OS clipboard, so it can be pasted anywhere normally (Ctrl+V)
+        // -- deliberately NOT routed through the GM clip_part slot, since
+        // that slot already has its own job (feeding the Tekion part#-paste
+        // flow elsewhere) and overwriting it here would break that.
+        // Confirmed via real DOM: a tire result's three pieces live in
+        // sibling blocks sharing one "tireResult_<N>_" id prefix --
+        // #..._BrandBlock (manufacturer logo's alt text), #..._SizeBlock
+        // (e.g. "LT285/70R17"), #..._NameBlock (e.g. "WRANGLER TERRITORY MT").
+        if (e.altKey) {
+            const anyBlock = e.target.closest('[id^="tireResult_"]');
+            const idMatch = anyBlock && anyBlock.id.match(/^tireResult_(\d+)/);
+            if (idMatch) {
+                e.preventDefault();
+                e.stopPropagation();
+                const prefix = 'tireResult_' + idMatch[1];
+                const brandImg = document.querySelector('#' + prefix + '_BrandBlock img');
+                const brand = brandImg ? (brandImg.getAttribute('alt') || '').trim() : '';
+                const sizeEl = document.getElementById(prefix + '_SizeBlock');
+                const size = sizeEl ? sizeEl.innerText.trim() : '';
+                const nameEl = document.getElementById(prefix + '_NameBlock');
+                const model = nameEl ? nameEl.innerText.trim() : '';
+
+                const description = [brand, size, model].filter(Boolean).join(' ');
+                if (!description) {
+                    console.log('[USAF Tire Copy] Could not read brand/size/model for', prefix);
+                    return;
+                }
+                navigator.clipboard.writeText(description).then(() => {
+                    console.log('[USAF Tire Copy] Copied:', description);
+                    const flashEl = nameEl || anyBlock;
+                    flashEl.style.background = 'rgba(37,99,235,0.4)';
+                    setTimeout(() => { flashEl.style.background = ''; }, 600);
+                }).catch(err => {
+                    console.error('[USAF Tire Copy] Clipboard write failed:', err);
+                });
+                return;
+            }
+        }
+
         // Part number — green highlight
         const pnBlock = e.target.closest('[id$="_PartNumBlock"]');
         if (pnBlock) {
@@ -353,6 +396,45 @@ if (IS_PARTSTECH) {
     document.addEventListener('mouseout', (e) => {
         const p  = e.target.closest('span.css-1og29io');
         const pr = e.target.closest('[data-testid="actualPrice"]');
+        if (p)  p.style.outline = '';
+        if (pr) pr.style.outline = '';
+    });
+}
+
+if (IS_REPAIRLINK) {
+
+    document.addEventListener('contextmenu', (e) => {
+        const partEl  = e.target.closest('span.partNumCol');
+        const priceEl = e.target.closest('dd.hiddenPrice');
+        if (partEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const pn = partEl.innerText.trim();
+            GM_setValue('clip_part', pn);
+            partEl.style.background = 'rgba(74,222,128,0.4)';
+            setTimeout(() => { partEl.style.background = ''; }, 600);
+            return;
+        }
+        if (priceEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const price = priceEl.innerText.trim().replace(/[$,]/g, '');
+            GM_setValue('clip_price', price);
+            priceEl.style.background = 'rgba(250,204,21,0.4)';
+            setTimeout(() => { priceEl.style.background = ''; }, 600);
+            return;
+        }
+    }, true);
+
+    document.addEventListener('mouseover', (e) => {
+        const p  = e.target.closest('span.partNumCol');
+        const pr = e.target.closest('dd.hiddenPrice');
+        if (p)  p.style.outline  = '2px dashed #4ade80';
+        if (pr) pr.style.outline = '2px dashed #facc15';
+    });
+    document.addEventListener('mouseout', (e) => {
+        const p  = e.target.closest('span.partNumCol');
+        const pr = e.target.closest('dd.hiddenPrice');
         if (p)  p.style.outline = '';
         if (pr) pr.style.outline = '';
     });
@@ -1680,15 +1762,15 @@ if (IS_RECONVISION) {
                 align-items:stretch;
                 gap:4px;
                 pointer-events:none;
-                width:105px;
+                width:78px;
             }
             .rv-bucket-btn {
                 pointer-events:all;
                 border:none;
-                border-radius:20px;
-                padding:8px 14px;
+                border-radius:16px;
+                padding:5px 8px;
                 font-family:'Segoe UI',sans-serif;
-                font-size:12px;
+                font-size:10px;
                 font-weight:700;
                 cursor:pointer;
                 white-space:nowrap;
@@ -1697,12 +1779,12 @@ if (IS_RECONVISION) {
                 overflow:hidden;
                 text-overflow:ellipsis;
                 transition:background 0.2s, opacity 0.2s;
-                width:105px;
+                width:78px;
                 box-sizing:border-box;
                 line-height:1;
             }
             .rv-bucket-btn.busy {
-                font-size:10px;
+                font-size:9px;
                 font-weight:500;
             }
             .rv-bucket-btn:disabled { opacity:0.5; cursor:not-allowed; }
@@ -1733,6 +1815,15 @@ if (IS_RECONVISION) {
                 background:#c026d3;
                 box-shadow:0 2px 16px rgba(217,70,239,0.6);
             }
+            #rv-btn-order {
+                background:#a855f7;
+                color:#000;
+                box-shadow:0 2px 12px rgba(168,85,247,0.4);
+            }
+            #rv-btn-order:hover:not(:disabled) {
+                background:#9333ea;
+                box-shadow:0 2px 16px rgba(168,85,247,0.6);
+            }
         `);
 
         const pillContainer = document.createElement('div');
@@ -1757,21 +1848,17 @@ if (IS_RECONVISION) {
         btnQuote.textContent = 'QUOTE';
         pillContainer.appendChild(btnQuote);
 
+        const btnOrder = document.createElement('button');
+        btnOrder.id = 'rv-btn-order';
+        btnOrder.className = 'rv-bucket-btn';
+        btnOrder.textContent = 'ORDER';
+        pillContainer.appendChild(btnOrder);
+
         function positionBucketPills() {
             const rvToggle = document.getElementById('rv-toggle');
             const rvPanel  = document.getElementById('rv-pt-panel');
 
             let anchorTop = null;
-
-            if (rvToggle) {
-                const toggleW = rvToggle.offsetWidth;
-                if (toggleW > 0) {
-                    pillContainer.style.width = toggleW + 'px';
-                    btn24.style.width = '100%';
-                    btnOver24.style.width = '100%';
-                    btnQuote.style.width = '100%';
-                }
-            }
 
             if (rvPanel && rvPanel.style.display !== 'none' && rvPanel.offsetHeight > 0) {
                 const r = rvPanel.getBoundingClientRect();
@@ -1793,6 +1880,7 @@ if (IS_RECONVISION) {
 
         setTimeout(positionBucketPills, 1000);
         window.addEventListener('resize', positionBucketPills);
+        setInterval(positionBucketPills, 400);
 
         const positionObserver = new MutationObserver(() => positionBucketPills());
         const observeEl = (id) => {
@@ -1990,6 +2078,18 @@ if (IS_RECONVISION) {
             console.log('[RV Quote] Opening quote email -- VIN:', vin);
             window.open(composeUrl, '_blank');
         });
+
+        btnOrder.addEventListener('click', () => {
+            const vin = getPageVin();
+            const subject = 'PART ORDER - ' + vin;
+            const body = 'WE NEED TO ORDER:\n\nPO :';
+            const composeUrl = 'https://outlook.cloud.microsoft/mail/deeplink/compose?to='
+                + encodeURIComponent(RECON_OUT_PARTS_EMAIL)
+                + '&subject=' + encodeURIComponent(subject)
+                + '&body=' + encodeURIComponent(body);
+            console.log('[RV Order] Opening order email -- VIN:', vin);
+            window.open(composeUrl, '_blank');
+        });
     }
 
     // NEW (8/26/26): single "Request Quote" pill (added to the existing
@@ -2128,6 +2228,472 @@ if (IS_RECONVISION) {
 
         setTimeout(runSnapshotPass, 2000); // let the page settle first
     }
+
+    // =============================================
+    // RV QUICK PART ADD (NEW 10/20/26)
+    // Right-click the little Parts status icon on any line -> opens that
+    // line's Parts modal, clicks + Add Part, focuses the new part# field
+    // (the existing RV-paste listener above auto-fills part#/price from
+    // whatever was last right-click-copied in PartsTech/RO Sales -- this
+    // reuses that flow rather than duplicating it), then asks for a
+    // one/two-letter vendor-source shortcut and a status shortcut (A =
+    // Action Required, O = Ordered) via small keyboard-driven popups.
+    //
+    // UNCONFIRMED / NEEDS LIVE TESTING: clicking the modal trigger
+    // (`.inner[data-target="#parts_modal"]`) via a plain synthetic .click()
+    // to open/reload the Parts modal for a specific line has not been
+    // tested live -- it's built on the same data-toggle="modal" pattern RV
+    // already uses for a real user click, but confirm it actually swaps
+    // in the right line's content (especially the case where the modal is
+    // already open on a DIFFERENT line and you right-click a new icon).
+    // =============================================
+    const QP_VENDOR_MAP = {
+        'F': 'FMP', 'A': 'AZ', 'O': 'OR', 'N': 'NAPA', 'B': 'BGB', 'H': 'HON',
+        'D': 'DOB', 'I': 'INFINITI', 'T': 'TOY', 'LK': 'LKQ', 'AU': 'AUDI',
+        'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
+        'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
+        'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FMP', 'ST': 'STOCK', 'U': 'USAF',
+    };
+    const QP_STATUS_MAP = { 'A': '1', 'O': '3' }; // 1 = Action Required, 3 = Ordered (confirmed RV status select values)
+
+    GM_addStyle(`
+        .inner[data-target="#parts_modal"] { border-radius:6px; transition:background 0.15s, box-shadow 0.15s; }
+        .inner[data-target="#parts_modal"]:hover {
+            background:rgba(37,99,235,0.22);
+            box-shadow:0 0 0 3px rgba(37,99,235,0.35);
+            cursor:pointer;
+        }
+        .rv-qp-popup {
+            position:fixed;z-index:9999999;background:#0d0d0d;border:2px solid #2563eb;
+            border-radius:10px;padding:10px 14px;font-family:'Segoe UI',sans-serif;
+            box-shadow:0 4px 20px rgba(0,0,0,.7);color:#e0e0e0;min-width:220px;
+        }
+        .rv-qp-popup .rv-qp-title { font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;margin-bottom:6px;letter-spacing:.04em; }
+        .rv-qp-popup input {
+            width:100%;box-sizing:border-box;padding:6px 8px;background:#1a1a1a;color:#fff;
+            border:1px solid #333;border-radius:6px;font-size:13px;font-family:monospace;
+        }
+        .rv-qp-popup .rv-qp-preview { margin-top:6px;font-size:12px;color:#4ade80;min-height:16px; }
+        .rv-qp-popup .rv-qp-hint { margin-top:6px;font-size:10px;color:#666; }
+        .rv-qp-status-btns { display:flex;gap:8px;margin-top:4px; }
+        .rv-qp-status-btns button {
+            flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;
+            cursor:pointer;background:#1f2937;color:#e0e0e0;
+        }
+        .rv-qp-status-btns button:hover { background:#2563eb;color:#fff; }
+    `);
+
+    function qpClosePopup() {
+        const existing = document.querySelector('.rv-qp-popup');
+        if (existing) existing.remove();
+    }
+
+    function qpPositionNear(popup, anchorRect) {
+        popup.style.top = (anchorRect.bottom + 8) + 'px';
+        popup.style.left = anchorRect.left + 'px';
+        requestAnimationFrame(() => {
+            const r = popup.getBoundingClientRect();
+            if (r.right > window.innerWidth - 10) popup.style.left = (window.innerWidth - r.width - 10) + 'px';
+            if (r.bottom > window.innerHeight - 10) popup.style.top = (anchorRect.top - r.height - 8) + 'px';
+        });
+    }
+
+    function qpShowVendorPopup(anchorRect, onDone) {
+        qpClosePopup();
+        const popup = document.createElement('div');
+        popup.className = 'rv-qp-popup';
+        popup.innerHTML = `
+            <div class="rv-qp-title">Vendor Source</div>
+            <input type="text" placeholder="F, A, AU, BM...">
+            <div class="rv-qp-preview"></div>
+            <div class="rv-qp-hint">Enter = confirm &middot; Esc = skip</div>
+        `;
+        document.body.appendChild(popup);
+        qpPositionNear(popup, anchorRect);
+
+        const input = popup.querySelector('input');
+        const preview = popup.querySelector('.rv-qp-preview');
+        input.focus();
+
+        input.addEventListener('input', () => {
+            const key = input.value.trim().toUpperCase();
+            const mapped = QP_VENDOR_MAP[key];
+            preview.textContent = mapped ? ('→ ' + mapped) : (key ? '(no shortcut match -- will use typed text as-is)' : '');
+        });
+
+        function cleanup() {
+            document.removeEventListener('keydown', onKey, true);
+            document.removeEventListener('mousedown', onOutside, true);
+            popup.remove();
+        }
+        function onKey(e) {
+            if (e.key === 'Escape') { e.preventDefault(); cleanup(); onDone(null); return; }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const raw = input.value.trim();
+                if (!raw) { cleanup(); onDone(null); return; }
+                const mapped = QP_VENDOR_MAP[raw.toUpperCase()];
+                cleanup();
+                onDone(mapped || raw.toUpperCase());
+            }
+        }
+        function onOutside(e) {
+            if (!popup.contains(e.target)) { cleanup(); onDone(null); }
+        }
+        document.addEventListener('keydown', onKey, true);
+        setTimeout(() => document.addEventListener('mousedown', onOutside, true), 0);
+    }
+
+    // statusMap: e.g. QP_STATUS_MAP ({A,O}) or BULK_STATUS_MAP ({A,O,R,S}).
+    // buttonDefs: [{key,label}, ...] in display order.
+    function qpShowStatusPopup(anchorRect, onDone, statusMap, buttonDefs) {
+        statusMap = statusMap || QP_STATUS_MAP;
+        buttonDefs = buttonDefs || [
+            { key: 'A', label: 'A &middot; Action Req.' },
+            { key: 'O', label: 'O &middot; Ordered' },
+        ];
+        qpClosePopup();
+        const popup = document.createElement('div');
+        popup.className = 'rv-qp-popup';
+        const btnsHtml = buttonDefs.map(b => `<button type="button" data-key="${b.key}">${b.label}</button>`).join('');
+        const keysHint = buttonDefs.map(b => b.key).join('/');
+        popup.innerHTML = `
+            <div class="rv-qp-title">Status</div>
+            <div class="rv-qp-status-btns">${btnsHtml}</div>
+            <div class="rv-qp-hint">Press ${keysHint}, click, or Esc = skip</div>
+        `;
+        document.body.appendChild(popup);
+        qpPositionNear(popup, anchorRect);
+
+        function cleanup() {
+            document.removeEventListener('keydown', onKey, true);
+            document.removeEventListener('mousedown', onOutside, true);
+            popup.remove();
+        }
+        function resolve(key) {
+            const statusValue = statusMap[key];
+            cleanup();
+            onDone(statusValue || null);
+        }
+        function onKey(e) {
+            const key = e.key.toUpperCase();
+            if (statusMap[key]) { e.preventDefault(); resolve(key); return; }
+            if (e.key === 'Escape') { e.preventDefault(); cleanup(); onDone(null); }
+        }
+        function onOutside(e) {
+            if (!popup.contains(e.target)) { cleanup(); onDone(null); }
+        }
+        document.addEventListener('keydown', onKey, true);
+        popup.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => resolve(btn.dataset.key));
+        });
+        setTimeout(() => document.addEventListener('mousedown', onOutside, true), 0);
+    }
+
+    function qpIsPartsModalOpen() {
+        const modal = document.getElementById('parts_modal');
+        return !!(modal && modal.style.display === 'block');
+    }
+
+    // container: defaults to #parts_modal (the popup flow); pass a specific
+    // element to scope the search elsewhere (e.g. one service's row table on
+    // the bulk-load page).
+    async function qpWaitForEmptyRow(maxMs, container) {
+        const start = Date.now();
+        while (Date.now() - start < maxMs) {
+            const scope = container || document.getElementById('parts_modal');
+            if (scope) {
+                const rows = scope.querySelectorAll('tr');
+                for (const r of rows) {
+                    const pnField = r.querySelector('textarea[id*="part_number"], input[id*="part_number"]');
+                    if (pnField && !pnField.value) return r;
+                }
+            }
+            await new Promise(r => setTimeout(r, 150));
+        }
+        return null;
+    }
+
+    function qpShowQtyPopup(anchorRect, currentValue, onDone) {
+        qpClosePopup();
+        const popup = document.createElement('div');
+        popup.className = 'rv-qp-popup';
+        popup.innerHTML = `
+            <div class="rv-qp-title">Quantity</div>
+            <input type="text" inputmode="numeric" value="${currentValue}">
+            <div class="rv-qp-hint">Enter = confirm &middot; Esc = keep ${currentValue}</div>
+        `;
+        document.body.appendChild(popup);
+        qpPositionNear(popup, anchorRect);
+
+        const input = popup.querySelector('input');
+        input.focus();
+        input.select();
+
+        function cleanup() {
+            document.removeEventListener('keydown', onKey, true);
+            document.removeEventListener('mousedown', onOutside, true);
+            popup.remove();
+        }
+        function onKey(e) {
+            if (e.key === 'Escape') { e.preventDefault(); cleanup(); onDone(null); return; }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const raw = input.value.trim();
+                cleanup();
+                onDone(raw || null);
+            }
+        }
+        function onOutside(e) {
+            if (!popup.contains(e.target)) { cleanup(); onDone(null); }
+        }
+        document.addEventListener('keydown', onKey, true);
+        setTimeout(() => document.addEventListener('mousedown', onOutside, true), 0);
+    }
+
+    // Shared by both the icon-triggered first add and the in-modal
+    // right-click "add another part" -- adds one new row to the already-open
+    // #parts_modal, lets the existing paste-on-focus listener fill part#/
+    // price from the clipboard, then walks Qty -> Vendor -> Status.
+    async function qpAddPartFlow(anchorRect) {
+        const addBtn = document.querySelector('.button-outline[data-action*="parts-modal-controller#addNewPart"]');
+        if (!addBtn) { console.log('[RV Quick Part] + Add Part button not found.'); return; }
+        addBtn.click();
+
+        const newRow = await qpWaitForEmptyRow(3000);
+        if (!newRow) { console.log('[RV Quick Part] New empty part row never appeared.'); return; }
+
+        const pnField = newRow.querySelector('textarea[id*="part_number"], input[id*="part_number"]');
+        if (pnField) pnField.focus(); // existing RV-paste focusin listener auto-fills part#/price from clipboard
+
+        await new Promise(r => setTimeout(r, 700)); // let that paste-on-focus flow finish
+
+        const qtyField = newRow.querySelector('input[data-field-name="quantity"]');
+        qpShowQtyPopup(anchorRect, qtyField ? qtyField.value || '1' : '1', (qtyValue) => {
+            if (qtyValue && qtyField) rvNativeSetValue(qtyField, qtyValue);
+
+            qpShowVendorPopup(anchorRect, (vendorText) => {
+                if (vendorText) {
+                    const descField = newRow.querySelector('td.save_value.description textarea');
+                    if (descField) rvNativeSetValue(descField, vendorText);
+                }
+                qpShowStatusPopup(anchorRect, (statusValue) => {
+                    if (statusValue) {
+                        const statusSelect = newRow.querySelector('td.save_value.status select, select[data-field-name="status"]');
+                        if (statusSelect) {
+                            statusSelect.value = statusValue;
+                            statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                    console.log('[RV Quick Part] Quick add flow complete.');
+                });
+            });
+        });
+    }
+
+    async function qpRunQuickAdd(iconEl) {
+        const anchorRect = iconEl.getBoundingClientRect();
+        const trigger = iconEl.closest('.inner[data-target="#parts_modal"]');
+        if (!trigger) { console.log('[RV Quick Part] Could not find the modal trigger for this icon.'); return; }
+
+        const wasAlreadyOpen = qpIsPartsModalOpen();
+        if (!wasAlreadyOpen) {
+            trigger.click(); // opens the modal
+            const opened = await waitForCondition(qpIsPartsModalOpen, 4000);
+            if (!opened) { console.log('[RV Quick Part] Parts modal never opened.'); return; }
+            await new Promise(r => setTimeout(r, 400)); // let modal content finish rendering
+        }
+        // If the modal is already open, do NOT click the trigger again --
+        // the icon is covered by the modal overlay anyway once it's open,
+        // and clicking it would reload/reset the modal back to this line's
+        // saved content, wiping out whatever hasn't been saved yet.
+
+        await qpAddPartFlow(anchorRect);
+    }
+
+    function initQuickPartIcon() {
+        document.addEventListener('contextmenu', (e) => {
+            const iconEl = e.target.closest('.block.parts_icon');
+            if (!iconEl) return;
+            e.preventDefault();
+            e.stopPropagation();
+            qpClosePopup();
+            qpRunQuickAdd(iconEl);
+        }, true);
+
+        // Alt+right-click ANYWHERE inside the already-open parts modal = add
+        // another part to it. This is the only way to add a second+ part,
+        // since once the modal is open it covers the original icon -- there
+        // is nothing left to right-click back on the page behind it.
+        document.addEventListener('contextmenu', (e) => {
+            if (!e.altKey) return;
+            const modal = document.getElementById('parts_modal');
+            if (!modal || modal.style.display !== 'block') return;
+            if (!modal.contains(e.target)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            qpClosePopup();
+            const anchorRect = { top: e.clientY, bottom: e.clientY, left: e.clientX, right: e.clientX };
+            console.log('[RV Quick Part] Adding another part to the already-open modal.');
+            qpAddPartFlow(anchorRect);
+        }, true);
+    }
+    initQuickPartIcon();
+
+    // --- Alt+S: click the parts modal's REAL Save (submit) button ---
+    // [id^="desktop-close-button-"] is labeled "Save" but its action is
+    // actually closeModal -- it prompts "close without saving" since nothing
+    // was submitted. The real save is the hidden submit button below it
+    // ([id^="desktop-save-button-"], action submitButtonClick); clicking a
+    // CSS-hidden button via script still fires its listeners fine.
+    document.addEventListener('keydown', (e) => {
+        if (!e.altKey || (e.key !== 's' && e.key !== 'S')) return;
+        const saveBtn = document.querySelector('[id^="desktop-save-button-"]');
+        if (!saveBtn) { console.log('[RV Quick Part] Alt+S: Save button not found.'); return; }
+        e.preventDefault();
+        saveBtn.click();
+        console.log('[RV Quick Part] Alt+S: Clicked Save.');
+    }, true);
+
+    // =============================================
+    // RV BULK-LOAD SCREEN: same quick-add flow, but for the "Add Part to
+    // Service" button on the bulk Parts Overview page. This page has no
+    // modal -- clicking the button adds a row directly into that service's
+    // own table -- so there's no reload-on-reopen issue like the per-vehicle
+    // icon above; every right-click just adds another row.
+    // =============================================
+    GM_addStyle(`
+        .add-part-to-service-btn.rv-qp-hover {
+            background:rgba(37,99,235,0.6) !important;
+            box-shadow:0 0 0 3px rgba(37,99,235,0.35);
+        }
+    `);
+
+    function qpFindServiceSection(btn) {
+        const header = btn.closest('.section-header[data-service-id]');
+        if (!header) return null;
+        const serviceId = header.getAttribute('data-service-id');
+        return document.getElementById('parts-section-' + serviceId);
+    }
+
+    async function qpRunBulkQuickAdd(btn) {
+        const anchorRect = btn.getBoundingClientRect();
+        const section = qpFindServiceSection(btn);
+        if (!section) { console.log('[RV Quick Part] Could not find this service\'s section to scope the new row search.'); return; }
+
+        btn.click(); // adds a new row directly into this service's table
+
+        const newRow = await qpWaitForEmptyRow(3000, section);
+        if (!newRow) { console.log('[RV Quick Part] New empty part row never appeared in this service.'); return; }
+
+        const pnField = newRow.querySelector('textarea[id*="part_number"], input[id*="part_number"]');
+        if (pnField) pnField.focus(); // existing RV-paste focusin listener auto-fills part#/price from clipboard
+
+        await new Promise(r => setTimeout(r, 700)); // let that paste-on-focus flow finish
+
+        qpShowVendorPopup(anchorRect, (vendorText) => {
+            if (vendorText) {
+                const descField = newRow.querySelector('td.save_value.description textarea');
+                if (descField) rvNativeSetValue(descField, vendorText);
+            }
+            const bulkButtonDefs = [
+                { key: 'A', label: 'A &middot; Action Req.' },
+                { key: 'R', label: 'R &middot; Arrived' },
+                { key: 'O', label: 'O &middot; Ordered' },
+                { key: 'S', label: 'S &middot; In Stock' },
+            ];
+            qpShowStatusPopup(anchorRect, (statusValue) => {
+                if (statusValue) {
+                    const statusSelect = newRow.querySelector('td.save_value.status select, select[data-field-name="status"]');
+                    if (statusSelect) {
+                        statusSelect.value = statusValue;
+                        statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+                console.log('[RV Quick Part] Bulk-load quick add flow complete.');
+            }, BULK_STATUS_MAP, bulkButtonDefs);
+        });
+    }
+
+    function initBulkQuickAddButton() {
+        document.addEventListener('mouseover', (e) => {
+            const btn = e.target.closest('.add-part-to-service-btn');
+            if (btn) btn.classList.add('rv-qp-hover');
+        }, true);
+        document.addEventListener('mouseout', (e) => {
+            const btn = e.target.closest('.add-part-to-service-btn');
+            if (btn) btn.classList.remove('rv-qp-hover');
+        }, true);
+        document.addEventListener('contextmenu', (e) => {
+            const btn = e.target.closest('.add-part-to-service-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            qpClosePopup();
+            qpRunBulkQuickAdd(btn);
+        }, true);
+    }
+    initBulkQuickAddButton();
+
+    // =============================================
+    // RV BULK PARTS STATUS SHORTCUTS (NEW 10/20/26)
+    // For the Parts Overview / bulk parts list page (RV's new bulk-load
+    // interface) -- hover over a line's Status dropdown and hit a letter
+    // to set it instantly, no click/dropdown-open needed:
+    //   A = Action Required, O = Ordered, R = Arrived, S = In Stock
+    // Uses the exact same status <select> markup confirmed already working
+    // in the Quick Part Add popup above (data-field-name="status", values
+    // 1/3/5/6) -- not scoped to one URL, since this same select markup
+    // appears both here and in the per-line Parts modal, so the shortcut
+    // works wherever a status dropdown exists.
+    // =============================================
+    const BULK_STATUS_MAP = { 'A': '1', 'O': '3', 'R': '5', 'S': '6' };
+
+    GM_addStyle(`
+        td.save_value.status select:hover,
+        select[data-field-name="status"]:hover {
+            outline:2px solid #2563eb;
+            outline-offset:-1px;
+        }
+    `);
+
+    function initStatusHoverShortcuts() {
+        let hoveredSelect = null;
+
+        document.addEventListener('mouseover', (e) => {
+            const sel = e.target.closest('td.save_value.status select, select[data-field-name="status"]');
+            if (sel) hoveredSelect = sel;
+        }, true);
+
+        document.addEventListener('mouseout', (e) => {
+            const sel = e.target.closest('td.save_value.status select, select[data-field-name="status"]');
+            if (sel && sel === hoveredSelect) hoveredSelect = null;
+        }, true);
+
+        document.addEventListener('keydown', (e) => {
+            if (!hoveredSelect) return;
+            // Don't hijack a letter the user is actually typing into some
+            // other focused field (e.g. a Description box) just because
+            // the mouse happens to be resting over a status dropdown.
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+
+            const val = BULK_STATUS_MAP[e.key.toUpperCase()];
+            if (!val) return;
+            e.preventDefault();
+
+            hoveredSelect.value = val;
+            hoveredSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+            const row = hoveredSelect.closest('tr');
+            if (row) {
+                row.style.transition = 'background 0.3s';
+                row.style.background = 'rgba(37,99,235,0.25)';
+                setTimeout(() => { row.style.background = ''; }, 400);
+            }
+        }, true);
+    }
+    initStatusHoverShortcuts();
 
     if (IS_RECONVISION) {
         let lastPath = location.pathname;
