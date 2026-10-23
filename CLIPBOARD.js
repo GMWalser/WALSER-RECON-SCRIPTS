@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.85
+// @version      5.90
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1714,14 +1714,25 @@ if (IS_RECONVISION) {
             }
 
             setTimeout(() => {
-                const row = el.closest('tr') || el.closest('[data-id]') || el.parentElement;
-                const priceInput = (row && row.querySelector('input[id*="part_price"]'))
-                    || document.querySelector(
-                        '#line_item_parts_attributes_new_row_1_part_price, ' +
-                        'input[data-field-name="partPrice"], ' +
-                        'input[id*="part_price"]'
-                    );
-                console.log('[RV Paste] row found:', !!row, '-- priceInput found:', !!priceInput);
+                // v5.86: the old lookup fell back to document.querySelector(...)
+                // whenever the row-scoped search came up empty -- and that
+                // returns the FIRST price input on the whole page, i.e. the
+                // previously pasted part's row. That is exactly the "each new
+                // paste changes the previous part's price" bug. Now: climb
+                // from this part# field to the nearest ancestor that contains
+                // exactly ONE part_price input (that's this part's own row,
+                // whatever its tag/structure), and never fall back to a
+                // page-wide first match -- if it can't be found, skip the
+                // price rather than overwrite another row.
+                let row = el.parentElement;
+                let priceInput = null;
+                while (row && row !== document.body) {
+                    const found = row.querySelectorAll('input[id*="part_price"], input[data-field-name="partPrice"]');
+                    if (found.length === 1) { priceInput = found[0]; break; }
+                    if (found.length > 1) break; // climbed past this row into a multi-row container
+                    row = row.parentElement;
+                }
+                console.log('[RV Paste] row found:', !!row, '-- priceInput found:', !!priceInput, priceInput ? '-- id: ' + priceInput.id : '');
                 if (priceInput && price) {
                     console.log('[RV Paste] Setting price field to:', price);
                     nativeSet(priceInput, price);
@@ -2142,6 +2153,16 @@ if (IS_RECONVISION) {
         el.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
+    // v5.87: double-note guard. The "*" marker is only applied AFTER the save
+    // click + modal-close wait, and nothing stopped a second pass from
+    // starting (or the same line coming up again) before that marker landed
+    // -- so any overlap, or RV resetting the "*" mid-session, wrote a second
+    // identical note. Now: (1) only one pass may run at a time, and (2) each
+    // service line id is snapshotted at most once per page session, claimed
+    // BEFORE the notes modal is touched.
+    const snapshottedServiceIds = new Set();
+    let snapshotPassRunning = false;
+
     function initMechanicalLineSnapshot() {
         async function processRow(row) {
             const nameInput = row.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
@@ -2161,6 +2182,12 @@ if (IS_RECONVISION) {
             const serviceId = row.getAttribute('data-service-id');
             const notesLink = row.querySelector(`a[data-target="#notes-line-item-modal"][data-id="${serviceId}"]`);
             if (!notesLink) return;
+
+            if (snapshottedServiceIds.has(serviceId)) {
+                console.log('[RV Line Snapshot] Already snapshotted this session, skipping:', currentTitle, '(service', serviceId, ')');
+                return;
+            }
+            snapshottedServiceIds.add(serviceId);
 
             console.log('[RV Line Snapshot] Processing:', currentTitle, '(service', serviceId, ')');
             notesLink.click();
@@ -2214,16 +2241,25 @@ if (IS_RECONVISION) {
         }
 
         async function runSnapshotPass() {
-            const sections = document.querySelectorAll('[class*="work-order-mechanical-repairs"]');
-            const rows = [];
-            sections.forEach(sec => {
-                sec.querySelectorAll('tr.table__row--content[data-service-id]').forEach(r => rows.push(r));
-            });
-            console.log('[RV Line Snapshot] Found', rows.length, 'mechanical line(s) to check.');
-            for (const row of rows) {
-                await processRow(row);
+            if (snapshotPassRunning) {
+                console.log('[RV Line Snapshot] A pass is already running -- skipping this one.');
+                return;
             }
-            console.log('[RV Line Snapshot] Pass complete.');
+            snapshotPassRunning = true;
+            try {
+                const sections = document.querySelectorAll('[class*="work-order-mechanical-repairs"]');
+                const rows = [];
+                sections.forEach(sec => {
+                    sec.querySelectorAll('tr.table__row--content[data-service-id]').forEach(r => rows.push(r));
+                });
+                console.log('[RV Line Snapshot] Found', rows.length, 'mechanical line(s) to check.');
+                for (const row of rows) {
+                    await processRow(row);
+                }
+                console.log('[RV Line Snapshot] Pass complete.');
+            } finally {
+                snapshotPassRunning = false;
+            }
         }
 
         setTimeout(runSnapshotPass, 2000); // let the page settle first
@@ -2477,6 +2513,14 @@ if (IS_RECONVISION) {
                     const descField = newRow.querySelector('td.save_value.description textarea');
                     if (descField) rvNativeSetValue(descField, vendorText);
                 }
+                // v5.90: all 4 statuses (A/R/O/S) here too, same as the
+                // bulk-load page -- same status <select> values (1/3/5/6).
+                const modalButtonDefs = [
+                    { key: 'A', label: 'A &middot; Action Req.' },
+                    { key: 'R', label: 'R &middot; Arrived' },
+                    { key: 'O', label: 'O &middot; Ordered' },
+                    { key: 'S', label: 'S &middot; In Stock' },
+                ];
                 qpShowStatusPopup(anchorRect, (statusValue) => {
                     if (statusValue) {
                         const statusSelect = newRow.querySelector('td.save_value.status select, select[data-field-name="status"]');
@@ -2486,7 +2530,7 @@ if (IS_RECONVISION) {
                         }
                     }
                     console.log('[RV Quick Part] Quick add flow complete.');
-                });
+                }, BULK_STATUS_MAP, modalButtonDefs);
             });
         });
     }
@@ -2587,31 +2631,60 @@ if (IS_RECONVISION) {
         if (!newRow) { console.log('[RV Quick Part] New empty part row never appeared in this service.'); return; }
 
         const pnField = newRow.querySelector('textarea[id*="part_number"], input[id*="part_number"]');
+        // v5.88 DIAGNOSTIC (no behavior change): log which row this flow
+        // picked, to find out why the part# and the vendor text can land on
+        // different rows on the bulk-load page.
+        console.log('[RV Quick Part] Bulk: rows in section:', section.querySelectorAll('tr').length,
+            '-- picked row part# id:', pnField ? pnField.id : '(none)',
+            '-- picked row desc id:', (newRow.querySelector('td.save_value.description textarea') || {}).id || '(none)');
         if (pnField) pnField.focus(); // existing RV-paste focusin listener auto-fills part#/price from clipboard
 
         await new Promise(r => setTimeout(r, 700)); // let that paste-on-focus flow finish
+        console.log('[RV Quick Part] Bulk: after paste wait -- picked row part# value:', pnField ? JSON.stringify(pnField.value) : '(none)',
+            '-- row still in DOM:', document.contains(newRow));
 
-        qpShowVendorPopup(anchorRect, (vendorText) => {
-            if (vendorText) {
-                const descField = newRow.querySelector('td.save_value.description textarea');
-                if (descField) rvNativeSetValue(descField, vendorText);
-            }
-            const bulkButtonDefs = [
-                { key: 'A', label: 'A &middot; Action Req.' },
-                { key: 'R', label: 'R &middot; Arrived' },
-                { key: 'O', label: 'O &middot; Ordered' },
-                { key: 'S', label: 'S &middot; In Stock' },
-            ];
-            qpShowStatusPopup(anchorRect, (statusValue) => {
-                if (statusValue) {
-                    const statusSelect = newRow.querySelector('td.save_value.status select, select[data-field-name="status"]');
-                    if (statusSelect) {
-                        statusSelect.value = statusValue;
-                        statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
+        const runVendorAndStatus = () => {
+            qpShowVendorPopup(anchorRect, (vendorText) => {
+                if (vendorText) {
+                    const descField = newRow.querySelector('td.save_value.description textarea');
+                    console.log('[RV Quick Part] Bulk: writing vendor', JSON.stringify(vendorText), 'to desc id:', descField ? descField.id : '(none)', '-- row still in DOM:', document.contains(newRow));
+                    if (descField) rvNativeSetValue(descField, vendorText);
                 }
-                console.log('[RV Quick Part] Bulk-load quick add flow complete.');
-            }, BULK_STATUS_MAP, bulkButtonDefs);
+                const bulkButtonDefs = [
+                    { key: 'A', label: 'A &middot; Action Req.' },
+                    { key: 'R', label: 'R &middot; Arrived' },
+                    { key: 'O', label: 'O &middot; Ordered' },
+                    { key: 'S', label: 'S &middot; In Stock' },
+                ];
+                qpShowStatusPopup(anchorRect, (statusValue) => {
+                    if (statusValue) {
+                        const statusSelect = newRow.querySelector('td.save_value.status select, select[data-field-name="status"]');
+                        if (statusSelect) {
+                            statusSelect.value = statusValue;
+                            statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                    console.log('[RV Quick Part] Bulk-load quick add flow complete.');
+                }, BULK_STATUS_MAP, bulkButtonDefs);
+            });
+        };
+
+        // v5.89: Qty step on the bulk-load page too (part# -> Qty -> Vendor
+        // -> Status), same popup the per-vehicle modal uses. Uses the same
+        // quantity selector as the modal flow; UNCONFIRMED that this page's
+        // rows use it too -- if the field isn't found, it logs every input
+        // in the row (so the real selector can be read off the console) and
+        // carries on to Vendor/Status without a Qty step instead of breaking.
+        const qtyField = newRow.querySelector('input[data-field-name="quantity"]');
+        if (!qtyField) {
+            console.log('[RV Quick Part] Bulk: Qty field not found in picked row -- skipping Qty step. Row inputs:',
+                Array.from(newRow.querySelectorAll('input, textarea, select')).map(i => (i.getAttribute('data-field-name') || '') + '|' + i.id + '|' + i.name));
+            runVendorAndStatus();
+            return;
+        }
+        qpShowQtyPopup(anchorRect, qtyField.value || '1', (qtyValue) => {
+            if (qtyValue) rvNativeSetValue(qtyField, qtyValue);
+            runVendorAndStatus();
         });
     }
 
