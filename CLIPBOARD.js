@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.92
+// @version      5.93
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -182,6 +182,10 @@ if (IS_TEKION) {
                 const existing = JSON.parse(GM_getValue('rv_veh_' + vin, '{}'));
                 if (existing.trim && existing.stock) { _vinAttempts[vin] = 'done'; return; }
             } catch(e) {}
+            // v5.93: this API route answered HTTP 400 "Token doesn't exist or is invalid" on every
+            // single call in the console logs (Tekion's login token can't be read by a script),
+            // so it never helped and only added 3 failed requests per vehicle. Skipped.
+            return;
             _vinAttempts[vin] = (state || 0) + 1;
             console.log('[RV] VIN found:', vin, '- attempt', _vinAttempts[vin], '- calling inventory API');
             fetchVehicleData(vin, function(success) {
@@ -859,17 +863,30 @@ if (IS_RO_SALES) {
     rvVehicleTooltip.id = 'rv-vehicle-tooltip';
     document.body.appendChild(rvVehicleTooltip);
 
+    // v5.93: ONE VIN finder, used for both saving and showing the vehicle data, so the
+    // two always agree (the saver and the tooltip used to find the VIN differently).
+    // Exact-match on leaf elements / inputs only; falls back to the VIN the 2-second
+    // scanner already remembered.
+    function findPageVin() {
+        let vin = '';
+        document.querySelectorAll('span,div,p,td,input').forEach(el => {
+            if (vin) return;
+            let t = '';
+            if (el.tagName === 'INPUT') t = el.value || '';
+            else if (el.childElementCount === 0) t = el.textContent || '';
+            else return;
+            t = t.trim();
+            if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
+        });
+        if (!vin) { try { vin = localStorage.getItem('rv_last_vin_seen') || ''; } catch (e) {} }
+        return vin;
+    }
+
     function getVehicleData() {
         const data = { vin: '', stock: '', vehicle: '', trim: '', mileage: '' };
         const modelBtn = document.querySelector('[data-test-id="undefined-modelButton"]');
         if (modelBtn) data.vehicle = modelBtn.innerText.trim();
-        // VIN: scan for standalone 17-char VIN
-        document.querySelectorAll('span,div,p,td,input').forEach(el => {
-            if (data.vin) return;
-            const t = el.tagName === 'INPUT' ? (el.value || '') : (el.innerText || el.textContent || '');
-            const m = t.trim().match(/\b([A-HJ-NPR-Z0-9]{17})\b/);
-            if (m) data.vin = m[1];
-        });
+        data.vin = findPageVin();
         // Load trim+stock+mileage from GM storage (saved by global scanner on any Tekion page)
         try {
             const key = 'rv_veh_' + (data.vin || 'last');
@@ -971,9 +988,38 @@ if (IS_RO_SALES) {
             if (ready || attempts >= maxAttempts) {
                 clearInterval(pollForData);
                 console.log('[Vehicle Hover TEST] Finished after ' + attempts + ' attempts -- final trim value:', trimEl ? trimEl.value : '(none)', '-- SUCCESS:', ready);
-                closeDrawerAndVerify();
+                // v5.93: SAVE the values right here, before closing. Before, saving was left to a
+                // separate 500ms timer that raced the close (this code closes within ~300ms of
+                // the trim appearing), so the drawer was often gone before that timer ran --
+                // the "hit or miss". A short wait first lets stock/mileage finish filling in.
+                setTimeout(function() {
+                    saveDrawerData();
+                    closeDrawerAndVerify();
+                }, ready ? 400 : 0);
             }
         }, 300);
+
+        function saveDrawerData() {
+            const trimEl2 = document.querySelector('#vehicleDetailsOverviewTrim');
+            const stockEl2 = document.querySelector('#vehicleDetailsOverviewVehicleStockNumber');
+            const milesEl2 = document.querySelector('#vehicleDetailsOverviewLastOdometerReadingMiles');
+            const rd = (el) => el ? ((el.value || el.innerText || '') + '').trim() : '';
+            const trim2 = rd(trimEl2), stock2 = rd(stockEl2), miles2 = rd(milesEl2);
+            const vin2 = findPageVin();
+            if (!trim2 && !stock2 && !miles2) {
+                console.log('[Vehicle Hover] Nothing readable in the drawer -- nothing saved.');
+                return;
+            }
+            const key = 'rv_veh_' + (vin2 || 'last');
+            try {
+                const ex = JSON.parse(GM_getValue(key, '{}'));
+                if (trim2) ex.trim = trim2;
+                if (stock2) ex.stock = stock2;
+                if (miles2) ex.mileage = miles2;
+                GM_setValue(key, JSON.stringify(ex));
+                console.log('[Vehicle Hover] Saved for', key, '->', JSON.stringify(ex));
+            } catch (e) { console.log('[Vehicle Hover] Save failed:', e); }
+        }
 
         // BUG FIX: the old code clicked .ant-drawer-mask once and then
         // UNCONDITIONALLY removed the CSS class hiding the drawer, whether
@@ -1046,10 +1092,19 @@ if (IS_RO_SALES) {
         // could pile up during a single tab switch.
         if (drawerFetchScheduled) return;
         drawerFetchScheduled = true;
-        setTimeout(() => {
+        let modalWaits = 0;
+        function tryStartDrawerFetch() {
+            const modalOpen = !!document.querySelector('.ant-v5-modal-wrap:not([style*="display: none"])');
+            if (modalOpen && modalWaits < 8) {
+                modalWaits++;
+                console.log('[Vehicle Hover] A Tekion popup is open -- waiting before opening the vehicle drawer (' + modalWaits + '/8)');
+                setTimeout(tryStartDrawerFetch, 1500);
+                return;
+            }
             drawerFetchScheduled = false;
             autoFetchDrawerData(link);
-        }, 1500);
+        }
+        setTimeout(tryStartDrawerFetch, 1500);
     }
     attachVehicleHover();
     new MutationObserver(attachVehicleHover).observe(document.body, { childList: true, subtree: true });
