@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.90
+// @version      5.92
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -241,6 +241,91 @@ if (IS_TEKION) {
 }
 
 // =============================================
+// TIRE COPY HINTS (v5.92)
+// USAF: hovering a tire's description (brand / size / name) outlines it in blue and shows an
+//       "ALT + R-CLICK" tag. After the Alt+right-click copy succeeds, a flag is stored.
+// Tekion: while that flag is fresh, a small "CTRL+V" pill shows until you paste (or click it).
+// Dedicated GM key: tire_copy_flag  (separate from clip_part and every other key).
+// =============================================
+const TIRE_FLAG_KEY = 'tire_copy_flag';
+const TIRE_FLAG_MAX_AGE_MS = 2 * 60 * 1000;
+
+if (IS_USAUTOFORCE) {
+    let hintEl = null;
+    let hintPrefix = null;
+    const DESC_ID = /^tireResult_(\d+)_(Brand|Size|Name)Block$/;
+    const descBlocks = (prefix) => ['Brand', 'Size', 'Name']
+        .map(n => document.getElementById(prefix + '_' + n + 'Block')).filter(Boolean);
+
+    function clearTireHint() {
+        if (hintPrefix) descBlocks(hintPrefix).forEach(b => { b.style.outline = ''; });
+        hintPrefix = null;
+        if (hintEl) hintEl.style.display = 'none';
+    }
+
+    document.addEventListener('mouseover', (e) => {
+        const blk = e.target.closest && e.target.closest('[id^="tireResult_"]');
+        const m = blk && blk.id.match(DESC_ID);
+        if (!m) { if (hintPrefix) clearTireHint(); return; }
+        const prefix = 'tireResult_' + m[1];
+        if (prefix === hintPrefix) return;
+        clearTireHint();
+        hintPrefix = prefix;
+        descBlocks(prefix).forEach(b => { b.style.outline = '2px dashed #3b9bff'; });
+        if (!hintEl) {
+            hintEl = document.createElement('div');
+            hintEl.textContent = 'ALT + R-CLICK';
+            hintEl.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;background:#2563eb;color:#fff;'
+                + 'font:700 11px Segoe UI,sans-serif;padding:3px 8px;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.5);';
+            document.documentElement.appendChild(hintEl);
+        }
+        const r = blk.getBoundingClientRect();
+        hintEl.style.left = Math.max(4, r.left) + 'px';
+        hintEl.style.top = Math.max(4, r.top - 24) + 'px';
+        hintEl.style.display = 'block';
+    }, true);
+}
+
+if (IS_TEKION) {
+    let pill = null;
+
+    function hideTirePill() { if (pill) pill.style.display = 'none'; }
+
+    function showTirePill(desc) {
+        if (!pill) {
+            pill = document.createElement('div');
+            pill.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483647;cursor:pointer;'
+                + 'background:#2563eb;color:#fff;font:700 13px Segoe UI,sans-serif;padding:8px 16px;border-radius:8px;'
+                + 'box-shadow:0 3px 12px rgba(0,0,0,.6);text-align:center;';
+            pill.title = 'Click to dismiss';
+            pill.addEventListener('click', () => {
+                GM_setValue(TIRE_FLAG_KEY, 'null');
+                hideTirePill();
+            });
+            document.documentElement.appendChild(pill);
+        }
+        pill.innerHTML = 'CTRL+V <span style="font-weight:400;font-size:11px;display:block;opacity:.9;"></span>';
+        pill.querySelector('span').textContent = desc;
+        pill.style.display = 'block';
+    }
+
+    // pasting anywhere on Tekion means the job is done
+    document.addEventListener('paste', () => {
+        let f = null;
+        try { f = JSON.parse(GM_getValue(TIRE_FLAG_KEY, 'null')); } catch (err) {}
+        if (f) GM_setValue(TIRE_FLAG_KEY, 'null');
+        hideTirePill();
+    }, true);
+
+    setInterval(() => {
+        let f = null;
+        try { f = JSON.parse(GM_getValue(TIRE_FLAG_KEY, 'null')); } catch (err) {}
+        if (f && f.ts && (Date.now() - f.ts) < TIRE_FLAG_MAX_AGE_MS) showTirePill(f.desc || '');
+        else hideTirePill();
+    }, 600);
+}
+
+// =============================================
 // US AUTOFORCE SIDE
 // =============================================
 if (IS_USAUTOFORCE) {
@@ -291,6 +376,7 @@ if (IS_USAUTOFORCE) {
                 }
                 navigator.clipboard.writeText(description).then(() => {
                     console.log('[USAF Tire Copy] Copied:', description);
+                    GM_setValue(TIRE_FLAG_KEY, JSON.stringify({ desc: description, ts: Date.now() }));
                     const flashEl = nameEl || anyBlock;
                     flashEl.style.background = 'rgba(37,99,235,0.4)';
                     setTimeout(() => { flashEl.style.background = ''; }, 600);
@@ -2288,7 +2374,7 @@ if (IS_RECONVISION) {
         'D': 'DOB', 'I': 'INFINITI', 'T': 'TOY', 'LK': 'LKQ', 'AU': 'AUDI',
         'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
         'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
-        'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FMP', 'ST': 'STOCK', 'U': 'USAF',
+        'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF',
     };
     const QP_STATUS_MAP = { 'A': '1', 'O': '3' }; // 1 = Action Required, 3 = Ordered (confirmed RV status select values)
 
