@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.93
+// @version      5.94
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -462,6 +462,7 @@ if (IS_PARTSTECH) {
             e.stopPropagation();
             const pn = partEl.innerText.trim();
             GM_setValue('clip_part', pn);
+            console.log('[Clip] Right-click SAVED part:', JSON.stringify(pn), '| read back:', JSON.stringify(GM_getValue('clip_part', '')), '| on', location.hostname);
             partEl.style.background = 'rgba(74,222,128,0.4)';
             setTimeout(() => { partEl.style.background = ''; }, 600);
             return;
@@ -471,6 +472,7 @@ if (IS_PARTSTECH) {
             e.stopPropagation();
             const price = priceEl.innerText.trim().replace(/[$,]/g, '');
             GM_setValue('clip_price', price);
+            console.log('[Clip] Right-click SAVED price:', JSON.stringify(price), '| on', location.hostname);
             priceEl.style.background = 'rgba(250,204,21,0.4)';
             setTimeout(() => { priceEl.style.background = ''; }, 600);
             return;
@@ -501,6 +503,7 @@ if (IS_REPAIRLINK) {
             e.stopPropagation();
             const pn = partEl.innerText.trim();
             GM_setValue('clip_part', pn);
+            console.log('[Clip] Right-click SAVED part:', JSON.stringify(pn), '| read back:', JSON.stringify(GM_getValue('clip_part', '')), '| on', location.hostname);
             partEl.style.background = 'rgba(74,222,128,0.4)';
             setTimeout(() => { partEl.style.background = ''; }, 600);
             return;
@@ -510,6 +513,7 @@ if (IS_REPAIRLINK) {
             e.stopPropagation();
             const price = priceEl.innerText.trim().replace(/[$,]/g, '');
             GM_setValue('clip_price', price);
+            console.log('[Clip] Right-click SAVED price:', JSON.stringify(price), '| on', location.hostname);
             priceEl.style.background = 'rgba(250,204,21,0.4)';
             setTimeout(() => { priceEl.style.background = ''; }, 600);
             return;
@@ -666,6 +670,7 @@ if (IS_RO_SALES) {
         if (!isPartSelect) return;
         armedInput = e.target;
         const { part, price } = getClip();
+        console.log('[Clip] Select box focused -- saved clip reads:', JSON.stringify(part), '/', JSON.stringify(price));
         if (part) {
             setPill('⌨ DblClick → ' + part + (price ? ' | $' + price : ''), 'armed', true);
         } else {
@@ -706,6 +711,7 @@ if (IS_RO_SALES) {
         e.preventDefault();
 
         const { part, price } = getClip();
+        console.log('[Clip] Double-click paste -- saved clip reads:', JSON.stringify(part), '/', JSON.stringify(price));
         if (!part) {
             setPill('No part# — right-click one in PartsTech first', 'warn', false, 5000);
             return;
