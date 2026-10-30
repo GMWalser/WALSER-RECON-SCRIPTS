@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.94
+// @version      5.95
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -450,11 +450,14 @@ if (IS_PARTSTECH) {
     let ptArmed = true;
 
     window.addEventListener('recon_arm_toggle', (e) => { ptArmed = e.detail; });
-    const storedArm = sessionStorage.getItem('recon_clip_armed');
-    if (storedArm === '0') ptArmed = false;
+    // v5.94b: Navigator always starts ARMED on every page load, but this script used to read a leftover
+    // "disarmed" value that PartsTech remembers per tab. The two disagreed: Navigator caught the right-click
+    // (green flash, saved in ITS private storage) while this script ignored it, so the old part number stayed.
+    // Both now start armed.
+    try { sessionStorage.setItem('recon_clip_armed', '1'); } catch (e) {}
 
     document.addEventListener('contextmenu', (e) => {
-        if (!ptArmed) return;
+        if (!ptArmed) { if (e.target.closest && e.target.closest('span.css-1og29io, [data-testid="actualPrice"]')) console.log('[Clip] Right-click ignored: Recon Clipboard is DISARMED (press Alt+A to re-arm)'); return; }
         const partEl  = e.target.closest('span.css-1og29io');
         const priceEl = e.target.closest('[data-testid="actualPrice"]');
         if (partEl) {
