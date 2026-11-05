@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -97,6 +97,18 @@ const WALLPAPERS = {
   th_crimsonsaber: { name: "Crimson Saber", css: "linear-gradient(120deg,transparent 47%,rgba(255,40,60,.95) 49.4%,rgba(255,255,255,.95) 50%,rgba(255,40,60,.95) 50.6%,transparent 53%),radial-gradient(circle at 50% 50%,rgba(255,26,46,.35),transparent 45%),linear-gradient(#070203,#070203)" },
   th_digitalrain: { name: "Digital Rain", css: "radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.12),transparent 60%),linear-gradient(#000300,#000300)" },
   th_mainframe: { name: "Mainframe", css: "repeating-linear-gradient(0deg,rgba(51,255,51,.06) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,rgba(51,255,51,.14),transparent 70%),linear-gradient(#010801,#010801)" },
+  ar_tw_mask: { name: "Skull Mask Inks", css: "repeating-radial-gradient(circle at 50% 40%,rgba(91,74,110,.45) 0 2px,transparent 2px 9px),radial-gradient(circle at 50% 40%,rgba(240,138,42,.35),transparent 35%),linear-gradient(#120d14,#120d14)" },
+  ar_tw_teal: { name: "Teal & Burnt Orange", css: "repeating-radial-gradient(circle at 50% 35%,rgba(111,154,160,.35) 0 2px,transparent 2px 10px),radial-gradient(circle at 50% 35%,rgba(226,98,42,.35),transparent 35%),linear-gradient(#0d1416,#0d1416)" },
+  ar_tw_phoenix: { name: "Phoenix Feathers", css: "radial-gradient(ellipse at 30% 30%,rgba(232,166,54,.35),transparent 40%),radial-gradient(ellipse at 70% 70%,rgba(31,138,160,.30),transparent 40%),radial-gradient(circle at 60% 20%,rgba(154,61,26,.40),transparent 35%),linear-gradient(#1a1714,#211d18)" },
+  ar_tw_tree: { name: "Twisted Tree Sunset", css: "repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 5px),linear-gradient(180deg,#4a2449 0%,#7a3f6b 35%,#e0794a 72%,#f2b16e 100%)" },
+  ar_tw_slime: { name: "Blower & Slime", css: "radial-gradient(ellipse at 50% 105%,rgba(57,230,57,.50),transparent 40%),repeating-radial-gradient(circle at 50% 100%,rgba(57,230,57,.12) 0 6px,transparent 6px 22px),radial-gradient(ellipse at 50% 0%,rgba(255,90,31,.45),transparent 60%),linear-gradient(#120a06,#120a06)" },
+  ar_vd_ballpoint: { name: "Ballpoint Blue", css: "repeating-linear-gradient(35deg,rgba(111,125,255,.14) 0 1px,transparent 1px 5px),repeating-linear-gradient(-55deg,rgba(111,125,255,.09) 0 1px,transparent 1px 8px),linear-gradient(#0c0f24,#0c0f24)" },
+  ar_vd_hatch: { name: "Crosshatch Engraving", css: "repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 6px),repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 9px),linear-gradient(#080808,#080808)" },
+  ar_mg_speed: { name: "Speed Lines", css: "repeating-conic-gradient(from 0deg at 85% 45%,rgba(255,255,255,.10) 0 3deg,transparent 3deg 9deg,rgba(255,255,255,.05) 9deg 11deg,transparent 11deg 16deg),linear-gradient(#1a1a1a,#2a2a2a)" },
+  ar_mg_green: { name: "Atomic Green", css: "repeating-conic-gradient(from 0deg at 50% 0%,rgba(198,244,50,.16) 0 5deg,transparent 5deg 10deg),linear-gradient(180deg,#1a2a0a,#0f1a05)" },
+  ar_mg_blue: { name: "Atomic Blue", css: "repeating-conic-gradient(from 0deg at 80% 15%,rgba(255,255,255,.14) 0 4deg,transparent 4deg 10deg),radial-gradient(circle at 80% 15%,rgba(255,255,255,.45),transparent 12%),linear-gradient(180deg,#0d2150,#071433)" },
+  ar_mg_flames: { name: "Hot Rod Flames", css: "radial-gradient(ellipse at 20% 110%,rgba(255,138,31,.65),transparent 35%),radial-gradient(ellipse at 50% 115%,rgba(255,214,79,.55),transparent 35%),radial-gradient(ellipse at 80% 110%,rgba(255,138,31,.65),transparent 35%),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 30px,transparent 30px 60px),linear-gradient(#141414,#1d1d1d)" },
+  ar_mg_saucer: { name: "Saucer Attack", css: "repeating-linear-gradient(0deg,rgba(125,220,74,.16) 0 40px,rgba(241,236,181,.08) 40px 80px),repeating-conic-gradient(from 0deg at 50% 30%,rgba(255,255,255,.05) 0 4deg,transparent 4deg 12deg),linear-gradient(#101410,#101410)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
@@ -162,6 +174,23 @@ const THEMED = {
 };
 Object.assign(PRESETS, COLOR_THEORY);
 Object.assign(PRESETS, THEMED);
+// Art-print looks: palettes and textures inspired by poster artists' work (colors and line
+// textures only, no artwork copied). Same readability checks as every other theme.
+const ART = {
+  tw_mask: { name: "Skull Mask Inks", about: "art: violet, rust, orange, gold and bone screen print (Tidwell-inspired)", bg: '#120d14', surface: '#221a28', text: '#efe8d6', accent: '#f08a2a', accentText: '#1a0a00', link: '#e3c06a', border: '#4a3a55', input: '#0e0a10', wp: WALLPAPERS.ar_tw_mask.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#f08a2a' },
+  tw_teal: { name: "Teal & Burnt Orange", about: "art: teal, burnt orange and cream variant (Tidwell-inspired)", bg: '#0d1416', surface: '#172326', text: '#f3e6c6', accent: '#e2622a', accentText: '#1a0700', link: '#8fc3c8', border: '#2f4a4f', input: '#0a1012', wp: WALLPAPERS.ar_tw_teal.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
+  tw_phoenix: { name: "Phoenix Feathers", about: "art: rust, gold and teal on warm gray (Tidwell-inspired)", bg: '#1a1714', surface: '#26221d', text: '#f1e8d8', accent: '#e8a636', accentText: '#1a1000', link: '#4fc0d6', border: '#4a443b', input: '#14110f', wp: WALLPAPERS.ar_tw_phoenix.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#ffb347' },
+  tw_tree: { name: "Twisted Tree Sunset", about: "art: purple-to-peach halftone sunset, olive and mint (Tidwell-inspired)", bg: '#1b1120', surface: '#2a1a30', text: '#fbe9d6', accent: '#f2a65e', accentText: '#20100a', link: '#9fd6cf', border: '#4c3254', input: '#150d19', wp: WALLPAPERS.ar_tw_tree.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
+  tw_slime: { name: "Blower & Slime", about: "art: fluorescent orange, slime green and chrome blue hot-rod print (Tidwell-inspired)", bg: '#120a06', surface: '#1f120b', text: '#fff1e8', accent: '#39e639', accentText: '#021a02', link: '#ff8a52', border: '#4a2a1a', input: '#0e0704', wp: WALLPAPERS.ar_tw_slime.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '' },
+  vd_ballpoint: { name: "Ballpoint Blue", about: "art: dense blue ballpoint-pen hatching (Van Dyke-inspired)", bg: '#0c0f24', surface: '#141a3a', text: '#e6e9ff', accent: '#8f9bff', accentText: '#050824', link: '#c3caff', border: '#2a3370', input: '#090b1c', wp: WALLPAPERS.ar_vd_ballpoint.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
+  vd_hatch: { name: "Crosshatch Engraving", about: "art: black and white crosshatch engraving (Van Dyke-inspired)", bg: '#080808', surface: '#141414', text: '#f2f2f2', accent: '#e8e8e8', accentText: '#0a0a0a', link: '#c8c8c8', border: '#3a3a3a', input: '#060606', wp: WALLPAPERS.ar_vd_hatch.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
+  mg_speed: { name: "Speed Lines", about: "art: grayscale-ramp speed lines (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_speed.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#d0d0d0' },
+  mg_green: { name: "Atomic Green", about: "art: lime-to-olive ramp with sunburst rays (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_green.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#c6f432' },
+  mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
+  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f' },
+  mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
+};
+Object.assign(PRESETS, ART);
 const FIELDS = [
   ['bg', 'Page background'], ['surface', 'Panels & cards'], ['text', 'Text'],
   ['accent', 'Buttons & highlights'], ['accentText', 'Button text'], ['link', 'Links'],
@@ -392,6 +421,9 @@ html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   if (T.fx === 'scan') css += `
 @keyframes wrScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
 html::before{content:'';position:fixed;left:0;right:0;top:0;height:18vh;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .2)} 85%,${rgba(c, .55)} 100%);animation:wrScan 6s linear infinite}`;
+  if (T.fx === 'spin') css += `
+@keyframes wrSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+html::before{content:'';position:fixed;left:50%;top:50%;width:250vmax;height:250vmax;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,${rgba(c, .10)} 0 6deg,transparent 6deg 12deg);animation:wrSpin 120s linear infinite}`;
   return css;
 }
 let fx = null;
@@ -567,8 +599,9 @@ function render(root) {
   const themes = allThemes(), custom = customThemes();
   const cur = themes[cfg.theme] || null;
   const opts = ['<option value="">Off (site\'s normal look)</option>',
-    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Themed: cyberpunk, space, cars, art">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
   ].join('');
