@@ -19,6 +19,9 @@ Tampermonkey icon -> **🎨 Themes & colors…** (on RV, Tekion, PartsTech, USAu
 - Pick a suggested dark theme, or change any color to make your own (★).
 - **Use on all work sites** applies the same theme everywhere.
 - **🎯 Click an element to recolor**: click any button/bar/box, pick its colors.
+- **Wallpaper**: 6 built-in ones (work on every site), or upload a picture / paste a picture link.
+  Sliders: darken picture, see-through panels. Some sites may block pictures; built-ins always work.
+- Drag the panel by its title bar; ▁ shrinks it to just the title bar.
 - **Custom CSS** box for anything else.
 - **Share**: Copy my theme code -> send it -> coworker pastes it and clicks Load.
 - Off by default. Saved per person, per browser.

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -37,6 +37,15 @@ const PRESETS = {
   ember:    { name: 'Ember Orange',   bg: '#1a1210', surface: '#261a16', text: '#f3e9e4', accent: '#f97316', accentText: '#1a0d05', link: '#fb923c', border: '#3d2a22', input: '#1f1512' },
   purple:   { name: 'Purple Night',   bg: '#151223', surface: '#211c33', text: '#e9e5f5', accent: '#a855f7', accentText: '#ffffff', link: '#c084fc', border: '#352d4f', input: '#1a1629' },
   contrast: { name: 'High Contrast',  bg: '#000000', surface: '#0a0a0a', text: '#ffffff', accent: '#facc15', accentText: '#000000', link: '#ffff00', border: '#777777', input: '#000000' },
+};
+// Built-in wallpapers: pure CSS (no image files), so no site can block them.
+const WALLPAPERS = {
+  aurora:    { name: 'Aurora',         css: 'radial-gradient(ellipse at 20% 20%,#0ea5e9 0%,transparent 45%),radial-gradient(ellipse at 80% 30%,#a855f7 0%,transparent 45%),radial-gradient(ellipse at 50% 90%,#22c55e 0%,transparent 50%),linear-gradient(#020617,#020617)' },
+  sunset:    { name: 'Sunset',         css: 'linear-gradient(160deg,#1e1b4b 0%,#7c2d12 55%,#f97316 100%)' },
+  ocean:     { name: 'Deep Ocean',     css: 'linear-gradient(180deg,#020617 0%,#0c4a6e 60%,#0e7490 100%)' },
+  carbon:    { name: 'Carbon Fiber',   css: 'repeating-linear-gradient(45deg,#111 0 6px,#1c1c1c 6px 12px),linear-gradient(#111,#111)' },
+  blueprint: { name: 'Blueprint Grid', css: 'repeating-linear-gradient(0deg,rgba(96,165,250,.18) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(96,165,250,.18) 0 1px,transparent 1px 40px),linear-gradient(#0b2545,#0b2545)' },
+  ember:     { name: 'Embers',         css: 'radial-gradient(circle at 30% 70%,#b91c1c 0%,transparent 40%),radial-gradient(circle at 75% 25%,#ea580c 0%,transparent 35%),linear-gradient(#0c0a09,#0c0a09)' },
 };
 const FIELDS = [
   ['bg', 'Page background'], ['surface', 'Panels & cards'], ['text', 'Text'],
@@ -90,6 +99,7 @@ function mix(h1, h2, t) {
   const a = hexToRgb(h1), b = hexToRgb(h2);
   return rgbToHex({ r: a.r + (b.r - a.r) * t, g: a.g + (b.g - a.g) * t, b: a.b + (b.b - a.b) * t });
 }
+function rgba(hex, a) { const c = hexToRgb(hex); return a >= 1 ? hex : `rgba(${c.r},${c.g},${c.b},${a})`; }
 const isBlue = H => H.h >= 190 && H.h <= 255;
 
 // ---------- the one stylesheet ----------
@@ -99,8 +109,10 @@ function cssText() {
   let css = '';
   if (T) {
     const s2 = mix(T.surface, T.text, 0.07);
+    // With a wallpaper, panels can be see-through (wpSee %) so the picture shows.
+    const a = T.wp ? 1 - (T.wpSee == null ? 25 : T.wpSee) / 100 : 1;
     css += `
-:root{--wr-bg:${T.bg};--wr-surface:${T.surface};--wr-surface2:${s2};--wr-text:${T.text};--wr-accent:${T.accent};
+:root{--wr-bg:${T.bg};--wr-surface:${rgba(T.surface, a)};--wr-surface2:${rgba(s2, a)};--wr-alpha:${a};--wr-text:${T.text};--wr-accent:${T.accent};
 --wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};color-scheme:dark !important}
 html,body{background-color:var(--wr-bg) !important}
 [data-wr-bg=page]{background-color:var(--wr-bg) !important}
@@ -121,6 +133,17 @@ input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
 ::selection{background:${T.accent};color:${T.accentText}}
 *{scrollbar-color:${T.border} ${T.bg}}
 `;
+    if (T.wp) {
+      const dim = (T.wpDim == null ? 50 : T.wpDim) / 100;
+      const fit = T.wpFit || 'cover';
+      const size = fit === 'tile' ? 'auto' : fit, rep = fit === 'tile' ? 'repeat' : 'no-repeat';
+      css += `
+html{background-image:linear-gradient(rgba(0,0,0,${dim}),rgba(0,0,0,${dim})),${T.wp} !important;
+background-size:100% 100%,${size} !important;background-repeat:no-repeat,${rep} !important;
+background-position:center,center !important;background-attachment:fixed,fixed !important}
+body,[data-wr-bg=page]{background-color:transparent !important}
+`;
+    }
   }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
@@ -162,7 +185,7 @@ function decide(el, cs, picked) {
     else if (H.s < 0.3) {
       if (L >= 0.85) d.bg = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'input' : 'surface';
       else if (L >= 0.45) d.bg = 'surface2';
-    } else if (L >= 0.6) { d.bg = 'tint'; d.tint = `hsl(${Math.round(H.h)}, ${Math.round(Math.min(H.s, 0.6) * 100)}%, 20%)`; }
+    } else if (L >= 0.6) { d.bg = 'tint'; d.tint = `hsla(${Math.round(H.h)}, ${Math.round(Math.min(H.s, 0.6) * 100)}%, 20%, var(--wr-alpha, 1))`; }
   }
   const c = parseColor(cs.color);
   if (c) {
@@ -260,9 +283,72 @@ function openPanel() {
   host = document.createElement('div');
   host.id = OUR + '-host';
   host.style.cssText = 'all:initial;position:fixed;top:12px;right:12px;z-index:2147483647';
+  const pos = load('panel_pos', null);           // where the user last dragged it
+  if (pos) placePanel(pos.x, pos.y);
   const root = host.attachShadow({ mode: 'open' });
   document.documentElement.appendChild(host);
   render(root);
+}
+function placePanel(x, y) {                       // keep at least the header on screen
+  x = Math.max(0, Math.min(x, window.innerWidth - 120));
+  y = Math.max(0, Math.min(y, window.innerHeight - 40));
+  Object.assign(host.style, { left: x + 'px', top: y + 'px', right: 'auto' });
+}
+function makeDraggable(root) {
+  const handle = root.querySelector('#drag');
+  handle.onpointerdown = e => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    const r = host.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+    const move = ev => placePanel(ev.clientX - dx, ev.clientY - dy);
+    const up = () => {
+      window.removeEventListener('pointermove', move, true); window.removeEventListener('pointerup', up, true);
+      const r2 = host.getBoundingClientRect(); save('panel_pos', { x: r2.left, y: r2.top });
+    };
+    window.addEventListener('pointermove', move, true); window.addEventListener('pointerup', up, true);
+  };
+}
+// Save a change to the current theme. Editing a suggested theme makes a "My ..." copy.
+function updateTheme(changes) {
+  const c = customThemes();
+  let id = cfg.theme;
+  if (PRESETS[id]) {
+    id = 'my_' + id;
+    if (!c[id]) c[id] = Object.assign({}, PRESETS[cfg.theme], { name: 'My ' + PRESETS[cfg.theme].name });
+  }
+  c[id] = Object.assign({}, c[id], changes);
+  try { save('custom_themes', c); }
+  catch (e) { alert('Could not save (picture too big?). Try a smaller picture.'); return false; }
+  const switched = cfg.theme !== id;
+  cfg.theme = id; saveSiteCfg(cfg); refresh(false);
+  return switched;
+}
+// Shrink an uploaded picture so it saves fast and small (max 1920px wide, JPEG).
+function shrinkImage(file, cb) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1920 / img.width, 1200 / img.height);
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      let q = 0.82, url = cv.toDataURL('image/jpeg', q);
+      while (url.length > 900000 && q > 0.4) { q -= 0.1; url = cv.toDataURL('image/jpeg', q); }
+      cb(url);
+    };
+    img.onerror = () => cb(null);               // not a picture, or this site blocks pictures
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+// Can this site show this picture? (Some sites block outside pictures.)
+function testImage(url, cb) {
+  const m = /^url\("(.*)"\)$/.exec(url);
+  if (!m) { cb(true); return; }
+  const img = new Image();
+  img.onload = () => cb(true); img.onerror = () => cb(false);
+  img.src = m[1];
 }
 function render(root) {
   cfg = siteCfg();
@@ -291,10 +377,15 @@ function render(root) {
   .row{display:flex;gap:6px;flex-wrap:wrap}
   .note{font-size:11px;color:#9ca3af;margin-top:8px}
   .dis{opacity:.4;pointer-events:none}
+  #drag{cursor:move;user-select:none}
+  .min .body{display:none}
+  .min{width:auto}
+  input[type=range]{width:100%}
 </style>
-<div class="p">
-  <h3>🎨 Themes & colors <button class="x" id="close" title="Close">✕</button></h3>
-  <div class="note" style="margin:0 0 8px">Site: <b>${esc(HOST)}</b></div>
+<div class="p ${load('panel_min', false) ? 'min' : ''}">
+  <h3 id="drag" title="Drag to move">🎨 Themes & colors <span><button class="x" id="minbtn" title="Shrink / expand">▁</button><button class="x" id="close" title="Close">✕</button></span></h3>
+  <div class="body">
+  <div class="note" style="margin:0 0 8px">Site: <b>${esc(HOST)}</b> · drag the title bar to move this box</div>
   <h4>Theme</h4>
   <select id="theme">${opts}</select>
   <div class="row" style="margin-top:6px">
@@ -307,6 +398,28 @@ function render(root) {
   </div>
   <label class="c ${cur ? '' : 'dis'}" style="margin-top:6px"><input type="checkbox" id="buttons" ${cfg.buttons ? 'checked' : ''}> Blue buttons use my button color</label>
   <div class="note">Changing a suggested theme's colors saves it as your own ★ theme.</div>
+  <h4>Wallpaper ${cur ? '' : '(pick a theme first)'}</h4>
+  <div class="${cur ? '' : 'dis'}">
+    <select id="wpsel">
+      <option value="">None</option>
+      <optgroup label="Built-in (work on every site)">${Object.keys(WALLPAPERS).map(k => `<option value="b:${k}">${esc(WALLPAPERS[k].name)}</option>`).join('')}</optgroup>
+      ${base.wp && !Object.values(WALLPAPERS).some(w => w.css === base.wp) ? '<option value="mine">My picture</option>' : ''}
+    </select>
+    <div class="row" style="margin-top:6px">
+      <button id="wpfile">📁 Upload picture…</button>
+      <button id="wplink">🔗 Use picture link…</button>
+      <input type="file" id="wpinput" accept="image/*" style="display:none">
+    </div>
+    <div id="wpmsg" class="note" style="margin-top:2px"></div>
+    <label class="c" style="margin-top:6px">Darken picture <b id="dimv">${base.wpDim == null ? 50 : base.wpDim}%</b></label>
+    <input type="range" id="wpdim" min="0" max="90" value="${base.wpDim == null ? 50 : base.wpDim}">
+    <label class="c">See-through panels <b id="seev">${base.wpSee == null ? 25 : base.wpSee}%</b></label>
+    <input type="range" id="wpsee" min="0" max="80" value="${base.wpSee == null ? 25 : base.wpSee}">
+    <label class="c" style="margin-top:4px">Fit
+      <select id="wpfit" style="width:auto">
+        <option value="cover">Fill screen</option><option value="contain">Whole picture</option><option value="tile">Tile (repeat)</option>
+      </select></label>
+  </div>
   <h4>Recolor one thing</h4>
   <div class="row">
     <button id="pick" class="pri">🎯 Click an element to recolor</button>
@@ -321,10 +434,57 @@ function render(root) {
   <div class="row"><button id="copy">Copy my theme code</button><button id="loadcode">Load code</button></div>
   <div class="note">Saved in this browser only. Each person picks their own look.
   If Chrome's "Auto Dark Mode" flag is on, a theme here tells Chrome this page is already dark.</div>
+  </div>
 </div>`;
   const $ = s => root.querySelector(s);
   $('#theme').value = cfg.theme;
+  makeDraggable(root);
+  $('#minbtn').onclick = () => { const p = $('.p'); p.classList.toggle('min'); save('panel_min', p.classList.contains('min')); };
   $('#close').onclick = () => { host.remove(); host = null; };
+  // ---- wallpaper ----
+  const wpKey = Object.keys(WALLPAPERS).find(k => WALLPAPERS[k].css === base.wp);
+  $('#wpsel').value = !base.wp ? '' : wpKey ? 'b:' + wpKey : 'mine';
+  $('#wpfit').value = base.wpFit || 'cover';
+  const setWp = (wp, msg) => {
+    updateTheme({ wp }); render(root);
+    if (msg) root.querySelector('#wpmsg').textContent = msg;
+  };
+  const blocked = msg => { $('#wpmsg').textContent = msg; };
+  $('#wpsel').onchange = e => {
+    const v = e.target.value;
+    if (v === 'mine') return;
+    setWp(v ? WALLPAPERS[v.slice(2)].css : '', '');
+  };
+  $('#wpfile').onclick = () => $('#wpinput').click();
+  $('#wpinput').onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    $('#wpmsg').textContent = 'Loading picture…';
+    shrinkImage(f, url => {
+      if (!url) { blocked('⚠ Could not use that picture here. Either the file is not a picture, or this site blocks pictures (use a built-in wallpaper here).'); return; }
+      const wp = `url("${url}")`;
+      testImage(wp, ok => ok ? setWp(wp, 'Picture set.') : blocked('⚠ This site blocks pictures. Use a built-in wallpaper here.'));
+    });
+  };
+  $('#wplink').onclick = () => {
+    const u = prompt('Paste a picture link (must start with https://):');
+    if (!u) return;
+    if (!/^https:\/\/[^\s"()]+$/.test(u.trim())) { alert('That link does not look right. It must start with https:// and have no spaces.'); return; }
+    const wp = `url("${u.trim()}")`;
+    $('#wpmsg').textContent = 'Checking picture…';
+    testImage(wp, ok => ok ? setWp(wp, 'Picture set.') : blocked('⚠ The picture did not load here (bad link, or this site blocks outside pictures). Try Upload, or a built-in wallpaper.'));
+  };
+  const slider = (id, key, label) => {
+    $(id).oninput = e => {                     // live preview
+      $(label).textContent = e.target.value + '%';
+      if (!T) return;
+      T = Object.assign({}, T, { [key]: Number(e.target.value) });
+      styleEl.textContent = cssText();
+    };
+    $(id).onchange = e => { if (updateTheme({ [key]: Number(e.target.value) })) render(root); };
+  };
+  slider('#wpdim', 'wpDim', '#dimv');
+  slider('#wpsee', 'wpSee', '#seev');
+  $('#wpfit').onchange = e => { if (updateTheme({ wpFit: e.target.value })) render(root); };
   $('#theme').onchange = e => { cfg.theme = e.target.value; saveSiteCfg(cfg); refresh(true); render(root); };
   $('#allsites').onclick = () => {
     WORK_SITES.forEach(h => { const c = siteCfg(h); c.theme = cfg.theme; saveSiteCfg(c, h); });
@@ -341,19 +501,7 @@ function render(root) {
       T = Object.assign({}, T, { [inp.dataset.k]: inp.value });
       styleEl.textContent = cssText();
     };
-    inp.onchange = () => {                      // save
-      const c = customThemes();
-      let id = cfg.theme;
-      if (PRESETS[id]) {                        // editing a suggested theme -> make "My ..." copy
-        id = 'my_' + id;
-        c[id] = Object.assign({}, PRESETS[cfg.theme], { name: 'My ' + PRESETS[cfg.theme].name });
-      }
-      c[id] = Object.assign({}, c[id], { [inp.dataset.k]: inp.value });
-      save('custom_themes', c);
-      const switched = cfg.theme !== id;
-      cfg.theme = id; saveSiteCfg(cfg); refresh(false);
-      if (switched) render(root);
-    };
+    inp.onchange = () => { if (updateTheme({ [inp.dataset.k]: inp.value })) render(root); };
   });
   $('#buttons').onchange = e => { cfg.buttons = e.target.checked; saveSiteCfg(cfg); refresh(true); };
   $('#pick').onclick = () => startPicker(root);
