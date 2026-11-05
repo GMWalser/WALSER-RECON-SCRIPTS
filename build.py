@@ -25,6 +25,7 @@ OUT = ROOT / 'WALSER_RECON.user.js'
 # (id, file) -- id is permanent: it names the script's saved-data area.
 # Do NOT rename an id once people use it, or that script's saved data resets.
 SCRIPTS = [
+    ('themes',           'THEMES.js'),
     ('clipboard',        'CLIPBOARD.js'),
     ('navigator',        'NAVIGATOR.js'),
     ('preloader',        'PRELOADER.js'),

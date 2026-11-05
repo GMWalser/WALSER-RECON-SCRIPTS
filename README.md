@@ -14,6 +14,15 @@ Click the Tampermonkey icon in the browser toolbar:
 
 The page reloads after a change.
 
+## Themes / skins (Page Themes)
+Tampermonkey icon -> **🎨 Themes & colors…** (on RV, Tekion, PartsTech, USAutoForce, RepairLink).
+- Pick a suggested dark theme, or change any color to make your own (★).
+- **Use on all work sites** applies the same theme everywhere.
+- **🎯 Click an element to recolor**: click any button/bar/box, pick its colors.
+- **Custom CSS** box for anything else.
+- **Share**: Copy my theme code -> send it -> coworker pastes it and clicks Load.
+- Off by default. Saved per person, per browser.
+
 ## For editing
 - Edit the individual script files (CLIPBOARD.js, NAVIGATOR.js, ...) as before.
 - `WALSER_RECON.user.js` is built from them automatically by GitHub
