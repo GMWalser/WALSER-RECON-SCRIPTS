@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      1.7
+// @version      1.8
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -110,6 +110,13 @@ const WALLPAPERS = {
   ar_mg_blue: { name: "Atomic Blue", css: "repeating-conic-gradient(from 0deg at 80% 15%,rgba(255,255,255,.14) 0 4deg,transparent 4deg 10deg),radial-gradient(circle at 80% 15%,rgba(255,255,255,.45),transparent 12%),linear-gradient(180deg,#0d2150,#071433)" },
   ar_mg_flames: { name: "Hot Rod Flames", css: "radial-gradient(ellipse at 20% 110%,rgba(255,138,31,.65),transparent 35%),radial-gradient(ellipse at 50% 115%,rgba(255,214,79,.55),transparent 35%),radial-gradient(ellipse at 80% 110%,rgba(255,138,31,.65),transparent 35%),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 30px,transparent 30px 60px),linear-gradient(#141414,#1d1d1d)" },
   ar_mg_saucer: { name: "Saucer Attack", css: "repeating-linear-gradient(0deg,rgba(125,220,74,.16) 0 40px,rgba(241,236,181,.08) 40px 80px),repeating-conic-gradient(from 0deg at 50% 30%,rgba(255,255,255,.05) 0 4deg,transparent 4deg 12deg),linear-gradient(#101410,#101410)" },
+  th_vikings: { name: "Vikings Purple & Gold", css: "linear-gradient(115deg,transparent 0 62%,rgba(255,198,47,.55) 62% 64%,transparent 64% 67%,rgba(255,198,47,.35) 67% 68%,transparent 68%),radial-gradient(ellipse at 25% 25%,rgba(79,38,131,.85),transparent 55%),linear-gradient(160deg,#12081f,#2a1150)" },
+  th_wolves: { name: "Timberwolves Blue & Green", css: "radial-gradient(ellipse at 30% 20%,rgba(120,190,32,.45),transparent 45%),radial-gradient(ellipse at 70% 15%,rgba(35,97,146,.65),transparent 50%),linear-gradient(180deg,transparent 0 78%,rgba(158,162,162,.18) 78% 80%,transparent 80%),linear-gradient(180deg,#0c2340,#07111f)" },
+  th_thermal: { name: "Thermal Vision", css: "radial-gradient(circle at 50% 50%,rgba(255,255,255,.55) 0 3%,rgba(255,220,0,.6) 8%,rgba(255,90,0,.55) 16%,rgba(220,0,40,.45) 24%,rgba(120,0,160,.40) 34%,rgba(20,40,200,.35) 46%,transparent 62%),linear-gradient(#05030f,#05030f)" },
+  th_hunter: { name: "Jungle Hunter", css: "radial-gradient(ellipse at 15% 20%,rgba(60,110,40,.55),transparent 35%),radial-gradient(ellipse at 85% 30%,rgba(40,90,30,.5),transparent 35%),radial-gradient(ellipse at 50% 90%,rgba(30,70,25,.55),transparent 40%),repeating-linear-gradient(75deg,rgba(0,0,0,.25) 0 6px,transparent 6px 22px),linear-gradient(#050c06,#081409)" },
+  th_xenohive: { name: "Xeno Hive", css: "repeating-radial-gradient(ellipse at 50% 120%,rgba(160,175,170,.10) 0 3px,transparent 3px 14px),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 8px,rgba(120,135,130,.07) 8px 11px,transparent 11px 26px),radial-gradient(ellipse at 50% 100%,rgba(156,255,46,.15),transparent 50%),linear-gradient(#050607,#0b0d0e)" },
+  th_tracker: { name: "Motion Tracker", css: "repeating-radial-gradient(circle at 50% 50%,rgba(57,255,136,.14) 0 1px,transparent 1px 70px),linear-gradient(90deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(0deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(#000a04,#000a04)" },
+  th_marine: { name: "Colonial Marine", css: "repeating-linear-gradient(135deg,rgba(242,169,0,.18) 0 14px,rgba(0,0,0,.35) 14px 28px),radial-gradient(ellipse at 30% 40%,rgba(85,90,50,.55),transparent 35%),radial-gradient(ellipse at 70% 60%,rgba(60,65,35,.55),transparent 35%),linear-gradient(#0e0f0a,#0e0f0a)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
@@ -173,6 +180,13 @@ const THEMED = {
   crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
   digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
   mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33' },
+  vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
+  wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#78be20' },
+  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff3b1f' },
+  hunter: { name: "Jungle Hunter", about: "movie-inspired: jungle canopy with a three-dot laser sight", bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser', fxColor: '#ff2020' },
+  xenohive: { name: "Xeno Hive", about: "movie-inspired: ribbed black biomechanical hive, acid green", bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#9cff2e' },
+  tracker: { name: "Motion Tracker", about: "movie-inspired: green radar motion tracker with rotating sweep", bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'sweep', fxColor: '#39ff88' },
+  marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#f2a900' },
 };
 Object.assign(PRESETS, COLOR_THEORY);
 Object.assign(PRESETS, THEMED);
@@ -423,6 +437,15 @@ html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   if (T.fx === 'scan') css += `
 @keyframes wrScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
 html::before{content:'';position:fixed;left:0;right:0;top:0;height:18vh;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .2)} 85%,${rgba(c, .55)} 100%);animation:wrScan 6s linear infinite}`;
+  if (T.fx === 'sweep') css += `
+@keyframes wrSweep{to{transform:translate(-50%,-50%) rotate(360deg)}}
+html::before{content:'';position:fixed;left:50%;top:50%;width:160vmax;height:160vmax;border-radius:50%;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,${rgba(c, .38)},${rgba(c, .08)} 35deg,transparent 60deg 360deg);animation:wrSweep 4s linear infinite}`;
+  if (T.fx === 'laser') css += `
+@keyframes wrLaser{0%{transform:translate(18vw,22vh)}25%{transform:translate(62vw,35vh)}50%{transform:translate(48vw,70vh)}75%{transform:translate(12vw,58vh)}100%{transform:translate(18vw,22vh)}}
+@keyframes wrBlink{0%,100%{opacity:.95}50%{opacity:.55}}
+html::before{content:'';position:fixed;left:0;top:0;width:44px;height:40px;z-index:-1;pointer-events:none;
+background:radial-gradient(circle at 22px 4px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px),radial-gradient(circle at 4px 36px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px),radial-gradient(circle at 40px 36px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px);
+animation:wrLaser 22s ease-in-out infinite,wrBlink 1.4s ease-in-out infinite}`;
   if (T.fx === 'spin') css += `
 @keyframes wrSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 html::before{content:'';position:fixed;left:50%;top:50%;width:250vmax;height:250vmax;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,${rgba(c, .10)} 0 6deg,transparent 6deg 12deg);animation:wrSpin 120s linear infinite}`;
@@ -602,7 +625,7 @@ function render(root) {
   const cur = themes[cfg.theme] || null;
   const opts = ['<option value="">Off (site\'s normal look)</option>',
     '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
-    '<optgroup label="Themed: cyberpunk, space, cars, art">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Themed: cyberpunk, space, cars, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
