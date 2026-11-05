@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1105.1802
+// @version      2026.1105.1811
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -8922,8 +8922,8 @@ log('v1.3 loaded on', location.hostname);
 })();
 });
 
-// ===== Filter Quick Add v1.3  (FILTER_QUICKADD.js) =====
-WR.add('filter_quickadd', 'Filter Quick Add', '1.3', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
+// ===== Filter Quick Add v1.4  (FILTER_QUICKADD.js) =====
+WR.add('filter_quickadd', 'Filter Quick Add', '1.4', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -9040,9 +9040,57 @@ function emptyInput(sec) {
   const all = [...sec.querySelectorAll(PART_INPUT_SEL)].filter(i => i.value === '');
   return all.length ? all[all.length - 1] : null;
 }
+// ---- Subaru: 4-cylinder and 6-cylinder use different drain plug gaskets ----
+// The engine is read from the TRIM box in Tekion's vehicle info panel
+// (#vehicleDetailsOverviewTrim), e.g. "Touring: SUV 2.5L H4 4DR ..." = 4 cyl.
+// The panel is not always open, so every trim seen is remembered per VIN.
+const SUBARU_4CYL = '803916010';
+const SUBARU_6CYL = '11126AA000';
+const TRIM_CACHE_KEY = 'fqa_trim_by_vin';
+function pageVin() {                       // exact 17-char VIN in a leaf element (RO header)
+  for (const el of document.querySelectorAll('span,div,p,td,input')) {
+    const t = (el.tagName === 'INPUT' ? el.value : (el.childElementCount === 0 ? el.textContent : '')) || '';
+    if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t.trim())) return t.trim();
+  }
+  return '';
+}
+function trimOnPage() {
+  const el = document.querySelector('#vehicleDetailsOverviewTrim');
+  return el ? (el.value || el.textContent || '').trim() : '';
+}
+function rememberTrim() {
+  const trim = trimOnPage();
+  if (!trim) return;
+  const vin = pageVin();
+  if (!vin) return;
+  let cache = {};
+  try { cache = JSON.parse(GM_getValue(TRIM_CACHE_KEY, '{}')); } catch (e) {}
+  if (cache[vin] === trim) return;
+  cache[vin] = trim;
+  const keys = Object.keys(cache);
+  if (keys.length > 500) keys.slice(0, keys.length - 500).forEach(k => delete cache[k]);   // keep newest 500
+  GM_setValue(TRIM_CACHE_KEY, JSON.stringify(cache));
+  log('Remembered trim for', vin, ':', trim);
+}
+function subaruCylinders() {
+  let trim = trimOnPage();
+  if (!trim) {
+    try { trim = JSON.parse(GM_getValue(TRIM_CACHE_KEY, '{}'))[pageVin()] || ''; } catch (e) {}
+  }
+  if (/\b[HV]6\b|\b6[\s-]*CYL/i.test(trim)) return { cyl: 6, trim };
+  if (/\b[HI]4\b|\b4[\s-]*CYL/i.test(trim)) return { cyl: 4, trim };
+  return { cyl: 0, trim };
+}
+
 function vehicleMake() {
   const el = document.querySelector('[data-test-id="undefined-modelButton"] span');
   const text = el ? el.textContent.toUpperCase() : '';
+  if (text.includes('SUBARU')) {
+    const s = subaruCylinders();
+    if (s.cyl === 6) return { text, pn: SUBARU_6CYL, note: '6 cyl' };
+    if (s.cyl === 4) return { text, pn: SUBARU_4CYL, note: '4 cyl' };
+    return { text, pn: null, why: 'Subaru engine unknown, no gasket. Open the vehicle info panel, then press Enter on the filter again' };
+  }
   for (const g of GASKET_BY_MAKE) if (g.makes.some(m => text.includes(m))) return { text, pn: g.pn };
   return { text, pn: null };
 }
@@ -9123,12 +9171,12 @@ async function handleRequest(raw) {
     const ok = await addOne(req.part);
     if (ok && req.oil) {
       const mk = vehicleMake();
-      if (!mk.pn) { log('Make not recognised from header text', JSON.stringify(mk.text), '-- no gasket added.'); toast('Filter added. Make not recognised, no gasket', true); return; }
+      if (!mk.pn) { log('No gasket:', mk.why || 'make not recognised', '| header text', JSON.stringify(mk.text)); toast(mk.why ? 'Filter added. ' + mk.why : 'Filter added. Make not recognised, no gasket', true); return; }
       const sec = findSection();
       const have = sec && gasketLine(sec, mk.pn);
       if (have) { log('Gasket already on a line in the job -- skipped. Line was:', JSON.stringify(have)); toast('Added ' + req.part + '. Gasket already on RO'); return; }
       log('Make:', mk.text, '-> gasket', mk.pn);
-      if (await addOne(mk.pn)) toast('Added ' + req.part + ' + gasket ' + mk.pn);
+      if (await addOne(mk.pn)) toast('Added ' + req.part + ' + gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : ''));
     } else if (ok) {
       toast('Added ' + req.part);
     }
@@ -9141,12 +9189,13 @@ async function handleRequest(raw) {
 
 function initTekion() {
   GM_addValueChangeListener(REQ_KEY, (name, oldVal, newVal) => { handleRequest(newVal); });
+  setInterval(rememberTrim, 1000);          // remember trim whenever the vehicle info panel is open
 }
 
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.3 loaded on', location.hostname);
+log('v1.4 loaded on', location.hostname);
 })();
 
 });
