@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1105.1725
+// @version      2026.1105.1736
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -9759,12 +9759,15 @@ function showImport() {
     'align-items:center;justify-content:center;font:14px Segoe UI,sans-serif';
   const opts = WR.list.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   box.innerHTML =
+    '<style>#wr-import *{color:#000 !important;background:#fff;font-family:Segoe UI,sans-serif}' +
+    '#wr-import button{border:1px solid #888;border-radius:4px;padding:6px 14px;cursor:pointer}' +
+    '#wr-import #wr-imp-go{background:#16a34a !important;color:#fff !important;border-color:#16a34a}</style>' +
     '<div style="background:#fff;color:#000;padding:16px;border-radius:8px;width:min(600px,92vw)">' +
     '<b>Import saved data from an old script</b>' +
     '<p style="margin:8px 0">1. Pick the script. 2. Open its <i>.storage.json</i> file from the Tampermonkey export in Notepad, ' +
     'copy everything, paste below. 3. Click Import.</p>' +
     `<select id="wr-imp-id" style="width:100%;margin-bottom:8px">${opts}</select>` +
-    '<textarea id="wr-imp-txt" style="width:100%;height:200px;font:12px monospace" placeholder="Paste here"></textarea>' +
+    '<textarea id="wr-imp-txt" style="width:100%;height:200px;font:12px monospace;border:1px solid #888" placeholder="Paste here"></textarea>' +
     '<div style="text-align:right;margin-top:8px"><button id="wr-imp-cancel">Cancel</button> ' +
     '<button id="wr-imp-go" style="font-weight:bold">Import</button></div></div>';
   document.body.appendChild(box);
