@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Builds WALSER_RECON.js: ONE Tampermonkey script that contains all the
+Builds WALSER_RECON.user.js: ONE Tampermonkey script that contains all the
 individual scripts listed in SCRIPTS below.
 
 How to use:
   1. Edit any individual script file as usual.
   2. Run:  python3 build.py
-  3. Commit WALSER_RECON.js. Tampermonkey auto-updates everyone.
+  3. Commit WALSER_RECON.user.js. Tampermonkey auto-updates everyone.
 
 (The GitHub Action in .github/workflows/build.yml runs this automatically
 whenever a script file changes on the main branch.)
@@ -20,7 +20,7 @@ Each script keeps:
 import re, sys, datetime, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent
-OUT = ROOT / 'WALSER_RECON.js'
+OUT = ROOT / 'WALSER_RECON.user.js'
 
 # (id, file) -- id is permanent: it names the script's saved-data area.
 # Do NOT rename an id once people use it, or that script's saved data resets.
@@ -46,7 +46,7 @@ SCRIPTS = [
     ('parts_database',   'VEHICLE_PARTS_DATABASE.js'),
 ]
 
-RAW = 'https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.js'
+RAW = 'https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js'
 BASE_GRANTS = ['GM_getValue', 'GM_setValue', 'GM_deleteValue', 'GM_listValues',
                'GM_addValueChangeListener', 'GM_removeValueChangeListener',
                'GM_registerMenuCommand', 'GM_addStyle', 'GM_openInTab',

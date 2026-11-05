@@ -3,7 +3,7 @@
 ## For coworkers: install
 1. Install the Tampermonkey browser extension.
 2. Open this link and click **Install**:
-   https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.js
+   https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
 3. Done. It updates itself.
 
 ## Turning scripts off
@@ -16,7 +16,7 @@ The page reloads after a change.
 
 ## For editing
 - Edit the individual script files (CLIPBOARD.js, NAVIGATOR.js, ...) as before.
-- `WALSER_RECON.js` is built from them automatically by GitHub
+- `WALSER_RECON.user.js` is built from them automatically by GitHub
   (.github/workflows/build.yml runs `build.py`). Do not edit it by hand.
 - The list of included scripts is at the top of `build.py`.
 - `loader.js` handles starting scripts, the on/off menu, and data import.
