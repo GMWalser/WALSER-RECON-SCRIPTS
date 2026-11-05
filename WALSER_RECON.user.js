@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1105.1905
+// @version      2026.1105.1914
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -3869,8 +3869,8 @@ if (IS_RECONVISION) {
 
 });
 
-// ===== PartsTech Queue Navigator v17.0  (NAVIGATOR.js) =====
-WR.add('navigator', 'PartsTech Queue Navigator', '17.0', ['https://app.partstech.com/*'], 'document-idle',
+// ===== PartsTech Queue Navigator v17.1  (NAVIGATOR.js) =====
+WR.add('navigator', 'PartsTech Queue Navigator', '17.1', ['https://app.partstech.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -4064,8 +4064,12 @@ function updateClipBorder() {
 
 function renderClip(clipBody) {
   if (!clipBody) return;
-  clipBody.innerHTML = '';
   const { part, price } = getClip();
+  // Only rebuild when something changed. Rebuilding every 300ms made the text flash.
+  const key = part + '|' + price + '|' + dockArmed;
+  if (clipBody.dataset.renderKey === key && clipBody.firstChild) return;
+  clipBody.dataset.renderKey = key;
+  clipBody.innerHTML = '';
   const partSlot = document.createElement('div'); partSlot.className = 'clip-slot';
   const partLeft = document.createElement('div');
   const partLbl = document.createElement('div'); partLbl.className = 'clip-label'; partLbl.textContent = 'Part #';

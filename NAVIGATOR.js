@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PartsTech Queue Navigator
 // @namespace    reconclipboard
-// @version      17.0
+// @version      17.1
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
@@ -203,8 +203,12 @@ function updateClipBorder() {
 
 function renderClip(clipBody) {
   if (!clipBody) return;
-  clipBody.innerHTML = '';
   const { part, price } = getClip();
+  // Only rebuild when something changed. Rebuilding every 300ms made the text flash.
+  const key = part + '|' + price + '|' + dockArmed;
+  if (clipBody.dataset.renderKey === key && clipBody.firstChild) return;
+  clipBody.dataset.renderKey = key;
+  clipBody.innerHTML = '';
   const partSlot = document.createElement('div'); partSlot.className = 'clip-slot';
   const partLeft = document.createElement('div');
   const partLbl = document.createElement('div'); partLbl.className = 'clip-label'; partLbl.textContent = 'Part #';
