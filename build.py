@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""
+Builds WALSER_RECON.js: ONE Tampermonkey script that contains all the
+individual scripts listed in SCRIPTS below.
+
+How to use:
+  1. Edit any individual script file as usual.
+  2. Run:  python3 build.py
+  3. Commit WALSER_RECON.js. Tampermonkey auto-updates everyone.
+
+(The GitHub Action in .github/workflows/build.yml runs this automatically
+whenever a script file changes on the main branch.)
+
+Each script keeps:
+  - its own @match sites (it only runs where it ran before)
+  - its own @run-at timing
+  - its own saved data (keys are kept separate per script)
+  - its own ON/OFF switch in the Tampermonkey menu
+"""
+import re, sys, datetime, pathlib
+
+ROOT = pathlib.Path(__file__).resolve().parent
+OUT = ROOT / 'WALSER_RECON.js'
+
+# (id, file) -- id is permanent: it names the script's saved-data area.
+# Do NOT rename an id once people use it, or that script's saved data resets.
+SCRIPTS = [
+    ('clipboard',        'CLIPBOARD.js'),
+    ('navigator',        'NAVIGATOR.js'),
+    ('preloader',        'PRELOADER.js'),
+    ('bucket_scanner',   'BUCKET MOVER.js'),
+    ('safety_scanner',   'SAFETY_INSPECTION_SCANNER.js'),
+    ('quote_scanner',    'PARTS_ORDER_SCANNER.js'),
+    ('quick_assign',     'RV_QUICK_ASSIGN.js'),
+    ('budget_tracker',   'BUDGET_TRACKER.js'),
+    ('picked_up_filter', 'PICKED_UP_FILTER_ORDER.js'),
+    ('euro_filter',      'EURO_FILTER_ORDER.js'),
+    ('parts_checkin',    'PARTS_CHECKIN.js'),
+    ('fulfillment_open', 'TEKION LOADER.js'),
+    ('order_fill',       'ORDER_FILL_CHECKBOXES.js'),
+    ('quick_remove',     'QUICK_REMOVE_PART.js'),
+    ('vendor_quickadd',  'VENDOR_QUICKADD.js'),
+    ('po_to_partstech',  'PO_TO_PARTSTECH.js'),
+    ('oem_vin_bridge',   'OEM_VIN_BRIDGE.js'),
+    ('teams_ro_opener',  'TEAMS_RO_OPENER.js'),
+    ('parts_database',   'VEHICLE_PARTS_DATABASE.js'),
+]
+
+RAW = 'https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.js'
+BASE_GRANTS = ['GM_getValue', 'GM_setValue', 'GM_deleteValue', 'GM_listValues',
+               'GM_addValueChangeListener', 'GM_removeValueChangeListener',
+               'GM_registerMenuCommand', 'GM_addStyle', 'GM_openInTab',
+               'GM_xmlhttpRequest', 'unsafeWindow']
+SUPPORTED = set(BASE_GRANTS) | {'none'}
+
+
+def parse(path):
+    text = path.read_text(encoding='utf-8').replace('\r\n', '\n')
+    m = re.search(r'//\s*==UserScript==(.*?)//\s*==/UserScript==\n?', text, re.S)
+    if not m:
+        sys.exit(f'ERROR: no userscript header in {path.name}')
+    meta = {}
+    for line in m.group(1).splitlines():
+        mm = re.match(r'\s*//\s*@(\S+)\s*(.*?)\s*$', line)
+        if mm:
+            meta.setdefault(mm.group(1), []).append(mm.group(2))
+    for bad in ('require', 'resource', 'include', 'exclude', 'noframes'):
+        if bad in meta:
+            sys.exit(f'ERROR: {path.name} uses @{bad}, which build.py does not support yet')
+    for g in meta.get('grant', []):
+        if g not in SUPPORTED:
+            sys.exit(f'ERROR: {path.name} uses @grant {g}, add it to BASE_GRANTS first')
+    body = text[m.end():]
+    return meta, body
+
+
+def js_str(s):
+    return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
+def main():
+    parts, all_matches = [], []
+    for sid, fname in SCRIPTS:
+        meta, body = parse(ROOT / fname)
+        name = meta.get('name', [sid])[0]
+        ver = meta.get('version', ['?'])[0]
+        matches = meta.get('match', [])
+        if not matches:
+            sys.exit(f'ERROR: {fname} has no @match')
+        run_at = meta.get('run-at', ['document-idle'])[0]
+        for mt in matches:
+            if mt not in all_matches:
+                all_matches.append(mt)
+        parts.append(
+            f"\n// ===== {name} v{ver}  ({fname}) =====\n"
+            f"WR.add({js_str(sid)}, {js_str(name)}, {js_str(ver)}, "
+            f"[{', '.join(js_str(x) for x in matches)}], {js_str(run_at)},\n"
+            f"function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, "
+            f"GM_addValueChangeListener, GM_removeValueChangeListener) {{\n"
+            f"{body}\n}});\n")
+
+    version = datetime.datetime.now(datetime.timezone.utc).strftime('%Y.%m%d.%H%M')
+    header = ['// ==UserScript==',
+              '// @name         Walser Recon Tools',
+              '// @namespace    walser-recon-tools',
+              f'// @version      {version}',
+              '// @author       Gabe',
+              '// @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.',
+              f'// @updateURL    {RAW}',
+              f'// @downloadURL  {RAW}']
+    header += [f'// @match        {m}' for m in all_matches]
+    header += [f'// @grant        {g}' for g in BASE_GRANTS]
+    header += ['// @connect      app.tekioncloud.com',
+               '// @run-at       document-start',
+               '// ==/UserScript==']
+
+    loader = (ROOT / 'loader.js').read_text(encoding='utf-8').replace('\r\n', '\n')
+    out = ('\n'.join(header) + '\n// GENERATED by build.py -- do not edit this file, edit the individual scripts.\n\n'
+           + loader.replace('/*__SCRIPTS__*/', ''.join(parts)))
+    OUT.write_text(out, encoding='utf-8', newline='\n')
+    print(f'Built {OUT.name} v{version}: {len(SCRIPTS)} scripts, {len(all_matches)} @match lines, '
+          f'{len(out)//1024} KB')
+
+
+if __name__ == '__main__':
+    main()
