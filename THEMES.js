@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -52,7 +52,7 @@ const WALLPAPERS = {
   autumn: { name: "Autumn Leaves", css: "radial-gradient(circle at 80% 20%,rgba(232,163,61,.45),transparent 40%),radial-gradient(circle at 20% 80%,rgba(212,225,87,.25),transparent 40%),linear-gradient(160deg,#2a1406 0%,#5c2a0e 55%,#8a4a12 100%)" },
   golddust: { name: "Gold Dust", css: "radial-gradient(circle at 50% 0%,rgba(212,175,55,.40),transparent 55%),repeating-radial-gradient(circle at 30% 40%,rgba(212,175,55,.12) 0 2px,transparent 2px 28px),linear-gradient(#0a0f2c,#0a0f2c)" },
   amethyst: { name: "Amethyst", css: "radial-gradient(circle at 30% 30%,rgba(168,85,247,.50),transparent 45%),radial-gradient(circle at 75% 75%,rgba(251,191,36,.30),transparent 40%),linear-gradient(#160f24,#160f24)" },
-  matrix: { name: "Matrix Rain", css: "repeating-linear-gradient(90deg,rgba(0,255,102,.10) 0 2px,transparent 2px 18px),repeating-linear-gradient(0deg,rgba(0,255,102,.05) 0 1px,transparent 1px 6px),linear-gradient(180deg,#000a00,#002b0d)" },
+  matrix: { name: "Matrix Rain", css: "repeating-linear-gradient(90deg,rgba(0,255,102,.10) 0 2px,transparent 2px 18px),repeating-linear-gradient(0deg,rgba(0,255,102,.05) 0 1px,transparent 1px 6px),linear-gradient(180deg,#000a00,#002b0d)", glow: true, fx: 'code', fxColor: '#00ff66' },
   sakura: { name: "Sakura", css: "radial-gradient(circle at 80% 20%,rgba(255,143,199,.45),transparent 40%),radial-gradient(circle at 20% 80%,rgba(126,232,200,.30),transparent 40%),linear-gradient(#1f0f1a,#1f0f1a)" },
   teal: { name: "Teal Depths", css: "radial-gradient(ellipse at 50% 0%,rgba(20,184,166,.40),transparent 60%),linear-gradient(180deg,#031c1c,#052e2e)" },
   ct_ultraviolet: { name: "Ultraviolet", css: "radial-gradient(ellipse at 20% 25%,rgba(124,255,79,0.4),transparent 45%),radial-gradient(ellipse at 80% 80%,rgba(255,106,213,0.3),transparent 45%),linear-gradient(160deg,#0e0420,#1c0b3a)" },
@@ -88,12 +88,21 @@ const WALLPAPERS = {
   th_typescarbon: { name: "TL Type-S Carbon", css: "repeating-linear-gradient(45deg,#16181b 0 4px,#0d0e10 4px 8px),repeating-linear-gradient(-45deg,rgba(255,255,255,.03) 0 4px,transparent 4px 8px),radial-gradient(ellipse at 80% 100%,rgba(215,38,46,.35),transparent 50%)" },
   th_screenprint: { name: "Screenprint Poster", css: "radial-gradient(circle,rgba(201,162,39,.22) 0 1.3px,transparent 1.8px)" },
   th_inkbone: { name: "Ink & Bone", css: "repeating-linear-gradient(45deg,rgba(239,233,220,.07) 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,rgba(239,233,220,.05) 0 1px,transparent 1px 11px),radial-gradient(circle at 70% 30%,rgba(179,0,27,.30),transparent 35%),linear-gradient(#070707,#070707)" },
+  th_bmx80s: { name: "80s BMX Green", css: "repeating-linear-gradient(115deg,rgba(61,220,47,.16) 0 18px,transparent 18px 36px,rgba(255,255,255,.06) 36px 40px,transparent 40px 90px),radial-gradient(ellipse at 80% 20%,rgba(61,220,47,.35),transparent 45%),linear-gradient(#060a06,#0a140a)" },
+  th_crawl: { name: "Opening Crawl", css: "radial-gradient(ellipse at 50% 120%,rgba(255,232,31,.18),transparent 55%),linear-gradient(#000,#000)" },
+  th_iceplanet: { name: "Ice Planet Outpost", css: "linear-gradient(180deg,#1b2a3a 0%,#3b5570 60%,#c9dcec 61%,#8fa9c0 100%)" },
+  th_forestmoon: { name: "Forest Moon", css: "repeating-linear-gradient(90deg,rgba(60,35,20,.55) 0 26px,transparent 26px 70px,rgba(40,25,15,.5) 70px 84px,transparent 84px 150px),radial-gradient(ellipse at 50% 0%,rgba(155,219,112,.25),transparent 60%),linear-gradient(#0a1108,#0f1a0b)" },
+  th_cloudcity: { name: "Cloud City Sunset", css: "radial-gradient(ellipse at 50% 80%,rgba(255,180,140,.55),transparent 50%),radial-gradient(ellipse at 20% 60%,rgba(255,255,255,.14),transparent 30%),radial-gradient(ellipse at 80% 65%,rgba(255,255,255,.12),transparent 30%),linear-gradient(180deg,#2b1450 0%,#a0466e 55%,#ff9a76 100%)" },
+  th_imperialbridge: { name: "Imperial Bridge", css: "repeating-linear-gradient(90deg,rgba(255,59,59,.55) 0 4px,transparent 4px 46px,rgba(125,255,154,.45) 46px 50px,transparent 50px 120px),linear-gradient(180deg,transparent 0 92%,rgba(0,0,0,.9) 92%),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 2px,transparent 2px 70px),linear-gradient(#0b0c0e,#14161a)" },
+  th_crimsonsaber: { name: "Crimson Saber", css: "linear-gradient(120deg,transparent 47%,rgba(255,40,60,.95) 49.4%,rgba(255,255,255,.95) 50%,rgba(255,40,60,.95) 50.6%,transparent 53%),radial-gradient(circle at 50% 50%,rgba(255,26,46,.35),transparent 45%),linear-gradient(#070203,#070203)" },
+  th_digitalrain: { name: "Digital Rain", css: "radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.12),transparent 60%),linear-gradient(#000300,#000300)" },
+  th_mainframe: { name: "Mainframe", css: "repeating-linear-gradient(0deg,rgba(51,255,51,.06) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,rgba(51,255,51,.14),transparent 70%),linear-gradient(#010801,#010801)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
 const COLOR_THEORY = {
-  synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30 },
-  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30 },
+  synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true },
+  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff00c8' },
   lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30 },
   autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30 },
   aurora: { name: "Nordic Aurora \u00b7 triadic", bg: '#0b1622', surface: '#13233a', text: '#e8f1ff', accent: '#34d399', accentText: '#04221a', link: '#c4b5fd', border: '#24405e', input: '#08111b', wp: WALLPAPERS.aurora.css, wpDim: 35, wpSee: 30 },
@@ -104,7 +113,7 @@ const COLOR_THEORY = {
   lava: { name: "Lava Flow \u00b7 analogous", bg: '#120808', surface: '#1f0e0c', text: '#ffece6', accent: '#ff5a1f', accentText: '#1a0500', link: '#ffb347', border: '#3d1a14', input: '#0d0505', wp: WALLPAPERS.ember.css, wpDim: 35, wpSee: 30 },
   matrix: { name: "Matrix \u00b7 monochromatic", bg: '#000a00', surface: '#031a05', text: '#b6ffb6', accent: '#00ff66', accentText: '#001a08', link: '#7dff9e', border: '#0f3d16', input: '#000700', wp: WALLPAPERS.matrix.css, wpDim: 35, wpSee: 30 },
   sakura: { name: "Sakura Night \u00b7 complementary", bg: '#1f0f1a', surface: '#2e1727', text: '#ffeef6', accent: '#ff8fc7', accentText: '#2a0b1c', link: '#7ee8c8', border: '#4d2a42', input: '#180b14', wp: WALLPAPERS.sakura.css, wpDim: 35, wpSee: 30 },
-  ultraviolet: { name: "Ultraviolet \u00b7 tetradic", bg: '#0e0420', surface: '#1c0b3a', text: '#f3eaff', accent: '#7cff4f', accentText: '#0e0420', link: '#ff6ad5', border: '#3a1f6b', input: '#0a0318', wp: WALLPAPERS.ct_ultraviolet.css, wpDim: 30, wpSee: 30 },
+  ultraviolet: { name: "Ultraviolet \u00b7 tetradic", bg: '#0e0420', surface: '#1c0b3a', text: '#f3eaff', accent: '#7cff4f', accentText: '#0e0420', link: '#ff6ad5', border: '#3a1f6b', input: '#0a0318', wp: WALLPAPERS.ct_ultraviolet.css, wpDim: 30, wpSee: 30, glow: true },
   mojave: { name: "Mojave Desert \u00b7 complementary", bg: '#1d140e', surface: '#2b1e15', text: '#fbefe2', accent: '#3fc1b0', accentText: '#062420', link: '#f0a35e', border: '#4d3727', input: '#170f0a', wp: WALLPAPERS.ct_mojave.css, wpDim: 30, wpSee: 30 },
   glacier: { name: "Glacier \u00b7 monochromatic", bg: '#06141f', surface: '#0c2233', text: '#e6f6ff', accent: '#7dd3fc', accentText: '#062033', link: '#bae6fd', border: '#1b3d57', input: '#041019', wp: WALLPAPERS.ct_glacier.css, wpDim: 30, wpSee: 30 },
   volcano: { name: "Volcano Ash \u00b7 complementary", bg: '#15171c', surface: '#20242c', text: '#eef0f4', accent: '#ff7a1a', accentText: '#1a0c00', link: '#8fb3ff', border: '#363c48', input: '#101216', wp: WALLPAPERS.ct_volcano.css, wpDim: 30, wpSee: 30 },
@@ -117,7 +126,7 @@ const COLOR_THEORY = {
   peacock: { name: "Peacock \u00b7 analogous + gold", bg: '#04141f', surface: '#0a2233', text: '#e8f8ff', accent: '#00b4d8', accentText: '#021a24', link: '#f4c430', border: '#17405a', input: '#030f17', wp: WALLPAPERS.ct_peacock.css, wpDim: 30, wpSee: 30 },
   grape: { name: "Grape Soda \u00b7 complementary", bg: '#170a26', surface: '#25123d', text: '#f4ebff', accent: '#b388ff', accentText: '#170a26', link: '#c6ff6b', border: '#43266b', input: '#11071c', wp: WALLPAPERS.ct_grape.css, wpDim: 30, wpSee: 30 },
   espresso: { name: "Espresso \u00b7 monochromatic", bg: '#17100c', surface: '#231912', text: '#f6ece2', accent: '#c8a27a', accentText: '#1a1009', link: '#e6c9a8', border: '#3e2d22', input: '#120c09', wp: WALLPAPERS.ct_espresso.css, wpDim: 30, wpSee: 30 },
-  tokyo: { name: "Neon Tokyo \u00b7 tetradic", bg: '#08050f', surface: '#140d22', text: '#f4f0ff', accent: '#00e5ff', accentText: '#001a1f', link: '#ff3ec9', border: '#2f2150', input: '#06040b', wp: WALLPAPERS.ct_tokyo.css, wpDim: 30, wpSee: 30 },
+  tokyo: { name: "Neon Tokyo \u00b7 tetradic", bg: '#08050f', surface: '#140d22', text: '#f4f0ff', accent: '#00e5ff', accentText: '#001a1f', link: '#ff3ec9', border: '#2f2150', input: '#06040b', wp: WALLPAPERS.ct_tokyo.css, wpDim: 30, wpSee: 30, glow: true },
   mintchoc: { name: "Mint Chocolate \u00b7 complementary", bg: '#1a120e', surface: '#261a14', text: '#f2fff9', accent: '#6ee7b7', accentText: '#08251a', link: '#a7f3d0', border: '#43302a', input: '#140d0a', wp: WALLPAPERS.ct_mintchoc.css, wpDim: 30, wpSee: 30 },
   lavender: { name: "Twilight Lavender \u00b7 analogous", bg: '#141326', surface: '#1f1d3a', text: '#efeeff', accent: '#a5b4fc', accentText: '#141326', link: '#f0abfc', border: '#39366a', input: '#0f0e1c', wp: WALLPAPERS.ct_lavender.css, wpDim: 30, wpSee: 30 },
   solar: { name: "Solar Flare \u00b7 analogous", bg: '#120d04', surface: '#1e1608', text: '#fff6e0', accent: '#ffc300', accentText: '#1a1200', link: '#ff8c42', border: '#3d2f12', input: '#0d0903', wp: WALLPAPERS.ct_solar.css, wpDim: 30, wpSee: 30 },
@@ -128,19 +137,28 @@ const COLOR_THEORY = {
 // Themed looks: cyberpunk, space opera, car, and art-inspired. Original palettes and patterns
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
-  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30 },
-  nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30 },
-  vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30 },
-  hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30 },
-  glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30 },
-  hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30 },
+  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff2e97' },
+  nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
+  vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true },
+  hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#2ef2d0' },
+  glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#ff6ec7' },
+  hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30, fx: 'stars', fxColor: '#cfe8ff' },
   twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30 },
-  darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30 },
-  saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30 },
+  darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'scan', fxColor: '#ff3b3b' },
+  saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30, glow: true },
   typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30 },
   typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30 },
   screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: WALLPAPERS.th_screenprint.css, wpDim: 25, wpSee: 30, wpFit: 'tile', wpTile: '9px 9px' },
   inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30 },
+  bmx80s: { name: "80s BMX Green", about: "80s freestyle BMX green (Haro-inspired)", bg: '#060a06', surface: '#0f170f', text: '#f2fff0', accent: '#3ddc2f', accentText: '#041a02', link: '#ffe14d', border: '#244a20', input: '#040704', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#3ddc2f' },
+  crawl: { name: "Opening Crawl", about: "space opera: yellow title text on a drifting starfield", bg: '#000000', surface: '#07080d', text: '#ffe81f', accent: '#ffe81f', accentText: '#000000', link: '#9fd8ff', border: '#2a2a18', input: '#000000', wp: WALLPAPERS.th_crawl.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#ffffff' },
+  iceplanet: { name: "Ice Planet Outpost", about: "space opera: frozen rebel-style base, falling snow", bg: '#0a121a', surface: '#122030', text: '#eef6ff', accent: '#9ad7ff', accentText: '#06202f', link: '#ffb36b', border: '#27405a', input: '#08101a', wp: WALLPAPERS.th_iceplanet.css, wpDim: 20, wpSee: 30, glow: false, fx: 'snow', fxColor: '#ffffff' },
+  forestmoon: { name: "Forest Moon", about: "space opera: giant redwood forest moon, fireflies", bg: '#0a1108', surface: '#132010', text: '#eef7e4', accent: '#d4a373', accentText: '#1a0f05', link: '#9bdb70', border: '#2d4224', input: '#070d06', wp: WALLPAPERS.th_forestmoon.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#d9ff8a' },
+  cloudcity: { name: "Cloud City Sunset", about: "space opera: city above the clouds at sunset", bg: '#1c1020', surface: '#2a1830', text: '#fff1ea', accent: '#ffb38a', accentText: '#2a0f05', link: '#f5d0fe', border: '#4b2d52', input: '#160c19', wp: WALLPAPERS.th_cloudcity.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#ff9a76' },
+  imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#ff3b3b' },
+  crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
+  digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
+  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33' },
 };
 Object.assign(PRESETS, COLOR_THEORY);
 Object.assign(PRESETS, THEMED);
@@ -158,7 +176,7 @@ function load(k, d) { try { const v = GM_getValue(k); return v === undefined ? d
 function save(k, v) { GM_setValue(k, JSON.stringify(v)); }
 function getSites() { return load('sites', {}); }
 function siteCfg(host) {
-  return Object.assign({ theme: '', buttons: true, rules: [], css: '' }, getSites()[host || HOST] || {});
+  return Object.assign({ theme: '', buttons: true, anim: true, rules: [], css: '' }, getSites()[host || HOST] || {});
 }
 function saveSiteCfg(c, host) { const s = getSites(); s[host || HOST] = c; save('sites', s); }
 function customThemes() { return load('custom_themes', {}); }
@@ -241,6 +259,7 @@ background-position:center,center !important;background-attachment:fixed,fixed !
 body,[data-wr-bg=page]{background-color:transparent !important}
 `;
     }
+    if (animOn()) css += animCss();
   }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
@@ -352,12 +371,108 @@ function flush() {
   try { scan(items, true); } catch (e) { console.warn('[Page Themes]', e); }
 }
 
+// ---------- animations: glowing buttons + moving wallpaper effects ----------
+// Turned off by the panel's "Animations" checkbox, or when Windows/the browser
+// asks for reduced motion. Canvas effects run ~30 fps and pause in background tabs.
+function animOn() {
+  return cfg.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function animCss() {
+  const g = T.accent, c = T.fxColor || T.accent;
+  let css = '';
+  if (T.glow) css += `
+@keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
+[data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 1px ${g},0 0 12px ${rgba(g, .7)} !important;outline:none !important}
+a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
+  if (T.fx) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
+  if (T.fx === 'pulse') css += `
+@keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
+html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,${rgba(c, .5)},transparent 60%);animation:wrPulse 5s ease-in-out infinite}`;
+  if (T.fx === 'scan') css += `
+@keyframes wrScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
+html::before{content:'';position:fixed;left:0;right:0;top:0;height:18vh;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .2)} 85%,${rgba(c, .55)} 100%);animation:wrScan 6s linear infinite}`;
+  return css;
+}
+let fx = null;
+function stopFx() {
+  if (!fx) return;
+  cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
+}
+function startFx() {
+  const mode = T && animOn() ? T.fx : '';
+  if (!['code', 'rain', 'snow', 'stars', 'fireflies'].includes(mode) || window.top !== window) { stopFx(); return; }
+  if (fx && fx.mode === mode && fx.color === T.fxColor) return;
+  stopFx();
+  const cv = document.createElement('canvas');
+  cv.id = OUR + '-fx';
+  cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none';
+  document.documentElement.appendChild(cv);
+  const ctx = cv.getContext('2d'), color = T.fxColor || '#ffffff', rand = (a, b) => a + Math.random() * (b - a);
+  const CH = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン0123456789';
+  let W = 0, H = 0, P = [], last = 0;
+  function init() {
+    if (mode === 'code') P = Array.from({ length: Math.ceil(W / 16) }, () => rand(-H / 16, 0));
+    if (mode === 'rain') P = Array.from({ length: Math.round(W / 9) }, () => ({ x: rand(0, W), y: rand(-H, H), l: rand(10, 28), s: rand(9, 16) }));
+    if (mode === 'snow') P = Array.from({ length: Math.round(W * H / 9000) }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2.6), s: rand(.3, 1.1), d: rand(-.3, .3) }));
+    if (mode === 'stars') P = Array.from({ length: 260 }, () => ({ x: rand(-1, 1), y: rand(-1, 1), z: rand(.1, 1) }));
+    if (mode === 'fireflies') P = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), a: rand(0, 6.28), p: rand(0, 6.28), s: rand(.2, .6) }));
+  }
+  function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; ctx.clearRect(0, 0, W, H); init(); }
+  function frame(t) {
+    fx.raf = requestAnimationFrame(frame);
+    if (document.hidden || t - last < 33) return;
+    last = t;
+    if (mode === 'code') {                                   // falling code with fading trails
+      ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.09)'; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over'; ctx.font = '15px monospace'; ctx.globalAlpha = .8;
+      P.forEach((y, i) => {
+        ctx.fillStyle = Math.random() < .05 ? '#ffffff' : color;
+        ctx.fillText(CH[(Math.random() * CH.length) | 0], i * 16, y * 16);
+        P[i] = (y * 16 > H && Math.random() > .975) ? 0 : y + 1;
+      });
+      ctx.globalAlpha = 1; return;
+    }
+    ctx.clearRect(0, 0, W, H);
+    if (mode === 'rain') {
+      ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.globalAlpha = .45; ctx.beginPath();
+      P.forEach(d => { d.y += d.s; d.x -= d.s * .15; if (d.y > H) { d.y = rand(-60, 0); d.x = rand(0, W * 1.1); } ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + d.l * .15, d.y - d.l); });
+      ctx.stroke();
+    }
+    if (mode === 'snow') {
+      ctx.fillStyle = color; ctx.globalAlpha = .75;
+      P.forEach(f => { f.y += f.s; f.x += f.d + Math.sin(f.y / 40) * .2; if (f.y > H) { f.y = -4; f.x = rand(0, W); } ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.28); ctx.fill(); });
+    }
+    if (mode === 'stars') {                                  // slow forward flight through stars
+      const cx = W / 2, cy = H / 2, k = .25 * Math.max(W, H); ctx.strokeStyle = color;
+      P.forEach(st => {
+        const pz = st.z; st.z -= .004;
+        if (st.z <= .02) { st.x = rand(-1, 1); st.y = rand(-1, 1); st.z = 1; return; }
+        ctx.globalAlpha = Math.min(1, (1 - st.z) * 1.3); ctx.lineWidth = (1 - st.z) * 2;
+        ctx.beginPath(); ctx.moveTo(cx + st.x / pz * k, cy + st.y / pz * k); ctx.lineTo(cx + st.x / st.z * k, cy + st.y / st.z * k); ctx.stroke();
+      });
+    }
+    if (mode === 'fireflies') {
+      P.forEach(f => {
+        f.a += rand(-.3, .3); f.x += Math.cos(f.a) * f.s; f.y += Math.sin(f.a) * f.s; f.p += .05;
+        if (f.x < 0 || f.x > W || f.y < 0 || f.y > H) { f.x = rand(0, W); f.y = rand(0, H); }
+        const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 9); gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = .35 + .35 * Math.sin(f.p); ctx.fillStyle = gr; ctx.fillRect(f.x - 9, f.y - 9, 18, 18);
+      });
+    }
+    ctx.globalAlpha = 1;
+  }
+  fx = { mode, color: T.fxColor, cv, raf: 0, resize };
+  window.addEventListener('resize', resize); resize(); fx.raf = requestAnimationFrame(frame);
+}
+
 // Re-apply everything (after any settings change)
 function refresh(rescan) {
   cfg = siteCfg();
   T = allThemes()[cfg.theme] || null;
   applyStyle();
   if (!document.body) return;
+  startFx();
   if (!T) { stopObserver(); unscanAll(); return; }
   if (rescan) { unscanAll(); scan([document.documentElement], false); }
   startObserver();
@@ -365,7 +480,7 @@ function refresh(rescan) {
 
 // ---------- start ----------
 applyStyle();                                   // early: avoids a white flash
-function onReady() { if (T) { scan([document.documentElement], false); startObserver(); } }
+function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); } }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady, { once: true });
 else onReady();
 
@@ -496,6 +611,7 @@ function render(root) {
     ${FIELDS.map(([k, label]) => `<label class="c"><input type="color" data-k="${k}" value="${base[k]}">${label}</label>`).join('')}
   </div>
   <label class="c ${cur ? '' : 'dis'}" style="margin-top:6px"><input type="checkbox" id="buttons" ${cfg.buttons ? 'checked' : ''}> Blue buttons use my button color</label>
+  <label class="c ${cur ? '' : 'dis'}" style="margin-top:4px"><input type="checkbox" id="anim" ${cfg.anim !== false ? 'checked' : ''}> ✨ Animations (glowing buttons, moving wallpaper)</label>
   <div class="note">Changing a suggested theme's colors saves it as your own ★ theme.</div>
   <h4>Wallpaper ${cur ? '' : '(pick a theme first)'}</h4>
   <div class="${cur ? '' : 'dis'}">
@@ -603,6 +719,7 @@ function render(root) {
     inp.onchange = () => { if (updateTheme({ [inp.dataset.k]: inp.value })) render(root); };
   });
   $('#buttons').onchange = e => { cfg.buttons = e.target.checked; saveSiteCfg(cfg); refresh(true); };
+  $('#anim').onchange = e => { cfg.anim = e.target.checked; saveSiteCfg(cfg); refresh(false); };
   $('#pick').onclick = () => startPicker(root);
   $('#clearpicks').onclick = () => { cfg.rules = []; saveSiteCfg(cfg); refresh(true); render(root); };
   $('#savecss').onclick = () => { cfg.css = $('#css').value; saveSiteCfg(cfg); refresh(false); };
