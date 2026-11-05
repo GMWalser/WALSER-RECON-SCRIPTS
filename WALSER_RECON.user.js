@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1105.1936
+// @version      2026.1105.1944
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v1.8  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '1.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Page Themes v1.9  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '1.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -510,6 +510,15 @@ html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   if (T.fx === 'scan') css += `
 @keyframes wrScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
 html::before{content:'';position:fixed;left:0;right:0;top:0;height:18vh;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .2)} 85%,${rgba(c, .55)} 100%);animation:wrScan 6s linear infinite}`;
+  // Laser trace around a hovered button (the overlay element is created by the hover code below)
+  const lc = T.accent;
+  css += `
+@property --wr-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes wrTrace{to{--wr-a:360deg}}
+#${OUR}-laser{position:fixed;pointer-events:none;z-index:2147483646;padding:2px;box-sizing:border-box;display:none;
+background:conic-gradient(from var(--wr-a),transparent 0 30%,${rgba(lc, .9)} 44%,#fff 48%,transparent 50% 80%,${rgba(lc, .9)} 94%,#fff 98%,transparent 100%);
+-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+filter:drop-shadow(0 0 3px ${lc}) drop-shadow(0 0 7px ${rgba(lc, .8)});animation:wrTrace 1.5s linear infinite}`;
   if (T.fx === 'sweep') css += `
 @keyframes wrSweep{to{transform:translate(-50%,-50%) rotate(360deg)}}
 html::before{content:'';position:fixed;left:50%;top:50%;width:160vmax;height:160vmax;border-radius:50%;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,${rgba(c, .38)},${rgba(c, .08)} 35deg,transparent 60deg 360deg);animation:wrSweep 4s linear infinite}`;
@@ -595,6 +604,41 @@ function startFx() {
   fx = { mode, color: T.fxColor, cv, raf: 0, resize };
   window.addEventListener('resize', resize); resize(); fx.raf = requestAnimationFrame(frame);
 }
+
+// ---------- laser line that travels around a button while you hover it ----------
+// A separate see-through layer is drawn over the button; the button itself is not changed.
+const BTN_SEL = 'button,[role="button"],input[type="button"],input[type="submit"],a.btn,[data-wr-bg="accent"]';
+let laserEl = null, laserTarget = null, laserRaf = 0;
+function hideLaser() {
+  laserTarget = null; cancelAnimationFrame(laserRaf);
+  if (laserEl) laserEl.style.display = 'none';
+}
+function showLaser(b) {
+  if (!laserEl) { laserEl = document.createElement('div'); laserEl.id = OUR + '-laser'; document.documentElement.appendChild(laserEl); }
+  if (!laserEl.isConnected) document.documentElement.appendChild(laserEl);
+  laserTarget = b;
+  const rad = parseFloat(getComputedStyle(b).borderTopLeftRadius) || 0;
+  laserEl.style.borderRadius = (rad + 3) + 'px';
+  laserEl.style.display = 'block';
+  cancelAnimationFrame(laserRaf);
+  const follow = () => {                         // keep it on the button while scrolling
+    if (!laserTarget || !laserTarget.isConnected) return hideLaser();
+    const r = laserTarget.getBoundingClientRect();
+    laserEl.style.left = (r.left - 3) + 'px'; laserEl.style.top = (r.top - 3) + 'px';
+    laserEl.style.width = (r.width + 6) + 'px'; laserEl.style.height = (r.height + 6) + 'px';
+    laserRaf = requestAnimationFrame(follow);
+  };
+  follow();
+}
+document.addEventListener('mouseover', e => {
+  if (!T || !animOn()) { if (laserTarget) hideLaser(); return; }
+  const b = e.target && e.target.closest ? e.target.closest(BTN_SEL) : null;
+  if (!b || b.closest('[id^="' + OUR + '"]')) { if (laserTarget && !laserTarget.contains(e.target)) hideLaser(); return; }
+  if (b !== laserTarget) showLaser(b);
+}, true);
+document.addEventListener('mouseout', e => {               // mouse left the button (not just moved onto its text)
+  if (laserTarget && !(e.relatedTarget && laserTarget.contains(e.relatedTarget)) && laserTarget.contains(e.target)) hideLaser();
+}, true);
 
 // Re-apply everything (after any settings change)
 function refresh(rescan) {
@@ -742,7 +786,7 @@ function render(root) {
     ${FIELDS.map(([k, label]) => `<label class="c"><input type="color" data-k="${k}" value="${base[k]}">${label}</label>`).join('')}
   </div>
   <label class="c ${cur ? '' : 'dis'}" style="margin-top:6px"><input type="checkbox" id="buttons" ${cfg.buttons ? 'checked' : ''}> Blue buttons use my button color</label>
-  <label class="c ${cur ? '' : 'dis'}" style="margin-top:4px"><input type="checkbox" id="anim" ${cfg.anim !== false ? 'checked' : ''}> ✨ Animations (glowing buttons, moving wallpaper)</label>
+  <label class="c ${cur ? '' : 'dis'}" style="margin-top:4px"><input type="checkbox" id="anim" ${cfg.anim !== false ? 'checked' : ''}> ✨ Animations (glowing buttons, laser hover, moving wallpaper)</label>
   <div class="note">Changing a suggested theme's colors saves it as your own ★ theme.</div>
   <h4>Wallpaper ${cur ? '' : '(pick a theme first)'}</h4>
   <div class="${cur ? '' : 'dis'}">
