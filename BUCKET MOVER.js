@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.19
+// @version      3.20
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -11,8 +11,20 @@
 // @match        https://app.reconvision.com/work_orders/*/edit*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_listValues
+// @grant        GM_deleteValue
 // @run-at       document-idle
 // ==/UserScript==
+
+// Storage cleanup: delete old tab-claim records (older than 1 hour).
+// They are only needed for a moment, but were never removed, so they piled up.
+try {
+  const claimCutoff = Date.now() - 60 * 60 * 1000;
+  GM_listValues().forEach(k => {
+    const m = k.match(/_claimed_(\d+)$/);
+    if (m && Number(m[1]) < claimCutoff) GM_deleteValue(k);
+  });
+} catch (e) { console.warn('[claim cleanup]', e); }
 
 (function () {
 'use strict';
