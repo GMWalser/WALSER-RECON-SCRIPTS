@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1333
+// @version      2026.1106.1336
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v3.7  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '3.7', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v3.8  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '3.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -507,6 +507,16 @@ function applyStyle() {
   const target = document.head || document.documentElement;
   if (target) { target.appendChild(styleEl); setTimeout(checkStyleBlocked, 0); }
   else setTimeout(applyStyle, 5);               // page not created yet at document-start
+}
+// Facts for troubleshooting a site we cannot see (shown at the bottom of the panel).
+function diagText() {
+  const fps = document.querySelectorAll('.fui-FluentProvider,[class*="fui-FluentProvider"]');
+  const fp = fps[0], v = fp ? getComputedStyle(fp).getPropertyValue('--colorNeutralBackground1').trim() : '';
+  const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
+  let pc = '', el = probe;
+  for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
+  return 'Status v3.8: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+    + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
 
@@ -1174,7 +1184,7 @@ function render(root) {
   <div class="row"><button id="copy">Copy my theme code</button><button id="loadcode">Load code</button></div>
   <div class="note">Saved in this browser only. Each person picks their own look.
   If Chrome's "Auto Dark Mode" flag is on, a theme here tells Chrome this page is already dark.</div>
-  <div class="note">Status: styles ${esc(styleStatus())} · Fluent UI ${document.querySelector('.fui-FluentProvider,[class*="fui-FluentProvider"]') ? 'found' : 'not found'}</div>
+  <div class="note" id="diag" style="user-select:text">${esc(diagText())}</div>
   </div>
 </div>`);
   const pst = root.querySelector('style');          // the panel's own styles: use the backup method if blocked
