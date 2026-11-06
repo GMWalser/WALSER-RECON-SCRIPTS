@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.2
+// @version      3.3
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -67,7 +67,7 @@
     ],
     [
       { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC',                    email: 'rallen@walser.com,mdeluca@walser.com,jsmith3@walser.com,mkraft@walser.com,nobrien1@walser.com' },
-      { label: 'CHV SUB',  search: 'WL1986',      match: 'SUBURBAN CHEVROLET',            email: '' },
+      { label: 'CHV SUB',  search: 'WL1986',      match: 'SUBURBAN CHEVROLET',            email: 'jsmith3@walser.com,mdeluca@walser.com,mkraft@walser.com,nobrien1@walser.com,rallen@walser.com' },   // SUBCHEV contact group
       { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE',           email: 'cjdparts@walser.com' },
       { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE', email: 'gtidrick@dodgeofburnsville.com' },
       { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD',                    email: 'WalserReconParts@appleautos.com' },
