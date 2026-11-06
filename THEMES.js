@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      4.5
+// @version      4.6
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -357,12 +357,16 @@ function cssText() {
     const a = T.wp ? 1 - seeThrough() / 100 : 1;
     css += `
 :root{--wr-bg:${T.bg};--wr-surface:${rgba(T.surface, a)};--wr-surface2:${rgba(s2, a)};--wr-alpha:${a};--wr-text:${T.text};--wr-accent:${T.accent};
---wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};color-scheme:dark !important}
+--wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};--wr-solid:${T.surface};color-scheme:dark !important}
 html,body{background-color:var(--wr-bg) !important}
 [data-wr-bg=page]{background-color:var(--wr-bg) !important}
 [data-wr-bg=surface]{background-color:var(--wr-surface) !important}
 [data-wr-bg=surface2]{background-color:var(--wr-surface2) !important}
 [data-wr-bg=input]{background-color:var(--wr-input) !important}
+[data-wr-bg=solid]{background-color:var(--wr-solid) !important}
+input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readonly],
+[class*="input"][class*="disabled"],[class*="Input"][class*="disabled"],[class*="picker"][class*="disabled"],
+[class*="select"][class*="disabled"] [class*="selector"],[class*="number"][class*="disabled"]{background-color:var(--wr-input) !important;color:${mix(T.text, T.bg, .35)} !important;border-color:${T.border} !important}
 [data-wr-bg=tint]{background-color:var(--wr-tint) !important}
 [data-wr-bg=accent]{background-color:var(--wr-accent) !important;border-color:var(--wr-accent) !important}
 [data-wr-bg=accent]:hover{filter:brightness(1.15)}
@@ -454,7 +458,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v4.1: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v4.6: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -482,7 +486,8 @@ function decide(el, cs, picked) {
     if (el === document.documentElement || el === document.body) { if (L > 0.4) d.bg = 'page'; }
     else if (cfg.buttons && isButtonLike(el) && H.s > 0.35 && isBlue(H) && L < 0.75) { d.bg = 'accent'; d.fg = 'accentText'; return d; }
     else if (H.s < 0.3) {
-      if (L >= 0.85) d.bg = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'input' : 'surface';
+      const floating = cs.position === 'fixed' || (cs.position === 'absolute' && (parseInt(cs.zIndex, 10) || 0) >= 10);
+      if (L >= 0.85) d.bg = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'input' : floating ? 'solid' : 'surface';
       else if (L >= 0.45) d.bg = 'surface2';
       else if (IS_TEAMS && L < 0.08 && H.s < 0.2) d.bg = 'surface';   // Teams' own fixed dark grays
     } else if (L >= 0.6) { d.bg = 'tint'; d.tint = `hsla(${Math.round(H.h)}, ${Math.round(Math.min(H.s, 0.6) * 100)}%, 20%, var(--wr-alpha, 1))`; }
@@ -545,7 +550,7 @@ function startObserver() {
     }
     if (!timer) timer = setTimeout(flush, 150);
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled', 'readonly', 'aria-disabled'] });
 }
 function stopObserver() { if (observer) observer.disconnect(); observer = null; queue.clear(); }
 function flush() {
