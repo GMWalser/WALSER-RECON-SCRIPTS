@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      4.2
+// @version      4.3
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -184,7 +184,7 @@ const THEMED = {
   mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'terminal', fxColor: '#33ff33' },
   vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
   wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '#78be20', mesh: ["#78be20", "#236192", "#0c2340", "#5f9e2a"] },
-  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ff3b1f', mesh: ["#ff3b1f", "#ffb000", "#6a00ff", "#0090ff"] },
+  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'flir', fxColor: '#ff3b1f' },
   hunter: { name: "Jungle Hunter", about: "movie-inspired: jungle canopy with a three-dot laser sight", bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser', fxColor: '#ff2020' },
   xenohive: { name: "Xeno Hive", about: "movie-inspired: ribbed black biomechanical hive, acid green", bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#9cff2e' },
   tracker: { name: "Motion Tracker", about: "movie-inspired: green radar motion tracker with rotating sweep", bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'sweep', fxColor: '#39ff88' },
@@ -639,7 +639,7 @@ function stopFx() {
   if (!fx) return;
   cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
 }
-const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach'];
+const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach', 'flir'];
 function startFx() {
   const mode = T && animOn() ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
@@ -912,6 +912,39 @@ function startFx() {
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(an) * (r - 12), cy + Math.sin(an) * (r - 12)); ctx.stroke(); ctx.shadowBlur = 0;
       ctx.fillStyle = '#c9d1da'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, 6.28); ctx.fill();
       if (red && (t / 120 | 0) % 2) { ctx.globalAlpha = .12; ctx.fillStyle = color; ctx.fillRect(0, 0, W, H); }
+    }
+    if (mode === 'flir') {                                   // thermal camera: ironbow heat map + camera overlay
+      if (!S.lut) {
+        const stops = [[0, [0, 0, 0]], [.15, [26, 10, 74]], [.35, [122, 26, 138]], [.5, [192, 32, 122]], [.62, [232, 74, 31]], [.78, [255, 165, 0]], [.9, [255, 224, 102]], [1, [255, 255, 255]]];
+        S.lut = []; for (let i = 0; i < 256; i++) { const v = i / 255; let k = 0; while (k < stops.length - 2 && v > stops[k + 1][0]) k++; const [a, ca] = stops[k], [b, cb] = stops[k + 1], f = (v - a) / (b - a); S.lut.push(ca.map((x, j) => Math.round(x + (cb[j] - x) * f))); }
+        S.sw = Math.max(32, Math.round(W / 10)); S.sh = Math.max(18, Math.round(H / 10));
+        S.sc = document.createElement('canvas'); S.sc.width = S.sw; S.sc.height = S.sh; S.sx = S.sc.getContext('2d'); S.img = S.sx.createImageData(S.sw, S.sh);
+        S.src = [[.25, .62, .9, .11], [.7, .55, .75, .09], [.48, .3, .55, .07], [.85, .8, .6, .06], [.12, .25, .45, .05], [.6, .85, .5, .08]].map(([x, y, a, r], i) => ({ x, y, a, r, ph: i * 1.3 }));
+      }
+      S.f = (S.f || 0) + 1;
+      if (S.f % 2) {                                         // recompute the heat map at ~15 fps
+        const sw = S.sw, sh = S.sh, d = S.img.data, srcs = S.src.map(q => ({ x: (q.x + Math.sin(t / 6000 + q.ph) * .08) * sw, y: (q.y + Math.cos(t / 7000 + q.ph) * .06) * sh, a: q.a * (.9 + Math.sin(t / 900 + q.ph) * .1), r2: 2 * Math.pow(q.r * sw, 2) }));
+        let maxH = 0;
+        for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+          let h = .1 + .12 * (y / sh);
+          for (const q of srcs) { const dx = x - q.x, dy = y - q.y; h += q.a * Math.exp(-(dx * dx + dy * dy) / q.r2); }
+          h += (Math.random() - .5) * .025; h = h < 0 ? 0 : h > 1 ? 1 : h; if (h > maxH) maxH = h;
+          const c = S.lut[(h * 255) | 0], o = (y * sw + x) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+        }
+        S.sx.putImageData(S.img, 0, 0); S.max = maxH;
+        const cx = (sw / 2) | 0, cy = (sh / 2) | 0, o = (cy * sw + cx) * 4; S.center = d[o] / 255 * .3 + d[o + 1] / 255 * .7;
+      }
+      ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = true; ctx.drawImage(S.sc, 0, 0, W, H);
+      const temp = v => (62 + v * 46).toFixed(1) + '°F';
+      ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .85;
+      const cx = W / 2, cy = H / 2;                          // center crosshair + reading
+      ctx.beginPath(); ctx.moveTo(cx - 22, cy); ctx.lineTo(cx - 6, cy); ctx.moveTo(cx + 6, cy); ctx.lineTo(cx + 22, cy); ctx.moveTo(cx, cy - 22); ctx.lineTo(cx, cy - 6); ctx.moveTo(cx, cy + 6); ctx.lineTo(cx, cy + 22); ctx.stroke();
+      ctx.font = 'bold 15px Consolas,monospace'; ctx.fillText(temp(S.center || 0), cx + 26, cy - 8);
+      const bx = W - 46, by = H * .2, bh = H * .6;            // color scale bar with max / min
+      const g = ctx.createLinearGradient(0, by + bh, 0, by); [0, .15, .35, .5, .62, .78, .9, 1].forEach(v => { const c = S.lut[(v * 255) | 0]; g.addColorStop(v, `rgb(${c[0]},${c[1]},${c[2]})`); });
+      ctx.globalAlpha = .9; ctx.fillStyle = g; ctx.fillRect(bx, by, 14, bh); ctx.strokeRect(bx, by, 14, bh);
+      ctx.fillStyle = '#ffffff'; ctx.font = '12px Consolas,monospace'; ctx.fillText(temp(S.max || 1), bx - 62, by + 10); ctx.fillText(temp(0), bx - 62, by + bh);
+      ctx.globalAlpha = .7; ctx.fillText('IR  ●REC  ' + new Date().toTimeString().slice(0, 8), 24, 30); ctx.fillText('IRONBOW  AUTO', 24, H - 22);
     }
     if (mode === 'lightning') {                              // a bolt every 5-12 seconds
       if (!bolt && t > nextBolt) { bolt = nextBolt ? makeBolt() : null; nextBolt = t + rand(5000, 12000); }
