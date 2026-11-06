@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1510
+// @version      2026.1106.1519
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v4.6  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '4.6', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v4.7  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '4.7', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -417,6 +417,12 @@ function mix(h1, h2, t) {
 function rgba(hex, a) { const c = hexToRgb(hex); return a >= 1 ? hex : `rgba(${c.r},${c.g},${c.b},${a})`; }
 const isBlue = H => H.h >= 190 && H.h <= 255;
 
+// Pop-up windows (dialogs, drawers, dropdowns, menus, tooltips, notifications) are always solid,
+// so the page behind them does not show through.
+const POPUP_SEL = ['[role="dialog"]', '[aria-modal="true"]', '[role="menu"]', '[role="listbox"]', '[role="tooltip"]', '[class*="modal"]', '[class*="Modal"]',
+  '[class*="drawer"]', '[class*="Drawer"]', '[class*="popover"]', '[class*="Popover"]', '[class*="dropdown"]', '[class*="Dropdown"]',
+  '[class*="tooltip"]', '[class*="Tooltip"]', '[class*="notification"]', '[class*="Notification"]', '[class*="popup"]', '[class*="Popup"]'];
+
 // ---------- the one stylesheet ----------
 const styleEl = document.createElement('style');
 styleEl.id = OUR + '-style';
@@ -428,13 +434,15 @@ function cssText() {
     const a = T.wp ? 1 - seeThrough() / 100 : 1;
     css += `
 :root{--wr-bg:${T.bg};--wr-surface:${rgba(T.surface, a)};--wr-surface2:${rgba(s2, a)};--wr-alpha:${a};--wr-text:${T.text};--wr-accent:${T.accent};
---wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};--wr-solid:${T.surface};color-scheme:dark !important}
+--wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};--wr-solid:${T.surface};--wr-solid2:${s2};color-scheme:dark !important}
 html,body{background-color:var(--wr-bg) !important}
 [data-wr-bg=page]{background-color:var(--wr-bg) !important}
 [data-wr-bg=surface]{background-color:var(--wr-surface) !important}
 [data-wr-bg=surface2]{background-color:var(--wr-surface2) !important}
 [data-wr-bg=input]{background-color:var(--wr-input) !important}
 [data-wr-bg=solid]{background-color:var(--wr-solid) !important}
+${POPUP_SEL.map(p => `${p}[data-wr-bg=surface],${p} [data-wr-bg=surface],${p}[data-wr-bg=input],${p} [data-wr-bg=input]`).join(',')}{background-color:var(--wr-solid) !important}
+${POPUP_SEL.map(p => `${p}[data-wr-bg=surface2],${p} [data-wr-bg=surface2]`).join(',')}{background-color:var(--wr-solid2) !important}
 input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readonly],
 [class*="input"][class*="disabled"],[class*="Input"][class*="disabled"],[class*="picker"][class*="disabled"],
 [class*="select"][class*="disabled"] [class*="selector"],[class*="number"][class*="disabled"]{background-color:var(--wr-input) !important;color:${mix(T.text, T.bg, .35)} !important;border-color:${T.border} !important}
@@ -529,7 +537,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v4.6: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v4.7: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
