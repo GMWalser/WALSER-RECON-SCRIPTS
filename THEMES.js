@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      3.9
+// @version      4.1
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -124,7 +124,7 @@ const WALLPAPERS = {
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
 const COLOR_THEORY = {
   synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true },
-  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff00c8' },
+  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#00f0ff', fxColors: ["#00f0ff", "#ff2bd6", "#f9f002"] },
   lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30 },
   autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30 },
   aurora: { name: "Nordic Aurora \u00b7 triadic", bg: '#0b1622', surface: '#13233a', text: '#e8f1ff', accent: '#34d399', accentText: '#04221a', link: '#c4b5fd', border: '#24405e', input: '#08111b', wp: WALLPAPERS.aurora.css, wpDim: 35, wpSee: 30 },
@@ -159,17 +159,17 @@ const COLOR_THEORY = {
 // Themed looks: cyberpunk, space opera, car, and art-inspired. Original palettes and patterns
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
-  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff2e97' },
+  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse flicker', fxColor: '#ff2e97' },
   nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
   vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true },
-  hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#2ef2d0' },
-  glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#ff6ec7' },
+  hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'gridfloor', fxColor: '#2ef2d0' },
+  glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'glitch', fxColor: '#5cf2ff' },
   hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30, fx: 'stars', fxColor: '#cfe8ff' },
   twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30 },
-  darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'scan', fxColor: '#ff3b3b' },
+  darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'searchlight', fxColor: '#ff3b3b' },
   saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30, glow: true },
-  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30 },
-  typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30 },
+  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30, fx: 'comet', fxColor: '#ff2a2a' },
+  typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30, fx: 'tach', fxColor: '#ff2a2a' },
   screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: WALLPAPERS.th_screenprint.css, wpDim: 25, wpSee: 30, wpFit: 'tile', wpTile: '9px 9px' },
   inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30 },
   bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156' },
@@ -177,18 +177,18 @@ const THEMED = {
   crawl: { name: "Opening Crawl", about: "space opera: yellow title text on a drifting starfield", bg: '#000000', surface: '#07080d', text: '#ffe81f', accent: '#ffe81f', accentText: '#000000', link: '#9fd8ff', border: '#2a2a18', input: '#000000', wp: WALLPAPERS.th_crawl.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#ffffff' },
   iceplanet: { name: "Ice Planet Outpost", about: "space opera: frozen rebel-style base, falling snow", bg: '#0a121a', surface: '#122030', text: '#eef6ff', accent: '#9ad7ff', accentText: '#06202f', link: '#ffb36b', border: '#27405a', input: '#08101a', wp: WALLPAPERS.th_iceplanet.css, wpDim: 20, wpSee: 30, glow: false, fx: 'snow', fxColor: '#ffffff' },
   forestmoon: { name: "Forest Moon", about: "space opera: giant redwood forest moon, fireflies", bg: '#0a1108', surface: '#132010', text: '#eef7e4', accent: '#d4a373', accentText: '#1a0f05', link: '#9bdb70', border: '#2d4224', input: '#070d06', wp: WALLPAPERS.th_forestmoon.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#d9ff8a' },
-  cloudcity: { name: "Cloud City Sunset", about: "space opera: city above the clouds at sunset", bg: '#1c1020', surface: '#2a1830', text: '#fff1ea', accent: '#ffb38a', accentText: '#2a0f05', link: '#f5d0fe', border: '#4b2d52', input: '#160c19', wp: WALLPAPERS.th_cloudcity.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#ff9a76' },
-  imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#ff3b3b' },
+  cloudcity: { name: "Cloud City Sunset", about: "space opera: city above the clouds at sunset", bg: '#1c1020', surface: '#2a1830', text: '#fff1ea', accent: '#ffb38a', accentText: '#2a0f05', link: '#f5d0fe', border: '#4b2d52', input: '#160c19', wp: WALLPAPERS.th_cloudcity.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '#ff9a76', mesh: ["#ff9a76", "#b24a7a", "#2b1450", "#ffc48a"] },
+  imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'warpside', fxColor: '#dfe8ff' },
   crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
   digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
-  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33' },
+  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'terminal', fxColor: '#33ff33' },
   vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
-  wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#78be20' },
-  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff3b1f' },
+  wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '#78be20', mesh: ["#78be20", "#236192", "#0c2340", "#5f9e2a"] },
+  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ff3b1f', mesh: ["#ff3b1f", "#ffb000", "#6a00ff", "#0090ff"] },
   hunter: { name: "Jungle Hunter", about: "movie-inspired: jungle canopy with a three-dot laser sight", bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser', fxColor: '#ff2020' },
   xenohive: { name: "Xeno Hive", about: "movie-inspired: ribbed black biomechanical hive, acid green", bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#9cff2e' },
   tracker: { name: "Motion Tracker", about: "movie-inspired: green radar motion tracker with rotating sweep", bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'sweep', fxColor: '#39ff88' },
-  marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#f2a900' },
+  marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan hud', fxColor: '#f2a900' },
 };
 Object.assign(PRESETS, COLOR_THEORY);
 Object.assign(PRESETS, THEMED);
@@ -205,8 +205,8 @@ const ART = {
   mg_speed: { name: "Speed Lines", about: "art: grayscale-ramp speed lines (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_speed.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#d0d0d0' },
   mg_green: { name: "Atomic Green", about: "art: lime-to-olive ramp with sunburst rays (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_green.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#c6f432' },
   mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
-  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f' },
-  mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
+  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'bokeh', fxColor: '#ff8a1f', fxColors: ["#ff8a1f", "#ffd24f", "#ff5a1f"] },
+  mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'saucer', fxColor: '#7ddc4a' },
 };
 Object.assign(PRESETS, ART);
 // Color Lab: one color-theory scheme each, shown as a slowly drifting mesh of soft color fields.
@@ -405,7 +405,14 @@ body,[data-wr-bg=page]{background-color:transparent !important}
 --colorNeutralStroke1:${T.border} !important;--colorNeutralStroke2:${T.border} !important;--colorNeutralStroke3:${T.border} !important;--colorNeutralStrokeAccessible:${T.border} !important;
 --colorBrandBackground:${T.accent} !important;--colorBrandBackgroundHover:${mix(T.accent, '#ffffff', .12)} !important;--colorBrandBackgroundPressed:${mix(T.accent, '#000000', .15)} !important;--colorBrandBackgroundSelected:${T.accent} !important;
 --colorCompoundBrandBackground:${T.accent} !important;--colorCompoundBrandStroke:${T.accent} !important;--colorBrandStroke1:${T.accent} !important;
---colorNeutralForegroundOnBrand:${T.accentText} !important;--colorBrandForeground1:${T.link} !important;--colorBrandForeground2:${T.link} !important;--colorBrandForegroundLink:${T.link} !important;--colorCompoundBrandForeground1:${T.link} !important}
+--colorNeutralForegroundOnBrand:${T.accentText} !important;--colorBrandForeground1:${T.link} !important;--colorBrandForeground2:${T.link} !important;--colorBrandForegroundLink:${T.link} !important;--colorCompoundBrandForeground1:${T.link} !important;
+--colorBrandBackground2:${rgba(T.accent, .28)} !important;--colorBrandBackground2Hover:${rgba(T.accent, .38)} !important;--colorBrandBackground2Pressed:${rgba(T.accent, .45)} !important;
+--colorBrandBackground3Static:${T.accent} !important;--colorBrandBackground4Static:${mix(T.accent, '#000000', .2)} !important;--colorBrandBackgroundStatic:${T.accent} !important;--colorBrandBackgroundInverted:${T.surface} !important;
+--colorBrandStroke2:${rgba(T.accent, .5)} !important;--colorBrandStroke2Contrast:${T.accent} !important;--colorStrokeFocus2:${T.accent} !important;--colorCompoundBrandStrokeHover:${T.link} !important;
+--colorNeutralForeground2BrandHover:${T.link} !important;--colorNeutralForeground2BrandPressed:${T.link} !important;--colorNeutralForeground2BrandSelected:${T.link} !important;
+--colorNeutralForeground3BrandHover:${T.link} !important;--colorNeutralForeground3BrandSelected:${T.link} !important;--colorBrandForeground2Hover:${T.link} !important;--colorBrandForegroundLinkHover:${T.link} !important;
+--colorNeutralCardBackground:${s2} !important;--colorNeutralCardBackgroundHover:${sh} !important;--colorNeutralCardBackgroundSelected:${sh} !important;
+--colorNeutralBackgroundAlpha:${s2} !important;--colorNeutralBackgroundAlpha2:${s3} !important;--colorSubtleBackground:transparent !important;--colorTransparentBackgroundHover:${sh} !important}
 body,#app{background-color:transparent !important}`;
   }
   (cfg.rules || []).forEach(r => {
@@ -447,7 +454,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v3.9: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v4.1: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -565,6 +572,9 @@ function animCss() {
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 1px ${g},0 0 12px ${rgba(g, .7)} !important;outline:none !important}
 a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
   if (T.fx) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
+  if (hasFx('flicker')) css += `
+@keyframes wrNeon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
+[data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite,wrNeon 6.5s steps(1) infinite !important}`;
   // ---- background effects drawn with CSS (html::before) ----
   if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
@@ -629,7 +639,7 @@ function stopFx() {
   if (!fx) return;
   cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
 }
-const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc'];
+const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach'];
 function startFx() {
   const mode = T && animOn() ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
@@ -643,7 +653,7 @@ function startFx() {
   const ctx = cv.getContext('2d'), color = T.fxColor || '#ffffff', rand = (a, b) => a + Math.random() * (b - a);
   const colors = (T.fxColors && T.fxColors.length) ? T.fxColors : [color], pick = () => colors[(Math.random() * colors.length) | 0];
   const CH = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン0123456789';
-  let W = 0, H = 0, P = [], F = [], bg = null, bolt = null, nextBolt = 0, last = 0;
+  let W = 0, H = 0, P = [], F = [], bg = null, bolt = null, nextBolt = 0, last = 0, S = {};
   function pathPoint(p, d) {                              // point at distance d along a circuit trace
     for (let k = 1; k < p.pts.length; k++) {
       const a = p.pts[k - 1], b = p.pts[k], len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
@@ -812,6 +822,94 @@ function startFx() {
         ctx.shadowBlur = 0;
       }
     }
+    if (mode === 'comet') {                                  // a red laser comet streaks across every 8-15 s
+      if (!S.c && t > (S.next || 0)) { const y = rand(H * .12, H * .55); S.c = { x: -60, y, vx: W / rand(220, 300), vy: rand(-.25, .35), trail: [] }; }
+      if (S.c) {
+        const c = S.c; c.x += c.vx; c.y += c.vy; c.trail.push([c.x, c.y]); if (c.trail.length > 70) c.trail.shift();
+        ctx.lineCap = 'round'; ctx.shadowColor = color; ctx.shadowBlur = 18;
+        for (let i = 1; i < c.trail.length; i++) { const k = i / c.trail.length; ctx.globalAlpha = k * .9; ctx.strokeStyle = color; ctx.lineWidth = 1 + k * 4; ctx.beginPath(); ctx.moveTo(c.trail[i - 1][0], c.trail[i - 1][1]); ctx.lineTo(c.trail[i][0], c.trail[i][1]); ctx.stroke(); }
+        ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(c.x, c.y, 3.2, 0, 6.28); ctx.fill(); ctx.shadowBlur = 0;
+        if (Math.random() < .6) P.push({ x: c.x, y: c.y, vx: rand(-1.5, -.2), vy: rand(-.8, .8), life: 1 });
+        if (c.x > W + 80) { S.c = null; S.next = t + rand(8000, 15000); }
+      }
+      P = P.filter(q => (q.life -= .03) > 0);
+      P.forEach(q => { q.x += q.vx; q.y += q.vy; ctx.globalAlpha = q.life * .8; ctx.fillStyle = color; ctx.fillRect(q.x, q.y, 1.6, 1.6); });
+    }
+    if (mode === 'gridfloor') {                              // neon grid floor rolling toward the viewer
+      const hy = H * .58, vx = W / 2; S.o = ((S.o || 0) + .012) % 1;
+      const g = ctx.createLinearGradient(0, hy - 40, 0, hy + 10); g.addColorStop(0, rgba(color, 0)); g.addColorStop(1, rgba(color, .35));
+      ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, hy - 40, W, 50);
+      ctx.strokeStyle = color; ctx.lineWidth = 1;
+      for (let i = -18; i <= 18; i++) { ctx.globalAlpha = .28; ctx.beginPath(); ctx.moveTo(vx, hy); ctx.lineTo(vx + i * W * .12, H); ctx.stroke(); }
+      for (let k = 0; k < 14; k++) { const z = (k + S.o) / 14, y = hy + (H - hy) * z * z; ctx.globalAlpha = .1 + z * .4; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    }
+    if (mode === 'glitch') {                                 // glitch slices tearing across for a split second
+      if (t > (S.next || 0)) { S.until = t + rand(120, 260); S.next = t + rand(1800, 4500); S.bars = Array.from({ length: 3 + ((Math.random() * 5) | 0) }, () => [rand(0, H), rand(4, 26), rand(-60, 60)]); }
+      if (S.until && t < S.until) {
+        S.bars.forEach(([y, h, dx]) => { ctx.globalAlpha = .28; ctx.fillStyle = '#00f0ff'; ctx.fillRect(dx, y, W, h); ctx.fillStyle = '#ff2fb3'; ctx.fillRect(-dx * .6, y + h * .35, W, h * .6); ctx.globalAlpha = .5; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, y + h * .5, W, 1); });
+      }
+    }
+    if (mode === 'searchlight') {                            // a beam sweeping slowly from the top
+      const a = Math.sin(t / 5200) * .75, x0 = W / 2, len = H * 1.4, half = .09;
+      const g = ctx.createRadialGradient(x0, -20, 0, x0, -20, len); g.addColorStop(0, rgba(color, .55)); g.addColorStop(1, rgba(color, 0));
+      ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, -20);
+      ctx.lineTo(x0 + Math.sin(a - half) * len, -20 + Math.cos(a - half) * len); ctx.lineTo(x0 + Math.sin(a + half) * len, -20 + Math.cos(a + half) * len); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = .9; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x0, 0, 7, 0, 6.28); ctx.fill();
+    }
+    if (mode === 'terminal') {                               // terminal text typing itself out and scrolling
+      if (!S.lines) { S.lines = []; S.cur = ''; S.target = ''; }
+      const cmds = ['scan --ro 73', 'decode vin', 'fetch parts.db', 'sync tekion', 'ping reconvision', 'grep filters', 'load queue', 'verify quote'];
+      if (S.cur.length >= S.target.length) {
+        if (S.target) { S.lines.push(S.cur); if (S.lines.length > Math.floor(H / 20) - 2) S.lines.shift(); }
+        S.target = Math.random() < .5 ? '> ' + cmds[(Math.random() * cmds.length) | 0] : Array.from({ length: 6 }, () => ((Math.random() * 0xffff) | 0).toString(16).padStart(4, '0')).join(' ') + '  OK';
+        S.cur = '';
+      } else S.cur += S.target[S.cur.length];
+      ctx.font = '14px monospace'; ctx.fillStyle = color;
+      S.lines.forEach((l, i) => { ctx.globalAlpha = .12 + .3 * (i / S.lines.length); ctx.fillText(l, 24, 30 + i * 20); });
+      ctx.globalAlpha = .55; const y = 30 + S.lines.length * 20; ctx.fillText(S.cur, 24, y);
+      if ((t / 500 | 0) % 2) ctx.fillRect(24 + ctx.measureText(S.cur).width + 2, y - 12, 8, 14);
+    }
+    if (mode === 'saucer') {                                 // a saucer glides across, pauses with its tractor beam on
+      if (!S.s && t > (S.next || 0)) S.s = { x: -120, y: rand(H * .1, H * .28), stop: rand(W * .35, W * .65), hold: 0 };
+      if (S.s) {
+        const u = S.s; if (u.x < u.stop || u.hold > 90) u.x += 2.2; else u.hold++;
+        const y = u.y + Math.sin(t / 400) * 4;
+        if (u.hold > 0 && u.hold < 90) { const g = ctx.createLinearGradient(0, y, 0, H); g.addColorStop(0, rgba(color, .45)); g.addColorStop(1, rgba(color, 0)); ctx.globalAlpha = .6 + Math.random() * .3; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(u.x - 20, y + 8); ctx.lineTo(u.x + 20, y + 8); ctx.lineTo(u.x + 120, H); ctx.lineTo(u.x - 120, H); ctx.closePath(); ctx.fill(); }
+        ctx.globalAlpha = .85; ctx.fillStyle = '#c8d0c8'; ctx.beginPath(); ctx.ellipse(u.x, y, 62, 13, 0, 0, 6.28); ctx.fill();
+        ctx.fillStyle = rgba(color, .8); ctx.beginPath(); ctx.ellipse(u.x, y - 10, 24, 16, 0, Math.PI, 0); ctx.fill();
+        for (let k = 0; k < 6; k++) { ctx.fillStyle = ((t / 200 | 0) + k) % 3 ? color : '#ffffff'; ctx.beginPath(); ctx.arc(u.x - 45 + k * 18, y + 2, 2.6, 0, 6.28); ctx.fill(); }
+        if (u.x > W + 140) { S.s = null; S.next = t + rand(9000, 16000); }
+      }
+    }
+    if (mode === 'warpside') {                               // stars streaking sideways past a viewport
+      if (!S.st) S.st = Array.from({ length: 140 }, () => ({ x: rand(0, W), y: rand(0, H), z: rand(.2, 1) }));
+      ctx.strokeStyle = color;
+      S.st.forEach(st => { st.x -= st.z * 9; if (st.x < -40) { st.x = W + rand(0, 200); st.y = rand(0, H); } ctx.globalAlpha = st.z * .7; ctx.lineWidth = st.z * 1.6; ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(st.x + st.z * 38, st.y); ctx.stroke(); });
+    }
+    if (mode === 'hud') {                                    // targeting HUD: corner brackets, drifting crosshair, live numbers
+      const m = 28, L = 46; ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = .55;
+      [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => { ctx.beginPath(); ctx.moveTo(x, y + sy * L); ctx.lineTo(x, y); ctx.lineTo(x + sx * L, y); ctx.stroke(); });
+      const cx = W * (.6 + Math.sin(t / 7000) * .22), cy = H * (.45 + Math.cos(t / 9000) * .25), r = 34;
+      ctx.globalAlpha = .6; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.28); ctx.stroke();
+      for (let k = 0; k < 4; k++) { const a = k * 1.571 + t / 1800; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r + 6), cy + Math.sin(a) * (r + 6)); ctx.lineTo(cx + Math.cos(a) * (r + 18), cy + Math.sin(a) * (r + 18)); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy); ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8); ctx.stroke();
+      ctx.font = '12px monospace'; ctx.fillStyle = color; ctx.globalAlpha = .7;
+      ctx.fillText('RNG ' + String(Math.round(120 + Math.sin(t / 900) * 80)).padStart(3, '0') + 'M', cx + r + 22, cy - 6);
+      ctx.fillText('TRK ' + ((t / 100 | 0) % 1000).toString().padStart(3, '0'), cx + r + 22, cy + 10);
+      ctx.fillText('AMMO ' + String(99 - ((t / 3000 | 0) % 60)).padStart(2, '0'), m + 6, H - m - 10);
+    }
+    if (mode === 'tach') {                                   // tachometer: needle sweeps the revs, redline flash
+      const cx = W - 150, cy = H - 120, r = 105, a0 = Math.PI * .75, a1 = Math.PI * 2.25;
+      const rev = (Math.sin(t / 2600) * .5 + .5) ** 1.6, red = rev > .86;
+      ctx.lineWidth = 3; ctx.globalAlpha = .55; ctx.strokeStyle = '#c9d1da'; ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + (a1 - a0) * .82); ctx.stroke();
+      ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy, r, a0 + (a1 - a0) * .82, a1); ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#c9d1da';
+      for (let k = 0; k <= 9; k++) { const a = a0 + (a1 - a0) * k / 9; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r - 4), cy + Math.sin(a) * (r - 4)); ctx.lineTo(cx + Math.cos(a) * (r - 16), cy + Math.sin(a) * (r - 16)); ctx.stroke(); ctx.font = '11px sans-serif'; ctx.fillStyle = '#c9d1da'; ctx.fillText(String(k), cx + Math.cos(a) * (r - 30) - 3, cy + Math.sin(a) * (r - 30) + 4); }
+      const an = a0 + (a1 - a0) * rev; ctx.globalAlpha = .9; ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.shadowColor = color; ctx.shadowBlur = red ? 16 : 6;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(an) * (r - 12), cy + Math.sin(an) * (r - 12)); ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#c9d1da'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, 6.28); ctx.fill();
+      if (red && (t / 120 | 0) % 2) { ctx.globalAlpha = .12; ctx.fillStyle = color; ctx.fillRect(0, 0, W, H); }
+    }
     if (mode === 'lightning') {                              // a bolt every 5-12 seconds
       if (!bolt && t > nextBolt) { bolt = nextBolt ? makeBolt() : null; nextBolt = t + rand(5000, 12000); }
       if (bolt) {
@@ -867,6 +965,49 @@ function startMesh() {
   if (moving) meshFx.raf = requestAnimationFrame(frame);
 }
 
+// ---------- HUD readout (Colonial Marine): live info from the page you are on ----------
+// Reads only what is already on screen: RO number, vehicle, VIN. Clicks pass through it.
+let hudEl = null, hudTimer = 0, hudClock = 0;
+function readPageInfo() {
+  const info = { ro: '', veh: '', vin: '' };
+  const tk = document.querySelector('[data-test-id="undefined-modelButton"] span');   // Tekion vehicle line
+  if (tk) info.veh = tk.textContent.trim();
+  const els = document.querySelectorAll('span,div,td,a,h1,h2,h3,p,input,b,strong');
+  for (let i = 0, n = Math.min(els.length, 4000); i < n; i++) {
+    const el = els[i]; if (el.closest && el.closest('[id^="' + OUR + '"]')) continue;
+    const txt = (el.tagName === 'INPUT' ? el.value : (el.childElementCount === 0 ? el.textContent : '')) || '';
+    const t = txt.trim(); if (!t || t.length > 60) continue;
+    if (!info.vin && /^[A-HJ-NPR-Z0-9]{17}$/.test(t)) info.vin = t;
+    if (!info.ro) { const m = t.match(/^(?:RO\s*#?\s*)?(7\d{6})$/i); if (m) info.ro = m[1]; }
+    if (!info.veh) { const m = t.match(/^((?:19|20)\d{2})\s+([A-Za-z][A-Za-z-]+)(\s+[A-Za-z0-9-]+){1,3}$/); if (m) info.veh = t; }
+    if (info.vin && info.ro && info.veh) break;
+  }
+  if (!info.ro) { const m = (document.title + ' ' + location.href).match(/\b(7\d{6})\b/); if (m) info.ro = m[1]; }
+  return info;
+}
+function stopHudInfo() { clearInterval(hudTimer); clearInterval(hudClock); if (hudEl) hudEl.remove(); hudEl = null; }
+function startHudInfo() {
+  if (!T || !hasFx('hud') || window.top !== window || !document.body) { stopHudInfo(); return; }
+  if (hudEl && hudEl.isConnected) return;
+  const c = T.fxColor || '#f2a900';
+  hudEl = document.createElement('div'); hudEl.id = OUR + '-hudinfo';
+  hudEl.style.cssText = `position:fixed;right:16px;bottom:16px;z-index:2147483640;pointer-events:none;font:12px/1.55 Consolas,monospace;color:${c};`
+    + `background:rgba(0,0,0,.45);border-left:3px solid ${c};padding:8px 12px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 0 6px ${rgba(c, .6)}`;
+  document.documentElement.appendChild(hudEl);
+  const site = /tekion/.test(HOST) ? 'TEKION' : /reconvision/.test(HOST) ? 'RECONVISION' : /partstech/.test(HOST) ? 'PARTSTECH' : /teams/.test(HOST) ? 'TEAMS' : HOST.split('.')[0].toUpperCase();
+  let info = readPageInfo();
+  const draw = () => {
+    if (!hudEl) return;
+    const now = new Date(), clock = now.toTimeString().slice(0, 8);
+    const lines = ['◢ M-TRAK HUD  ' + site, 'RO   ' + (info.ro || '------'), 'VEH  ' + (info.veh || 'NO TARGET').slice(0, 34), 'VIN  ' + (info.vin || '-----------------'), 'T+   ' + clock];
+    hudEl.textContent = '';
+    lines.forEach((l, i) => { const d = document.createElement('div'); d.textContent = l; if (i === 0) d.style.opacity = '.7'; hudEl.appendChild(d); });
+  };
+  draw();
+  hudTimer = setInterval(() => { if (!document.hidden) { info = readPageInfo(); draw(); } }, 3000);   // page info every 3 s
+  hudClock = setInterval(() => { if (!document.hidden) draw(); }, 1000);                              // clock every second
+}
+
 // ---------- laser line that travels around a button while you hover it ----------
 // A separate see-through layer is drawn over the button; the button itself is not changed.
 const BTN_SEL = 'button,[role="button"],input[type="button"],input[type="submit"],a.btn,[data-wr-bg="accent"]';
@@ -917,7 +1058,7 @@ function refresh(rescan) {
   T = allThemes()[activeThemeId()] || null;
   applyStyle();
   if (!document.body) return;
-  startFx(); startMesh();
+  startFx(); startMesh(); startHudInfo();
   if (!T) { stopObserver(); unscanAll(); return; }
   if (rescan) { unscanAll(); scan([document.documentElement], false); }
   startObserver();
@@ -925,7 +1066,7 @@ function refresh(rescan) {
 
 // ---------- start ----------
 applyStyle();                                   // early: avoids a white flash
-function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); startMesh(); } }
+function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); startMesh(); startHudInfo(); } }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady, { once: true });
 else onReady();
 
