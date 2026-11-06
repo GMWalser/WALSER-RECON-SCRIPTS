@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1105.1944
+// @version      2026.1106.1218
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v1.9  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '1.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Page Themes v2.0  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '2.0', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -125,7 +125,7 @@ const WALLPAPERS = {
   autumn: { name: "Autumn Leaves", css: "radial-gradient(circle at 80% 20%,rgba(232,163,61,.45),transparent 40%),radial-gradient(circle at 20% 80%,rgba(212,225,87,.25),transparent 40%),linear-gradient(160deg,#2a1406 0%,#5c2a0e 55%,#8a4a12 100%)" },
   golddust: { name: "Gold Dust", css: "radial-gradient(circle at 50% 0%,rgba(212,175,55,.40),transparent 55%),repeating-radial-gradient(circle at 30% 40%,rgba(212,175,55,.12) 0 2px,transparent 2px 28px),linear-gradient(#0a0f2c,#0a0f2c)" },
   amethyst: { name: "Amethyst", css: "radial-gradient(circle at 30% 30%,rgba(168,85,247,.50),transparent 45%),radial-gradient(circle at 75% 75%,rgba(251,191,36,.30),transparent 40%),linear-gradient(#160f24,#160f24)" },
-  matrix: { name: "Matrix Rain", css: "repeating-linear-gradient(90deg,rgba(0,255,102,.10) 0 2px,transparent 2px 18px),repeating-linear-gradient(0deg,rgba(0,255,102,.05) 0 1px,transparent 1px 6px),linear-gradient(180deg,#000a00,#002b0d)", glow: true, fx: 'code', fxColor: '#00ff66' },
+  matrix: { name: "Matrix Rain", css: "repeating-linear-gradient(90deg,rgba(0,255,102,.10) 0 2px,transparent 2px 18px),repeating-linear-gradient(0deg,rgba(0,255,102,.05) 0 1px,transparent 1px 6px),linear-gradient(180deg,#000a00,#002b0d)" },
   sakura: { name: "Sakura", css: "radial-gradient(circle at 80% 20%,rgba(255,143,199,.45),transparent 40%),radial-gradient(circle at 20% 80%,rgba(126,232,200,.30),transparent 40%),linear-gradient(#1f0f1a,#1f0f1a)" },
   teal: { name: "Teal Depths", css: "radial-gradient(ellipse at 50% 0%,rgba(20,184,166,.40),transparent 60%),linear-gradient(180deg,#031c1c,#052e2e)" },
   ct_ultraviolet: { name: "Ultraviolet", css: "radial-gradient(ellipse at 20% 25%,rgba(124,255,79,0.4),transparent 45%),radial-gradient(ellipse at 80% 80%,rgba(255,106,213,0.3),transparent 45%),linear-gradient(160deg,#0e0420,#1c0b3a)" },
@@ -190,31 +190,48 @@ const WALLPAPERS = {
   th_xenohive: { name: "Xeno Hive", css: "repeating-radial-gradient(ellipse at 50% 120%,rgba(160,175,170,.10) 0 3px,transparent 3px 14px),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 8px,rgba(120,135,130,.07) 8px 11px,transparent 11px 26px),radial-gradient(ellipse at 50% 100%,rgba(156,255,46,.15),transparent 50%),linear-gradient(#050607,#0b0d0e)" },
   th_tracker: { name: "Motion Tracker", css: "repeating-radial-gradient(circle at 50% 50%,rgba(57,255,136,.14) 0 1px,transparent 1px 70px),linear-gradient(90deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(0deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(#000a04,#000a04)" },
   th_marine: { name: "Colonial Marine", css: "repeating-linear-gradient(135deg,rgba(242,169,0,.18) 0 14px,rgba(0,0,0,.35) 14px 28px),radial-gradient(ellipse at 30% 40%,rgba(85,90,50,.55),transparent 35%),radial-gradient(ellipse at 70% 60%,rgba(60,65,35,.55),transparent 35%),linear-gradient(#0e0f0a,#0e0f0a)" },
+  x_megacity: { name: "Neon Megacity", css: "repeating-linear-gradient(90deg,rgba(45,255,196,.07) 0 2px,transparent 2px 38px,rgba(45,255,196,.12) 38px 40px,transparent 40px 95px),radial-gradient(ellipse at 50% 30%,rgba(45,255,196,.35),transparent 55%),radial-gradient(circle at 80% 70%,rgba(255,140,42,.25),transparent 35%),linear-gradient(180deg,#05261f,#031512)" },
+  x_neonalley: { name: "Neon Alley", css: "linear-gradient(90deg,transparent 0 8%,rgba(255,60,90,.45) 8% 11%,transparent 11% 22%,rgba(255,79,160,.35) 22% 24%,transparent 24% 72%,rgba(90,215,255,.35) 72% 75%,transparent 75% 86%,rgba(255,120,60,.40) 86% 89%,transparent 89%),radial-gradient(ellipse at 50% 0%,rgba(90,215,255,.35),transparent 55%),linear-gradient(180deg,#141634,#0a0b1e)" },
+  x_campslasher: { name: "Camp Slasher", css: "radial-gradient(ellipse at 50% 18%,rgba(190,220,235,.45),transparent 28%),repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 18px,transparent 18px 60px,rgba(0,0,0,.4) 60px 70px,transparent 70px 140px),linear-gradient(180deg,#0e2a33 0%,#061418 60%,#020507 100%)" },
+  x_madlab: { name: "Mad Lab", css: "repeating-linear-gradient(0deg,transparent 0 22px,rgba(123,211,137,.10) 22px 24px),repeating-linear-gradient(90deg,transparent 0 9px,rgba(123,211,137,.18) 9px 11px,transparent 11px 18px),radial-gradient(ellipse at 20% 30%,rgba(80,200,255,.30),transparent 40%),radial-gradient(ellipse at 75% 60%,rgba(123,211,137,.30),transparent 45%),linear-gradient(#050a07,#0a140c)" },
+  x_silverscreen: { name: "Silver Screen Monster", css: "radial-gradient(ellipse at 50% 35%,rgba(255,255,255,.22),transparent 45%),radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,.85) 85%),linear-gradient(#111,#050505)" },
+  x_camo: { name: "Woodland Camo", css: "radial-gradient(ellipse 60px 34px at 20% 25%,#3b4a26 98%,transparent),radial-gradient(ellipse 70px 30px at 70% 18%,#4a3b26 98%,transparent),radial-gradient(ellipse 40px 50px at 45% 55%,#1c2414 98%,transparent),radial-gradient(ellipse 80px 36px at 80% 70%,#2e3a1e 98%,transparent),radial-gradient(ellipse 50px 28px at 18% 82%,#5a4a30 98%,transparent),radial-gradient(ellipse 30px 40px at 60% 88%,#141a0e 98%,transparent),linear-gradient(#262e1a,#262e1a)" },
+  x_blaze: { name: "Blaze Orange Hunter", css: "linear-gradient(180deg,transparent 0 62%,rgba(8,6,3,.95) 62%),repeating-linear-gradient(90deg,rgba(8,6,3,.9) 0 6px,transparent 6px 26px,rgba(8,6,3,.8) 26px 30px,transparent 30px 55px),linear-gradient(180deg,#2a1206 0%,#a8400c 40%,#ff8a2a 58%,#ffcf6a 64%,#1a0f06 66%)" },
+  x_marsh: { name: "Duck Marsh", css: "repeating-linear-gradient(96deg,transparent 0 9px,rgba(201,162,74,.20) 9px 10px,transparent 10px 23px,rgba(140,110,50,.25) 23px 24px,transparent 24px 37px),linear-gradient(180deg,#2c2a3e 0%,#7a5a3a 45%,#3a3420 70%,#14160e 100%)" },
+  x_walleye: { name: "Walleye Lake", css: "repeating-conic-gradient(from 160deg at 50% -10%,rgba(200,240,255,.10) 0 4deg,transparent 4deg 11deg),radial-gradient(ellipse at 50% 0%,rgba(127,224,255,.35),transparent 55%),linear-gradient(180deg,#0e4a5c 0%,#062a36 55%,#03141a 100%)" },
+  x_garden: { name: "Garden Bloom", css: "radial-gradient(circle at 50% 50%,#ffe27a 0 4px,transparent 5px),radial-gradient(circle at 50% 36%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 63% 46%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 58% 62%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 42% 62%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 37% 46%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 12% 12%,rgba(184,240,200,.35) 0 3px,transparent 4px),linear-gradient(#1c1220,#1c1220)" },
+  x_kawaii: { name: "Kawaii Pastel", css: "radial-gradient(ellipse at 20% 20%,rgba(255,179,217,.40),transparent 45%),radial-gradient(ellipse at 80% 30%,rgba(168,230,255,.35),transparent 45%),radial-gradient(ellipse at 50% 90%,rgba(206,180,255,.35),transparent 50%),linear-gradient(160deg,#232246,#171631)" },
+  x_anime: { name: "Anime Sky", css: "radial-gradient(circle at 50% 55%,rgba(255,226,122,.45),transparent 25%),linear-gradient(180deg,#1b2a6b 0%,#6a3c9c 45%,#ff7ab6 75%,#ffb36b 100%)" },
+  x_graffiti: { name: "Street Graffiti", css: "radial-gradient(circle at 18% 30%,rgba(255,95,216,.55) 0 60px,transparent 120px),radial-gradient(circle at 78% 25%,rgba(57,255,20,.40) 0 50px,transparent 110px),radial-gradient(circle at 60% 78%,rgba(0,200,255,.40) 0 70px,transparent 130px),radial-gradient(circle at 30% 80%,rgba(255,200,0,.35) 0 40px,transparent 90px),repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 2px,transparent 2px 30px),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 2px,transparent 2px 62px),linear-gradient(#3a1f18,#2a1510)" },
+  x_lr_teal: { name: "Candy Teal Lowrider", css: "repeating-radial-gradient(ellipse at 15% 20%,rgba(255,255,255,.10) 0 2px,transparent 2px 13px),repeating-radial-gradient(ellipse at 85% 80%,rgba(255,255,255,.08) 0 2px,transparent 2px 15px),linear-gradient(115deg,transparent 0 46%,rgba(214,170,74,.7) 46% 46.6%,rgba(255,140,40,.35) 46.6% 55%,rgba(214,170,74,.7) 55% 55.6%,transparent 55.6%),linear-gradient(160deg,#0a4a4c,#063336 50%,#031a1c)" },
+  x_lr_bluepink: { name: "Candy Blue & Pink", css: "repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,63,164,.45) 26px 30px,transparent 30px 44px,rgba(120,60,200,.45) 44px 50px,transparent 50px 70px,rgba(102,200,255,.30) 70px 72px,transparent 72px 110px),linear-gradient(100deg,transparent 0 30%,rgba(255,63,164,.25) 30% 34%,transparent 34% 64%,rgba(120,60,200,.3) 64% 69%,transparent 69%),linear-gradient(180deg,#123a9c,#0a1d4f 60%,#04102e)" },
+  x_lr_rainbow: { name: "Rainbow Flake", css: "repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 14px),linear-gradient(120deg,#3a137a 0%,#2050c8 30%,#13b5c0 48%,#ffc83d 52%,#e07a1a 62%,#6a1fb0 85%,#2a0a50 100%)" },
+  x_lr_orange: { name: "Candy Orange Pinstripe", css: "repeating-radial-gradient(ellipse 120% 60% at 0% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),repeating-radial-gradient(ellipse 120% 60% at 100% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),linear-gradient(90deg,transparent 0 47%,rgba(255,255,255,.4) 47% 47.4%,transparent 47.4% 52.6%,rgba(255,255,255,.4) 52.6% 53%,transparent 53%),linear-gradient(180deg,#c2410c,#7a1f06 55%,#3a0c03)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
 const COLOR_THEORY = {
   synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true },
-  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff00c8' },
-  lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30 },
-  autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30 },
+  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#00f0ff', fxColors: ["#00f0ff", "#ff2bd6", "#f9f002"], hover: 'laser' },
+  lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30, fx: 'bubbles', fxColor: '#bdfcf5', fxColors: ["#bdfcf5", "#ff6f59"] },
+  autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30, fx: 'leaves', fxColor: '#e8a33d', fxColors: ["#e8a33d", "#c2551a", "#8a3a12", "#d4e157"] },
   aurora: { name: "Nordic Aurora \u00b7 triadic", bg: '#0b1622', surface: '#13233a', text: '#e8f1ff', accent: '#34d399', accentText: '#04221a', link: '#c4b5fd', border: '#24405e', input: '#08111b', wp: WALLPAPERS.aurora.css, wpDim: 35, wpSee: 30 },
-  royal: { name: "Royal Gold \u00b7 complementary", bg: '#0a0f2c', surface: '#141b45', text: '#f4f1e6', accent: '#d4af37', accentText: '#0a0f2c', link: '#e9c46a', border: '#2c3672', input: '#070b22', wp: WALLPAPERS.golddust.css, wpDim: 35, wpSee: 30 },
+  royal: { name: "Royal Gold \u00b7 complementary", bg: '#0a0f2c', surface: '#141b45', text: '#f4f1e6', accent: '#d4af37', accentText: '#0a0f2c', link: '#e9c46a', border: '#2c3672', input: '#070b22', wp: WALLPAPERS.golddust.css, wpDim: 35, wpSee: 30, fx: 'flake', fxColor: '#d4af37', fxColors: ["#d4af37", "#f5e3a0", "#ffffff"], hover: 'shine' },
   amethyst: { name: "Amethyst & Citrine \u00b7 complementary", bg: '#160f24', surface: '#241838', text: '#f3ecff', accent: '#fbbf24', accentText: '#1b1206', link: '#c4b5fd', border: '#3d2b5c', input: '#110b1c', wp: WALLPAPERS.amethyst.css, wpDim: 35, wpSee: 30 },
   oceansun: { name: "Ocean Sunset \u00b7 split-complementary", bg: '#0b1a33', surface: '#13284d', text: '#eaf2ff', accent: '#ff8c42', accentText: '#1a0d00', link: '#ff8fb8', border: '#23406e', input: '#081429', wp: WALLPAPERS.sunset.css, wpDim: 35, wpSee: 30 },
   teal: { name: "Deep Teal \u00b7 monochromatic", bg: '#031c1c', surface: '#072c2c', text: '#d9fffb', accent: '#14b8a6', accentText: '#022020', link: '#5eead4', border: '#0f4a48', input: '#021616', wp: WALLPAPERS.teal.css, wpDim: 35, wpSee: 30 },
-  lava: { name: "Lava Flow \u00b7 analogous", bg: '#120808', surface: '#1f0e0c', text: '#ffece6', accent: '#ff5a1f', accentText: '#1a0500', link: '#ffb347', border: '#3d1a14', input: '#0d0505', wp: WALLPAPERS.ember.css, wpDim: 35, wpSee: 30 },
-  matrix: { name: "Matrix \u00b7 monochromatic", bg: '#000a00', surface: '#031a05', text: '#b6ffb6', accent: '#00ff66', accentText: '#001a08', link: '#7dff9e', border: '#0f3d16', input: '#000700', wp: WALLPAPERS.matrix.css, wpDim: 35, wpSee: 30 },
-  sakura: { name: "Sakura Night \u00b7 complementary", bg: '#1f0f1a', surface: '#2e1727', text: '#ffeef6', accent: '#ff8fc7', accentText: '#2a0b1c', link: '#7ee8c8', border: '#4d2a42', input: '#180b14', wp: WALLPAPERS.sakura.css, wpDim: 35, wpSee: 30 },
+  lava: { name: "Lava Flow \u00b7 analogous", bg: '#120808', surface: '#1f0e0c', text: '#ffece6', accent: '#ff5a1f', accentText: '#1a0500', link: '#ffb347', border: '#3d1a14', input: '#0d0505', wp: WALLPAPERS.ember.css, wpDim: 35, wpSee: 30, fx: 'fireflies', fxColor: '#ff5a1f' },
+  matrix: { name: "Matrix \u00b7 monochromatic", bg: '#000a00', surface: '#031a05', text: '#b6ffb6', accent: '#00ff66', accentText: '#001a08', link: '#7dff9e', border: '#0f3d16', input: '#000700', wp: WALLPAPERS.matrix.css, wpDim: 35, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff66' },
+  sakura: { name: "Sakura Night \u00b7 complementary", bg: '#1f0f1a', surface: '#2e1727', text: '#ffeef6', accent: '#ff8fc7', accentText: '#2a0b1c', link: '#7ee8c8', border: '#4d2a42', input: '#180b14', wp: WALLPAPERS.sakura.css, wpDim: 35, wpSee: 30, fx: 'petals', fxColor: '#ffc1e0', fxColors: ["#ffc1e0", "#ff8fc7", "#fff0f7"], hover: 'sparkle' },
   ultraviolet: { name: "Ultraviolet \u00b7 tetradic", bg: '#0e0420', surface: '#1c0b3a', text: '#f3eaff', accent: '#7cff4f', accentText: '#0e0420', link: '#ff6ad5', border: '#3a1f6b', input: '#0a0318', wp: WALLPAPERS.ct_ultraviolet.css, wpDim: 30, wpSee: 30, glow: true },
   mojave: { name: "Mojave Desert \u00b7 complementary", bg: '#1d140e', surface: '#2b1e15', text: '#fbefe2', accent: '#3fc1b0', accentText: '#062420', link: '#f0a35e', border: '#4d3727', input: '#170f0a', wp: WALLPAPERS.ct_mojave.css, wpDim: 30, wpSee: 30 },
-  glacier: { name: "Glacier \u00b7 monochromatic", bg: '#06141f', surface: '#0c2233', text: '#e6f6ff', accent: '#7dd3fc', accentText: '#062033', link: '#bae6fd', border: '#1b3d57', input: '#041019', wp: WALLPAPERS.ct_glacier.css, wpDim: 30, wpSee: 30 },
+  glacier: { name: "Glacier \u00b7 monochromatic", bg: '#06141f', surface: '#0c2233', text: '#e6f6ff', accent: '#7dd3fc', accentText: '#062033', link: '#bae6fd', border: '#1b3d57', input: '#041019', wp: WALLPAPERS.ct_glacier.css, wpDim: 30, wpSee: 30, fx: 'snow', fxColor: '#e6f6ff' },
   volcano: { name: "Volcano Ash \u00b7 complementary", bg: '#15171c', surface: '#20242c', text: '#eef0f4', accent: '#ff7a1a', accentText: '#1a0c00', link: '#8fb3ff', border: '#363c48', input: '#101216', wp: WALLPAPERS.ct_volcano.css, wpDim: 30, wpSee: 30 },
   rainforest: { name: "Rainforest Orchid \u00b7 complementary", bg: '#07170e', surface: '#0e2618', text: '#e8fff0', accent: '#ff4fa3', accentText: '#26051a', link: '#6ee7a8', border: '#1d4a31', input: '#05110a', wp: WALLPAPERS.ct_rainforest.css, wpDim: 30, wpSee: 30 },
   racing: { name: "Midnight Racing \u00b7 complementary", bg: '#071226', surface: '#0f1f3d', text: '#eef4ff', accent: '#ff9f1c', accentText: '#1a0d00', link: '#5cc8ff', border: '#233b66', input: '#050d1c', wp: WALLPAPERS.ct_racing.css, wpDim: 30, wpSee: 30 },
   bubblegum: { name: "Bubblegum Pop \u00b7 triadic", bg: '#1b0f24', surface: '#2a1838', text: '#fff0fb', accent: '#ff5fc1', accentText: '#24061a', link: '#5ff2e2', border: '#4a2c5f', input: '#140b1b', wp: WALLPAPERS.ct_bubblegum.css, wpDim: 30, wpSee: 30 },
   copper: { name: "Copper Patina \u00b7 complementary", bg: '#10191a', surface: '#182527', text: '#effaf7', accent: '#d08a4e', accentText: '#1a0d04', link: '#6fd3b8', border: '#2d4245', input: '#0c1314', wp: WALLPAPERS.ct_copper.css, wpDim: 30, wpSee: 30 },
-  galaxy: { name: "Galaxy \u00b7 split-complementary", bg: '#0a0820', surface: '#15123a', text: '#eeeaff', accent: '#ffd166', accentText: '#1a1400', link: '#ef7ac0', border: '#2e2866', input: '#070617', wp: WALLPAPERS.ct_galaxy.css, wpDim: 30, wpSee: 30 },
+  galaxy: { name: "Galaxy \u00b7 split-complementary", bg: '#0a0820', surface: '#15123a', text: '#eeeaff', accent: '#ffd166', accentText: '#1a1400', link: '#ef7ac0', border: '#2e2866', input: '#070617', wp: WALLPAPERS.ct_galaxy.css, wpDim: 30, wpSee: 30, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd166", "#ef7ac0"] },
   slatemint: { name: "Slate & Mint \u00b7 analogous", bg: '#12181d', surface: '#1b242b', text: '#e9f1f5', accent: '#5eead4', accentText: '#06201c', link: '#93c5fd', border: '#2f3d47', input: '#0e1317', wp: WALLPAPERS.ct_slatemint.css, wpDim: 30, wpSee: 30 },
   peacock: { name: "Peacock \u00b7 analogous + gold", bg: '#04141f', surface: '#0a2233', text: '#e8f8ff', accent: '#00b4d8', accentText: '#021a24', link: '#f4c430', border: '#17405a', input: '#030f17', wp: WALLPAPERS.ct_peacock.css, wpDim: 30, wpSee: 30 },
   grape: { name: "Grape Soda \u00b7 complementary", bg: '#170a26', surface: '#25123d', text: '#f4ebff', accent: '#b388ff', accentText: '#170a26', link: '#c6ff6b', border: '#43266b', input: '#11071c', wp: WALLPAPERS.ct_grape.css, wpDim: 30, wpSee: 30 },
@@ -223,28 +240,28 @@ const COLOR_THEORY = {
   mintchoc: { name: "Mint Chocolate \u00b7 complementary", bg: '#1a120e', surface: '#261a14', text: '#f2fff9', accent: '#6ee7b7', accentText: '#08251a', link: '#a7f3d0', border: '#43302a', input: '#140d0a', wp: WALLPAPERS.ct_mintchoc.css, wpDim: 30, wpSee: 30 },
   lavender: { name: "Twilight Lavender \u00b7 analogous", bg: '#141326', surface: '#1f1d3a', text: '#efeeff', accent: '#a5b4fc', accentText: '#141326', link: '#f0abfc', border: '#39366a', input: '#0f0e1c', wp: WALLPAPERS.ct_lavender.css, wpDim: 30, wpSee: 30 },
   solar: { name: "Solar Flare \u00b7 analogous", bg: '#120d04', surface: '#1e1608', text: '#fff6e0', accent: '#ffc300', accentText: '#1a1200', link: '#ff8c42', border: '#3d2f12', input: '#0d0903', wp: WALLPAPERS.ct_solar.css, wpDim: 30, wpSee: 30 },
-  arctic: { name: "Arctic Night \u00b7 complementary", bg: '#0a1018', surface: '#121b28', text: '#ecf3ff', accent: '#4cc9f0', accentText: '#04161d', link: '#ff7eb6', border: '#24344a', input: '#070b11', wp: WALLPAPERS.ct_arctic.css, wpDim: 30, wpSee: 30 },
+  arctic: { name: "Arctic Night \u00b7 complementary", bg: '#0a1018', surface: '#121b28', text: '#ecf3ff', accent: '#4cc9f0', accentText: '#04161d', link: '#ff7eb6', border: '#24344a', input: '#070b11', wp: WALLPAPERS.ct_arctic.css, wpDim: 30, wpSee: 30, fx: 'snow', fxColor: '#ffffff' },
   cabin: { name: "Forest Cabin \u00b7 complementary", bg: '#0f140c', surface: '#182014', text: '#eef5e6', accent: '#e07a2f', accentText: '#1a0b00', link: '#a3d977', border: '#2e3a24', input: '#0b0f09', wp: WALLPAPERS.ct_cabin.css, wpDim: 30, wpSee: 30 },
   reef: { name: "Coral Reef \u00b7 split-complementary", bg: '#0a1626', surface: '#11223a', text: '#edf6ff', accent: '#ff7f6e', accentText: '#1f0806', link: '#4fd1c5', border: '#21395c', input: '#07111d', wp: WALLPAPERS.ct_reef.css, wpDim: 30, wpSee: 30 },
 };
 // Themed looks: cyberpunk, space opera, car, and art-inspired. Original palettes and patterns
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
-  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff2e97' },
+  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#ff2e97', fxColors: ["#00f5d4", "#ff2e97"] },
   nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
   vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true },
   hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#2ef2d0' },
   glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#ff6ec7' },
   hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30, fx: 'stars', fxColor: '#cfe8ff' },
-  twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30 },
+  twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30, fx: 'fog', fxColor: '#e2a45a' },
   darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'scan', fxColor: '#ff3b3b' },
   saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30, glow: true },
-  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30 },
+  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30, fx: 'flake', fxColor: '#9fc2ff', fxColors: ["#9fc2ff", "#ffffff"], hover: 'shine' },
   typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30 },
   screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: WALLPAPERS.th_screenprint.css, wpDim: 25, wpSee: 30, wpFit: 'tile', wpTile: '9px 9px' },
-  inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30 },
-  bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156' },
-  bmx80sblue: { name: "80s Haro Blue", about: "80s freestyle BMX: teal/aqua frame color sampled from photos, white stripes, coral accents", bg: '#041314', surface: '#0a2224', text: '#effefe', accent: '#1ccacb', accentText: '#021a1a', link: '#ff8a7a', border: '#1a4547', input: '#030e0f', wp: WALLPAPERS.th_bmx80sblue.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#1ccacb' },
+  inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30, hover: 'drip', hoverColor: '#b3001b' },
+  bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156', hover: 'shine' },
+  bmx80sblue: { name: "80s Haro Blue", about: "80s freestyle BMX: teal/aqua frame color sampled from photos, white stripes, coral accents", bg: '#041314', surface: '#0a2224', text: '#effefe', accent: '#1ccacb', accentText: '#021a1a', link: '#ff8a7a', border: '#1a4547', input: '#030e0f', wp: WALLPAPERS.th_bmx80sblue.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#1ccacb', hover: 'shine' },
   crawl: { name: "Opening Crawl", about: "space opera: yellow title text on a drifting starfield", bg: '#000000', surface: '#07080d', text: '#ffe81f', accent: '#ffe81f', accentText: '#000000', link: '#9fd8ff', border: '#2a2a18', input: '#000000', wp: WALLPAPERS.th_crawl.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#ffffff' },
   iceplanet: { name: "Ice Planet Outpost", about: "space opera: frozen rebel-style base, falling snow", bg: '#0a121a', surface: '#122030', text: '#eef6ff', accent: '#9ad7ff', accentText: '#06202f', link: '#ffb36b', border: '#27405a', input: '#08101a', wp: WALLPAPERS.th_iceplanet.css, wpDim: 20, wpSee: 30, glow: false, fx: 'snow', fxColor: '#ffffff' },
   forestmoon: { name: "Forest Moon", about: "space opera: giant redwood forest moon, fireflies", bg: '#0a1108', surface: '#132010', text: '#eef7e4', accent: '#d4a373', accentText: '#1a0f05', link: '#9bdb70', border: '#2d4224', input: '#070d06', wp: WALLPAPERS.th_forestmoon.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#d9ff8a' },
@@ -252,7 +269,7 @@ const THEMED = {
   imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#ff3b3b' },
   crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
   digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
-  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33' },
+  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33', hover: 'spark' },
   vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
   wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#78be20' },
   thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff3b1f' },
@@ -270,16 +287,38 @@ const ART = {
   tw_teal: { name: "Teal & Burnt Orange", about: "art: teal, burnt orange and cream variant (Tidwell-inspired)", bg: '#0d1416', surface: '#172326', text: '#f3e6c6', accent: '#e2622a', accentText: '#1a0700', link: '#8fc3c8', border: '#2f4a4f', input: '#0a1012', wp: WALLPAPERS.ar_tw_teal.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   tw_phoenix: { name: "Phoenix Feathers", about: "art: rust, gold and teal on warm gray (Tidwell-inspired)", bg: '#1a1714', surface: '#26221d', text: '#f1e8d8', accent: '#e8a636', accentText: '#1a1000', link: '#4fc0d6', border: '#4a443b', input: '#14110f', wp: WALLPAPERS.ar_tw_phoenix.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#ffb347' },
   tw_tree: { name: "Twisted Tree Sunset", about: "art: purple-to-peach halftone sunset, olive and mint (Tidwell-inspired)", bg: '#1b1120', surface: '#2a1a30', text: '#fbe9d6', accent: '#f2a65e', accentText: '#20100a', link: '#9fd6cf', border: '#4c3254', input: '#150d19', wp: WALLPAPERS.ar_tw_tree.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
-  tw_slime: { name: "Blower & Slime", about: "art: fluorescent orange, slime green and chrome blue hot-rod print (Tidwell-inspired)", bg: '#120a06', surface: '#1f120b', text: '#fff1e8', accent: '#39e639', accentText: '#021a02', link: '#ff8a52', border: '#4a2a1a', input: '#0e0704', wp: WALLPAPERS.ar_tw_slime.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '' },
+  tw_slime: { name: "Blower & Slime", about: "art: fluorescent orange, slime green and chrome blue hot-rod print (Tidwell-inspired)", bg: '#120a06', surface: '#1f120b', text: '#fff1e8', accent: '#39e639', accentText: '#021a02', link: '#ff8a52', border: '#4a2a1a', input: '#0e0704', wp: WALLPAPERS.ar_tw_slime.css, wpDim: 20, wpSee: 30, glow: true, fx: 'bubbles', fxColor: '#39e639', fxColors: ["#39e639", "#39e639"], hover: 'drip', hoverColor: '#39e639' },
   vd_ballpoint: { name: "Ballpoint Blue", about: "art: dense blue ballpoint-pen hatching (Van Dyke-inspired)", bg: '#0c0f24', surface: '#141a3a', text: '#e6e9ff', accent: '#8f9bff', accentText: '#050824', link: '#c3caff', border: '#2a3370', input: '#090b1c', wp: WALLPAPERS.ar_vd_ballpoint.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   vd_hatch: { name: "Crosshatch Engraving", about: "art: black and white crosshatch engraving (Van Dyke-inspired)", bg: '#080808', surface: '#141414', text: '#f2f2f2', accent: '#e8e8e8', accentText: '#0a0a0a', link: '#c8c8c8', border: '#3a3a3a', input: '#060606', wp: WALLPAPERS.ar_vd_hatch.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   mg_speed: { name: "Speed Lines", about: "art: grayscale-ramp speed lines (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_speed.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#d0d0d0' },
   mg_green: { name: "Atomic Green", about: "art: lime-to-olive ramp with sunburst rays (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_green.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#c6f432' },
   mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
-  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f' },
+  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f', hover: 'shine' },
   mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
 };
 Object.assign(PRESETS, ART);
+// Animated theme packs (each has its own background effect and hover effect).
+const EXTRA_GROUPS = {"cyber": "Cyberpunk (animated)", "horror": "Horror", "outdoor": "Hunting & fishing", "cute": "Cute & anime", "street": "Street & graffiti", "lowrider": "Lowrider candy paint"};
+const EXTRA = {
+  megacity: { name: "Neon Megacity", about: "cyberpunk: green-teal megacity with drifting orange lights", bg: '#031512', surface: '#07241f', text: '#e6fff8', accent: '#2dffc4', accentText: '#00201a', link: '#ffb347', border: '#0f4a40', input: '#021210', wp: WALLPAPERS.x_megacity.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'bokeh', fxColor: '#ffb347', fxColors: ["#ffb347", "#ff8c2a", "#2dffc4"], hover: 'laser' },
+  neonalley: { name: "Neon Alley", about: "cyberpunk: rainy alley of pink, red and blue neon signs", bg: '#0a0b1e', surface: '#141634', text: '#f2f0ff', accent: '#ff4fa0', accentText: '#1f0010', link: '#5ad7ff', border: '#2d3170', input: '#07081a', wp: WALLPAPERS.x_neonalley.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'rain', fxColor: '#7fd9ff', hover: 'laser' },
+  campslasher: { name: "Camp Slasher", about: "horror: moonlit foggy lake forest, slash marks, buttons bleed on hover (80s slasher-inspired)", bg: '#03080a', surface: '#0b1518', text: '#e8ecea', accent: '#e8e4da', accentText: '#120000', link: '#ff5a5a', border: '#24363a', input: '#020507', wp: WALLPAPERS.x_campslasher.css, wpDim: 20, wpSee: 30, group: 'horror', glow: false, fx: 'fog slash', fxColor: '#9fb9c4', hover: 'drip', hoverColor: '#9e0000' },
+  madlab: { name: "Mad Lab", about: "horror: monster-green laboratory, lightning and sparking buttons (classic monster movie-inspired)", bg: '#050a07', surface: '#0c1810', text: '#e6f2e8', accent: '#7bd389', accentText: '#04140a', link: '#9be7ff', border: '#23402c', input: '#040805', wp: WALLPAPERS.x_madlab.css, wpDim: 20, wpSee: 30, group: 'horror', glow: true, fx: 'lightning', fxColor: '#bfefff', hover: 'spark' },
+  silverscreen: { name: "Silver Screen Monster", about: "horror: black and white 1930s film, flicker, grain and lightning", bg: '#0a0a0a', surface: '#161616', text: '#f0f0f0', accent: '#d9d9d9', accentText: '#0a0a0a', link: '#ff7a52', border: '#3a3a3a', input: '#070707', wp: WALLPAPERS.x_silverscreen.css, wpDim: 20, wpSee: 30, group: 'horror', glow: false, fx: 'lightning grain', fxColor: '#ffffff', hover: 'spark' },
+  camo: { name: "Woodland Camo", about: "hunting: woodland camo with blaze orange, falling leaves", bg: '#10130c', surface: '#1b2015', text: '#f1f0e4', accent: '#ff6a13', accentText: '#1a0800', link: '#c9d38a', border: '#3a412c', input: '#0c0f09', wp: WALLPAPERS.x_camo.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'leaves', fxColor: '#8a5a2b', fxColors: ["#8a5a2b", "#b5782f", "#6b7a35", "#a0522d"], hover: 'laser', wpFit: 'tile', wpTile: '280px 280px' },
+  blaze: { name: "Blaze Orange Hunter", about: "hunting: blaze orange dawn over the tree line, morning fog", bg: '#0f0a06', surface: '#1c140c', text: '#fff3e6', accent: '#ff6a00', accentText: '#1a0800', link: '#ffd08a', border: '#4a321c', input: '#0b0704', wp: WALLPAPERS.x_blaze.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'fog', fxColor: '#ffcf9a', hover: 'laser' },
+  marsh: { name: "Duck Marsh", about: "waterfowl: cattail marsh at dusk, mallard teal, falling leaves", bg: '#0d0f0a', surface: '#181c12', text: '#f0efe2', accent: '#c9a24a', accentText: '#1a1200', link: '#7fc6a4', border: '#383d28', input: '#0a0b07', wp: WALLPAPERS.x_marsh.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'leaves', fxColor: '#c9a24a', fxColors: ["#c9a24a", "#8a6a2b", "#5a4a2a"], hover: 'laser' },
+  walleye: { name: "Walleye Lake", about: "fishing: Minnesota lake underwater, sun rays, bubbles and fish swimming by", bg: '#04141a', surface: '#0a2530', text: '#e9fbff', accent: '#e8c547', accentText: '#1a1400', link: '#7fe0ff', border: '#1a4655', input: '#031017', wp: WALLPAPERS.x_walleye.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'bubbles', fxColor: '#cfefff', fxColors: ["#cfefff", "#e8c547"], hover: 'laser' },
+  garden: { name: "Garden Bloom", about: "cute: pastel flower garden, falling petals, sparkles on hover", bg: '#1c1220', surface: '#2a1b30', text: '#fff0f7', accent: '#ff9ccf', accentText: '#2a0b1c', link: '#b8f0c8', border: '#4c3354', input: '#160e1a', wp: WALLPAPERS.x_garden.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'petals', fxColor: '#ffc1e0', fxColors: ["#ffc1e0", "#ff9ccf", "#e7c6ff", "#fff0f7"], hover: 'sparkle', wpFit: 'tile', wpTile: '110px 110px' },
+  kawaii: { name: "Kawaii Pastel", about: "cute: pastel candy colors with twinkling sparkles", bg: '#171631', surface: '#232246', text: '#fff4fb', accent: '#ffb3d9', accentText: '#2a0b1f', link: '#a8e6ff', border: '#3e3c78', input: '#121128', wp: WALLPAPERS.x_kawaii.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd1ec", "#c9f1ff"], hover: 'sparkle' },
+  anime: { name: "Anime Sky", about: "anime: sunset sky with rotating speed lines and sparkles", bg: '#0d1430', surface: '#172150', text: '#f3f6ff', accent: '#ff7ab6', accentText: '#2a0016', link: '#ffe27a', border: '#2e3d80', input: '#0a1026', wp: WALLPAPERS.x_anime.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'spin', fxColor: '#ffffff', hover: 'sparkle' },
+  graffiti: { name: "Street Graffiti", about: "street: brick wall with spray paint splats, paint drips on hover", bg: '#121212', surface: '#1e1e1e', text: '#f5f5f5', accent: '#39ff14', accentText: '#0a1a00', link: '#ff5fd8', border: '#3a3a3a', input: '#0d0d0d', wp: WALLPAPERS.x_graffiti.css, wpDim: 20, wpSee: 30, group: 'street', glow: false, fx: 'pulse', fxColor: '#ff5fd8', hover: 'drip', hoverColor: '#39ff14' },
+  lr_teal: { name: "Candy Teal Lowrider", about: "lowrider: candy teal with white lace, gold pinstripes and orange flake", bg: '#031a1c', surface: '#072b2e', text: '#effffd', accent: '#2fd6d0', accentText: '#012020', link: '#ffb547', border: '#b08a3a', input: '#021416', wp: WALLPAPERS.x_lr_teal.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#9ff6ef", "#ffcf6a"], hover: 'shine' },
+  lr_bluepink: { name: "Candy Blue & Pink", about: "lowrider: blue metal flake with pink and purple stripe patterns", bg: '#04102e', surface: '#0a1d4f', text: '#f2f6ff', accent: '#ff3fa4', accentText: '#22000f', link: '#66c8ff', border: '#2a49a0', input: '#030b22', wp: WALLPAPERS.x_lr_bluepink.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#9fd8ff', fxColors: ["#9fd8ff", "#ffffff", "#ff8fd0"], hover: 'shine' },
+  lr_rainbow: { name: "Rainbow Flake", about: "lowrider: purple, teal and gold candy fade with patterned panels", bg: '#150a2a', surface: '#22123f', text: '#fff6e8', accent: '#ffc83d', accentText: '#1f1400', link: '#5fe6ff', border: '#6a3fb0', input: '#10071f', wp: WALLPAPERS.x_lr_rainbow.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffd76a', fxColors: ["#ffd76a", "#ffffff", "#8ff0ff", "#d6a8ff"], hover: 'shine' },
+  lr_orange: { name: "Candy Orange Pinstripe", about: "lowrider: candy orange with flowing white pinstripes", bg: '#1a0703', surface: '#2a0f07', text: '#fff2ea', accent: '#ff7a2e', accentText: '#1f0800', link: '#ffd9c2', border: '#8a3a1a', input: '#140502', wp: WALLPAPERS.x_lr_orange.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffd0a0', fxColors: ["#ffd0a0", "#ffffff"], hover: 'shine' },
+};
+Object.assign(PRESETS, EXTRA);
 const FIELDS = [
   ['bg', 'Page background'], ['surface', 'Panels & cards'], ['text', 'Text'],
   ['accent', 'Buttons & highlights'], ['accentText', 'Button text'], ['link', 'Links'],
@@ -301,7 +340,26 @@ function customThemes() { return load('custom_themes', {}); }
 function allThemes() { return Object.assign({}, PRESETS, customThemes()); }
 
 let cfg = siteCfg();
-let T = allThemes()[cfg.theme] || null;     // active theme colors, or null = Off
+// ---------- theme of the day ----------
+// When on, one random theme is picked each day and used on all work sites.
+// "Skip" picks a different one for the rest of the day.
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+function dailyState() { return load('daily', { on: false }); }
+function pickRandomTheme(not) { const ks = Object.keys(allThemes()).filter(k => k !== not); return ks[(Math.random() * ks.length) | 0]; }
+function activeThemeId() {
+  const d = dailyState();
+  if (!d.on) return cfg.theme;
+  if (d.date !== todayStr() || !allThemes()[d.theme]) { d.date = todayStr(); d.theme = pickRandomTheme(d.theme); save('daily', d); }
+  return d.theme;
+}
+function setActiveTheme(id) {                    // used by the dropdown and by color edits
+  const d = dailyState();
+  if (d.on) { d.theme = id; d.date = todayStr(); save('daily', d); }
+  else { cfg.theme = id; saveSiteCfg(cfg); }
+}
+function skipDaily() { const d = dailyState(); d.on = true; d.date = todayStr(); d.theme = pickRandomTheme(d.theme); save('daily', d); refresh(true); }
+
+let T = allThemes()[activeThemeId()] || null;     // active theme colors, or null = Off
 
 // ---------- color math ----------
 function parseColor(s) {
@@ -495,8 +553,10 @@ function flush() {
 function animOn() {
   return cfg.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
+// A theme can list several effects, e.g. fx: 'fog slash' (one canvas effect + CSS effects).
+function hasFx(n) { return (' ' + ((T && T.fx) || '') + ' ').includes(' ' + n + ' '); }
 function animCss() {
-  const g = T.accent, c = T.fxColor || T.accent;
+  const g = T.accent, c = T.fxColor || T.accent, hc = T.hoverColor || T.accent;
   let css = '';
   if (T.glow) css += `
 @keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
@@ -504,33 +564,63 @@ function animCss() {
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 1px ${g},0 0 12px ${rgba(g, .7)} !important;outline:none !important}
 a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
   if (T.fx) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
-  if (T.fx === 'pulse') css += `
+  // ---- background effects drawn with CSS (html::before) ----
+  if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
 html::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,${rgba(c, .5)},transparent 60%);animation:wrPulse 5s ease-in-out infinite}`;
-  if (T.fx === 'scan') css += `
+  if (hasFx('scan')) css += `
 @keyframes wrScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
 html::before{content:'';position:fixed;left:0;right:0;top:0;height:18vh;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .2)} 85%,${rgba(c, .55)} 100%);animation:wrScan 6s linear infinite}`;
-  // Laser trace around a hovered button (the overlay element is created by the hover code below)
-  const lc = T.accent;
-  css += `
-@property --wr-a{syntax:'<angle>';inherits:false;initial-value:0deg}
-@keyframes wrTrace{to{--wr-a:360deg}}
-#${OUR}-laser{position:fixed;pointer-events:none;z-index:2147483646;padding:2px;box-sizing:border-box;display:none;
-background:conic-gradient(from var(--wr-a),transparent 0 30%,${rgba(lc, .9)} 44%,#fff 48%,transparent 50% 80%,${rgba(lc, .9)} 94%,#fff 98%,transparent 100%);
--webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
-filter:drop-shadow(0 0 3px ${lc}) drop-shadow(0 0 7px ${rgba(lc, .8)});animation:wrTrace 1.5s linear infinite}`;
-  if (T.fx === 'sweep') css += `
+  if (hasFx('sweep')) css += `
 @keyframes wrSweep{to{transform:translate(-50%,-50%) rotate(360deg)}}
 html::before{content:'';position:fixed;left:50%;top:50%;width:160vmax;height:160vmax;border-radius:50%;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,${rgba(c, .38)},${rgba(c, .08)} 35deg,transparent 60deg 360deg);animation:wrSweep 4s linear infinite}`;
-  if (T.fx === 'laser') css += `
+  if (hasFx('laser')) css += `
 @keyframes wrLaser{0%{transform:translate(18vw,22vh)}25%{transform:translate(62vw,35vh)}50%{transform:translate(48vw,70vh)}75%{transform:translate(12vw,58vh)}100%{transform:translate(18vw,22vh)}}
 @keyframes wrBlink{0%,100%{opacity:.95}50%{opacity:.55}}
 html::before{content:'';position:fixed;left:0;top:0;width:44px;height:40px;z-index:-1;pointer-events:none;
 background:radial-gradient(circle at 22px 4px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px),radial-gradient(circle at 4px 36px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px),radial-gradient(circle at 40px 36px,${rgba(c, 1)} 0 3px,${rgba(c, .5)} 5px,transparent 9px);
 animation:wrLaser 22s ease-in-out infinite,wrBlink 1.4s ease-in-out infinite}`;
-  if (T.fx === 'spin') css += `
+  if (hasFx('spin')) css += `
 @keyframes wrSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 html::before{content:'';position:fixed;left:50%;top:50%;width:250vmax;height:250vmax;z-index:-1;pointer-events:none;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,${rgba(c, .10)} 0 6deg,transparent 6deg 12deg);animation:wrSpin 120s linear infinite}`;
+  // ---- CSS effects on html::after ----
+  if (hasFx('slash')) {                      // three gashes that slice across the screen every ~9 s
+    const sc = T.slashColor || '#8a0000';
+    css += `
+@keyframes wrSlash{0%{clip-path:inset(0 100% 0 0);opacity:1}5%{clip-path:inset(0 0 0 0);opacity:1}60%{opacity:.85}100%{clip-path:inset(0 0 0 0);opacity:0}}
+html::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+background:linear-gradient(118deg,transparent 0 38%,${rgba(sc, .95)} 38.2%,${rgba(sc, .5)} 38.6%,transparent 39%),linear-gradient(118deg,transparent 0 43%,${rgba(sc, .95)} 43.2%,${rgba(sc, .5)} 43.6%,transparent 44%),linear-gradient(118deg,transparent 0 48%,${rgba(sc, .95)} 48.2%,${rgba(sc, .5)} 48.6%,transparent 49%);
+animation:wrSlash 9s ease-out infinite}`;
+  }
+  if (hasFx('grain')) css += `
+@keyframes wrGrain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}100%{transform:translate(0,0)}}
+@keyframes wrFlicker{0%,100%{opacity:.09}45%{opacity:.14}50%{opacity:.06}}
+html::after{content:'';position:fixed;inset:-10%;z-index:2147483640;pointer-events:none;
+background:repeating-radial-gradient(circle at 17% 32%,rgba(255,255,255,.6) 0 1px,transparent 1px 3px),repeating-radial-gradient(circle at 73% 61%,rgba(0,0,0,.7) 0 1px,transparent 1px 4px);
+animation:wrGrain .5s steps(4) infinite,wrFlicker 3s steps(6) infinite}`;
+  // ---- hover effect (one see-through layer drawn over/under the hovered button) ----
+  css += `
+@property --wr-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes wrTrace{to{--wr-a:360deg}}
+@keyframes wrFlick{50%{opacity:.5}}
+@keyframes wrDrip{to{clip-path:inset(0 0 0 0)}}
+@keyframes wrTwinkle{from{opacity:.25;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+@keyframes wrShine{from{background-position:130% 0}to{background-position:-30% 0}}
+#${OUR}-laser{position:fixed;pointer-events:none;z-index:2147483646;box-sizing:border-box;display:none}
+#${OUR}-laser[data-mode=laser],#${OUR}-laser[data-mode=spark]{padding:2px;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+#${OUR}-laser[data-mode=laser]{background:conic-gradient(from var(--wr-a),transparent 0 30%,${rgba(hc, .9)} 44%,#fff 48%,transparent 50% 80%,${rgba(hc, .9)} 94%,#fff 98%,transparent 100%);
+filter:drop-shadow(0 0 3px ${hc}) drop-shadow(0 0 7px ${rgba(hc, .8)});animation:wrTrace 1.5s linear infinite}
+#${OUR}-laser[data-mode=spark]{background:conic-gradient(from var(--wr-a),transparent 0 18%,#9be7ff 28%,#fff 31%,transparent 34% 55%,#c8f4ff 63%,#fff 65%,transparent 68% 82%,#9be7ff 90%,transparent 93%);
+filter:drop-shadow(0 0 4px #7fdcff) drop-shadow(0 0 9px #4fc3ff);animation:wrTrace .45s linear infinite,wrFlick .12s steps(2) infinite}
+#${OUR}-laser[data-mode=drip]{clip-path:inset(0 0 100% 0);animation:wrDrip 1.1s ease-in forwards;filter:drop-shadow(0 2px 1px rgba(0,0,0,.6));
+background:linear-gradient(${hc},${hc}) 0 0/100% 5px no-repeat,linear-gradient(${hc},${hc}) 12% 0/5px 62% no-repeat,linear-gradient(${hc},${hc}) 31% 0/4px 40% no-repeat,
+linear-gradient(${hc},${hc}) 55% 0/6px 86% no-repeat,linear-gradient(${hc},${hc}) 79% 0/4px 55% no-repeat,linear-gradient(${hc},${hc}) 93% 0/3px 30% no-repeat,
+radial-gradient(circle at 13% 66%,${hc} 0 4.5px,transparent 5.5px),radial-gradient(circle at 56% 90%,${hc} 0 5.5px,transparent 6.5px),radial-gradient(circle at 79.5% 59%,${hc} 0 4px,transparent 5px)}
+#${OUR}-laser[data-mode=sparkle]{filter:drop-shadow(0 0 4px ${hc});animation:wrTwinkle .9s ease-in-out infinite alternate;
+background:radial-gradient(circle at 6% 22%,#fff 0 1.6px,transparent 3px),radial-gradient(circle at 94% 30%,${hc} 0 2.2px,transparent 4px),radial-gradient(circle at 18% 92%,${hc} 0 1.8px,transparent 3.5px),radial-gradient(circle at 76% 88%,#fff 0 2.2px,transparent 4px),radial-gradient(circle at 50% 4%,#fff 0 1.6px,transparent 3px)}
+#${OUR}-laser[data-mode=sparkle]::after{content:'';position:absolute;inset:0;animation:wrTwinkle .9s ease-in-out .45s infinite alternate;
+background:radial-gradient(circle at 30% 6%,${hc} 0 2px,transparent 3.5px),radial-gradient(circle at 98% 75%,#fff 0 1.6px,transparent 3px),radial-gradient(circle at 2% 60%,#fff 0 2px,transparent 3.5px),radial-gradient(circle at 62% 98%,${hc} 0 1.6px,transparent 3px)}
+#${OUR}-laser[data-mode=shine]{overflow:hidden;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.7) 47%,rgba(255,255,255,.2) 53%,transparent 64%);background-size:300% 100%;animation:wrShine 1.4s ease-in-out infinite}`;
   return css;
 }
 let fx = null;
@@ -538,24 +628,74 @@ function stopFx() {
   if (!fx) return;
   cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
 }
+const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh'];
 function startFx() {
-  const mode = T && animOn() ? T.fx : '';
-  if (!['code', 'rain', 'snow', 'stars', 'fireflies'].includes(mode) || window.top !== window) { stopFx(); return; }
-  if (fx && fx.mode === mode && fx.color === T.fxColor) return;
+  const mode = T && animOn() ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
+  if (!mode || window.top !== window) { stopFx(); return; }
+  const sig = mode + '|' + T.fxColor + '|' + JSON.stringify(T.fxColors || '');
+  if (fx && fx.sig === sig) return;
   stopFx();
   const cv = document.createElement('canvas');
   cv.id = OUR + '-fx';
   cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none';
   document.documentElement.appendChild(cv);
   const ctx = cv.getContext('2d'), color = T.fxColor || '#ffffff', rand = (a, b) => a + Math.random() * (b - a);
+  const colors = (T.fxColors && T.fxColors.length) ? T.fxColors : [color], pick = () => colors[(Math.random() * colors.length) | 0];
   const CH = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン0123456789';
-  let W = 0, H = 0, P = [], last = 0;
+  let W = 0, H = 0, P = [], F = [], bg = null, bolt = null, nextBolt = 0, last = 0;
+  function pathPoint(p, d) {                              // point at distance d along a circuit trace
+    for (let k = 1; k < p.pts.length; k++) {
+      const a = p.pts[k - 1], b = p.pts[k], len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
+      if (d <= len) { const f = len ? d / len : 0; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; }
+      d -= len;
+    }
+    return p.pts[p.pts.length - 1];
+  }
   function init() {
     if (mode === 'code') P = Array.from({ length: Math.ceil(W / 16) }, () => rand(-H / 16, 0));
     if (mode === 'rain') P = Array.from({ length: Math.round(W / 9) }, () => ({ x: rand(0, W), y: rand(-H, H), l: rand(10, 28), s: rand(9, 16) }));
     if (mode === 'snow') P = Array.from({ length: Math.round(W * H / 9000) }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2.6), s: rand(.3, 1.1), d: rand(-.3, .3) }));
     if (mode === 'stars') P = Array.from({ length: 260 }, () => ({ x: rand(-1, 1), y: rand(-1, 1), z: rand(.1, 1) }));
     if (mode === 'fireflies') P = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), a: rand(0, 6.28), p: rand(0, 6.28), s: rand(.2, .6) }));
+    if (mode === 'bokeh') P = Array.from({ length: 45 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(3, 13), s: rand(.1, .4), p: rand(0, 6.28), c: pick() }));
+    if (mode === 'petals' || mode === 'leaves') {
+      const big = mode === 'leaves';
+      P = Array.from({ length: big ? 28 : 45 }, () => ({ x: rand(0, W), y: rand(-H, H), r: big ? rand(6, 12) : rand(3.5, 7), rot: rand(0, 6.28), vr: rand(-.04, .04), s: rand(.4, 1.2), d: rand(-.5, .5), c: pick() }));
+    }
+    if (mode === 'bubbles') {
+      P = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(1.5, 5), s: rand(.4, 1.3), w: rand(0, 6.28) }));
+      F = Array.from({ length: 4 }, () => ({ x: rand(0, W), y: rand(H * .2, H * .9), dir: Math.random() < .5 ? -1 : 1, s: rand(.4, 1.1), sz: rand(18, 38), w: rand(0, 6.28), c: colors[1] || color }));
+    }
+    if (mode === 'flake') P = Array.from({ length: Math.round(W * H / 4500) }, () => ({ x: rand(0, W), y: rand(0, H), ph: rand(0, 6.28), sp: rand(.03, .09), c: pick() }));
+    if (mode === 'fog') P = Array.from({ length: 7 }, () => ({ x: rand(-W * .3, W), y: rand(H * .3, H), r: rand(W * .2, W * .45), s: rand(.15, .45) }));
+    if (mode === 'circuit') {                             // random right-angle traces, drawn once
+      const gsz = 26; bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+      const b = bg.getContext('2d'); b.lineWidth = 1.5; P = [];
+      for (let i = 0, n = Math.max(20, Math.round(W * H / 26000)); i < n; i++) {
+        let x = Math.round(rand(0, W) / gsz) * gsz, y = Math.round(rand(0, H) / gsz) * gsz, dir = (Math.random() * 4) | 0;
+        const pts = [[x, y]], col = colors[i % colors.length];
+        for (let s = 0, segs = 4 + ((Math.random() * 8) | 0); s < segs; s++) {
+          if (Math.random() < .35) dir = (dir + (Math.random() < .5 ? 1 : 3)) % 4;
+          const len = gsz * (1 + ((Math.random() * 4) | 0));
+          x += [len, 0, -len, 0][dir]; y += [0, len, 0, -len][dir]; pts.push([x, y]);
+        }
+        let L = 0; for (let k = 1; k < pts.length; k++) L += Math.abs(pts[k][0] - pts[k - 1][0]) + Math.abs(pts[k][1] - pts[k - 1][1]);
+        P.push({ pts, L, d: rand(0, L), s: rand(1.5, 3.5), c: col });
+        b.globalAlpha = .16; b.strokeStyle = col; b.beginPath(); b.moveTo(pts[0][0], pts[0][1]); pts.slice(1).forEach(p => b.lineTo(p[0], p[1])); b.stroke();
+        b.globalAlpha = .4; b.fillStyle = col; [pts[0], pts[pts.length - 1]].forEach(p => { b.beginPath(); b.arc(p[0], p[1], 2.5, 0, 6.28); b.fill(); });
+      }
+    }
+  }
+  function makeBolt() {
+    let x = rand(W * .1, W * .9), y = 0; const pts = [[x, y]], branches = [];
+    const end = H * rand(.5, .9);
+    while (y < end) { y += rand(15, 35); x += rand(-28, 28); pts.push([x, y]); }
+    for (let i = 0; i < 2; i++) {
+      const s = pts[2 + ((Math.random() * (pts.length - 3)) | 0)]; let bx = s[0], by = s[1]; const bp = [[bx, by]];
+      for (let k = 0; k < 5; k++) { by += rand(12, 26); bx += rand(-30, 30) + (i ? 12 : -12); bp.push([bx, by]); }
+      branches.push(bp);
+    }
+    return { pts, branches, age: 0 };
   }
   function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; ctx.clearRect(0, 0, W, H); init(); }
   function frame(t) {
@@ -591,17 +731,87 @@ function startFx() {
         ctx.beginPath(); ctx.moveTo(cx + st.x / pz * k, cy + st.y / pz * k); ctx.lineTo(cx + st.x / st.z * k, cy + st.y / st.z * k); ctx.stroke();
       });
     }
-    if (mode === 'fireflies') {
+    if (mode === 'fireflies' || mode === 'bokeh') {
       P.forEach(f => {
-        f.a += rand(-.3, .3); f.x += Math.cos(f.a) * f.s; f.y += Math.sin(f.a) * f.s; f.p += .05;
-        if (f.x < 0 || f.x > W || f.y < 0 || f.y > H) { f.x = rand(0, W); f.y = rand(0, H); }
-        const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 9); gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.globalAlpha = .35 + .35 * Math.sin(f.p); ctx.fillStyle = gr; ctx.fillRect(f.x - 9, f.y - 9, 18, 18);
+        if (mode === 'fireflies') { f.a += rand(-.3, .3); f.x += Math.cos(f.a) * f.s; f.y += Math.sin(f.a) * f.s; }
+        else { f.y -= f.s; f.x += Math.sin(f.p) * .2; if (f.y < -20) { f.y = H + 20; f.x = rand(0, W); } }
+        f.p += .05;
+        if (f.x < -20 || f.x > W + 20 || f.y < -20 || f.y > H + 20) { f.x = rand(0, W); f.y = rand(0, H); }
+        const r = f.r || 9, gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r);
+        gr.addColorStop(0, f.c || color); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = .35 + .3 * Math.sin(f.p); ctx.fillStyle = gr; ctx.fillRect(f.x - r, f.y - r, r * 2, r * 2);
       });
+    }
+    if (mode === 'petals' || mode === 'leaves') {
+      ctx.globalAlpha = .8;
+      P.forEach(f => {
+        f.y += f.s; f.x += f.d + Math.sin(f.y / 50) * .4; f.rot += f.vr;
+        if (f.y > H + 20) { f.y = -20; f.x = rand(0, W); }
+        ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.fillStyle = f.c;
+        ctx.beginPath(); ctx.ellipse(0, 0, f.r, f.r * (mode === 'leaves' ? .45 : .6), 0, 0, 6.28); ctx.fill();
+        if (mode === 'leaves') { ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-f.r, 0); ctx.lineTo(f.r * 1.3, 0); ctx.stroke(); }
+        ctx.restore();
+      });
+    }
+    if (mode === 'bubbles') {
+      ctx.strokeStyle = color; ctx.lineWidth = 1;
+      P.forEach(b => {
+        b.y -= b.s; b.w += .05; if (b.y < -10) { b.y = H + 10; b.x = rand(0, W); }
+        const x = b.x + Math.sin(b.w) * 3; ctx.globalAlpha = .4;
+        ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, 6.28); ctx.stroke();
+        ctx.globalAlpha = .6; ctx.fillStyle = '#ffffff'; ctx.fillRect(x - b.r * .4, b.y - b.r * .45, 1.2, 1.2);
+      });
+      F.forEach(f => {                                       // simple fish silhouettes swimming across
+        f.x += f.dir * f.s; f.w += .08;
+        if (f.x < -80 || f.x > W + 80) { f.dir = Math.random() < .5 ? -1 : 1; f.x = f.dir > 0 ? -60 : W + 60; f.y = rand(H * .2, H * .9); }
+        const y = f.y + Math.sin(f.w) * 4, sz = f.sz, wag = Math.sin(f.w * 2) * sz * .12;
+        ctx.save(); ctx.translate(f.x, y); ctx.scale(f.dir, 1); ctx.globalAlpha = .28; ctx.fillStyle = f.c;
+        ctx.beginPath(); ctx.ellipse(0, 0, sz, sz * .36, 0, 0, 6.28); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-sz * .85, 0); ctx.lineTo(-sz * 1.45, -sz * .38 + wag); ctx.lineTo(-sz * 1.45, sz * .38 + wag); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+    }
+    if (mode === 'flake') {                                  // metal-flake glitter twinkling
+      P.forEach(f => {
+        f.ph += f.sp; const a = Math.pow(Math.max(0, Math.sin(f.ph)), 8);
+        if (a < .05) return;
+        ctx.globalAlpha = a; ctx.fillStyle = f.c; ctx.fillRect(f.x - .8, f.y - .8, 1.6, 1.6);
+        if (a > .7) { ctx.globalAlpha = a * .6; ctx.fillRect(f.x - 4, f.y - .4, 8, .8); ctx.fillRect(f.x - .4, f.y - 4, .8, 8); }
+      });
+    }
+    if (mode === 'fog') {
+      P.forEach(f => {
+        f.x += f.s; if (f.x - f.r > W) f.x = -f.r;
+        const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        gr.addColorStop(0, rgba(color, .14)); gr.addColorStop(1, rgba(color, 0));
+        ctx.globalAlpha = 1; ctx.fillStyle = gr; ctx.fillRect(f.x - f.r, f.y - f.r, f.r * 2, f.r * 2);
+      });
+    }
+    if (mode === 'circuit') {                                // light pulses running along the traces
+      ctx.globalAlpha = 1; ctx.drawImage(bg, 0, 0);
+      P.forEach(p => {
+        p.d += p.s; if (p.d > p.L) p.d = 0;
+        for (let k = 0; k < 8; k++) {
+          const q = pathPoint(p, Math.max(0, p.d - k * 5));
+          ctx.globalAlpha = (1 - k / 8) * .9; ctx.fillStyle = k ? p.c : '#ffffff';
+          const s = k ? 2.4 : 3; ctx.fillRect(q[0] - s / 2, q[1] - s / 2, s, s);
+        }
+      });
+    }
+    if (mode === 'lightning') {                              // a bolt every 5-12 seconds
+      if (!bolt && t > nextBolt) { bolt = nextBolt ? makeBolt() : null; nextBolt = t + rand(5000, 12000); }
+      if (bolt) {
+        const a = Math.max(0, 1 - bolt.age / 9); bolt.age++;
+        ctx.globalAlpha = .16 * a; ctx.fillStyle = '#dfefff'; ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = a; ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.shadowColor = color; ctx.shadowBlur = 12;
+        [bolt.pts].concat(bolt.branches).forEach((pts, i) => { ctx.lineWidth = i ? 1.2 : 2.5; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); });
+        ctx.shadowBlur = 0;
+        if (bolt.age > 9) bolt = null;
+      }
     }
     ctx.globalAlpha = 1;
   }
-  fx = { mode, color: T.fxColor, cv, raf: 0, resize };
+  fx = { sig, cv, raf: 0, resize };
   window.addEventListener('resize', resize); resize(); fx.raf = requestAnimationFrame(frame);
 }
 
@@ -617,15 +827,24 @@ function showLaser(b) {
   if (!laserEl) { laserEl = document.createElement('div'); laserEl.id = OUR + '-laser'; document.documentElement.appendChild(laserEl); }
   if (!laserEl.isConnected) document.documentElement.appendChild(laserEl);
   laserTarget = b;
+  const mode = T.hover || 'laser';
   const rad = parseFloat(getComputedStyle(b).borderTopLeftRadius) || 0;
-  laserEl.style.borderRadius = (rad + 3) + 'px';
+  laserEl.dataset.mode = mode;
+  laserEl.style.borderRadius = mode === 'drip' ? '0' : mode === 'shine' ? rad + 'px' : (rad + 3) + 'px';
+  laserEl.style.animation = 'none'; void laserEl.offsetWidth; laserEl.style.animation = '';   // restart (drip runs once)
   laserEl.style.display = 'block';
   cancelAnimationFrame(laserRaf);
+  const pad = mode === 'sparkle' ? 10 : mode === 'shine' ? 0 : 3;
   const follow = () => {                         // keep it on the button while scrolling
     if (!laserTarget || !laserTarget.isConnected) return hideLaser();
     const r = laserTarget.getBoundingClientRect();
-    laserEl.style.left = (r.left - 3) + 'px'; laserEl.style.top = (r.top - 3) + 'px';
-    laserEl.style.width = (r.width + 6) + 'px'; laserEl.style.height = (r.height + 6) + 'px';
+    if (mode === 'drip') {                       // drips hang from the bottom edge
+      laserEl.style.left = r.left + 'px'; laserEl.style.top = (r.bottom - 3) + 'px';
+      laserEl.style.width = r.width + 'px'; laserEl.style.height = '38px';
+    } else {
+      laserEl.style.left = (r.left - pad) + 'px'; laserEl.style.top = (r.top - pad) + 'px';
+      laserEl.style.width = (r.width + pad * 2) + 'px'; laserEl.style.height = (r.height + pad * 2) + 'px';
+    }
     laserRaf = requestAnimationFrame(follow);
   };
   follow();
@@ -643,7 +862,7 @@ document.addEventListener('mouseout', e => {               // mouse left the but
 // Re-apply everything (after any settings change)
 function refresh(rescan) {
   cfg = siteCfg();
-  T = allThemes()[cfg.theme] || null;
+  T = allThemes()[activeThemeId()] || null;
   applyStyle();
   if (!document.body) return;
   startFx();
@@ -660,6 +879,7 @@ else onReady();
 
 if (window.top !== window) return;              // menu + panel only in the main window
 GM_registerMenuCommand('🎨 Themes & colors…', openPanel);
+if (dailyState().on) GM_registerMenuCommand('⏭ Skip today\'s theme', () => { skipDaily(); if (host) openPanel(); });
 
 // ---------- settings panel (shadow DOM so page styles can't touch it) ----------
 let host = null;
@@ -697,16 +917,17 @@ function makeDraggable(root) {
 // Save a change to the current theme. Editing a suggested theme makes a "My ..." copy.
 function updateTheme(changes) {
   const c = customThemes();
-  let id = cfg.theme;
+  const cur = activeThemeId();
+  let id = cur;
   if (PRESETS[id]) {
     id = 'my_' + id;
-    if (!c[id]) c[id] = Object.assign({}, PRESETS[cfg.theme], { name: 'My ' + PRESETS[cfg.theme].name });
+    if (!c[id]) c[id] = Object.assign({}, PRESETS[cur], { name: 'My ' + PRESETS[cur].name });
   }
   c[id] = Object.assign({}, c[id], changes);
   try { save('custom_themes', c); }
   catch (e) { alert('Could not save (picture too big?). Try a smaller picture.'); return false; }
-  const switched = cfg.theme !== id;
-  cfg.theme = id; saveSiteCfg(cfg); refresh(false);
+  const switched = cur !== id;
+  setActiveTheme(id); refresh(false);
   return switched;
 }
 // Shrink an uploaded picture so it saves fast and small (max 1920px wide, JPEG).
@@ -739,9 +960,10 @@ function testImage(url, cb) {
 function render(root) {
   cfg = siteCfg();
   const themes = allThemes(), custom = customThemes();
-  const cur = themes[cfg.theme] || null;
+  const curId = activeThemeId(), cur = themes[curId] || null;
   const opts = ['<option value="">Off (site\'s normal look)</option>',
-    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k] && !EXTRA[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    ...Object.keys(EXTRA_GROUPS).map(g => `<optgroup label="${esc(EXTRA_GROUPS[g])}">` + Object.keys(EXTRA).filter(k => EXTRA[k].group === g).map(k => `<option value="${k}" title="${esc(EXTRA[k].about)}">${esc(PRESETS[k].name)}</option>`).join('') + '</optgroup>'),
     '<optgroup label="Themed: cyberpunk, space, cars, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
@@ -777,9 +999,11 @@ function render(root) {
   <div class="note" style="margin:0 0 8px">Site: <b>${esc(HOST)}</b> · drag the title bar to move this box</div>
   <h4>Theme</h4>
   <select id="theme">${opts}</select>
+  <label class="c" style="margin-top:6px"><input type="checkbox" id="daily" ${dailyState().on ? 'checked' : ''}> 🎲 New random theme every day (all work sites)</label>
+  ${dailyState().on ? `<div class="row" style="margin-top:4px"><button id="skip" class="pri">⏭ Skip, pick another</button></div><div class="note" style="margin-top:2px">Today's theme: <b>${esc((themes[activeThemeId()] || {}).name || '')}</b></div>` : ''}
   <div class="row" style="margin-top:6px">
     <button id="allsites">Use on all work sites</button>
-    ${custom[cfg.theme] ? '<button id="del">Delete this theme</button>' : ''}
+    ${custom[curId] ? '<button id="del">Delete this theme</button>' : ''}
   </div>
   <h4>Colors ${cur ? '' : '(pick a theme first)'}</h4>
   <div class="grid ${cur ? '' : 'dis'}">
@@ -827,7 +1051,7 @@ function render(root) {
   </div>
 </div>`;
   const $ = s => root.querySelector(s);
-  $('#theme').value = cfg.theme;
+  $('#theme').value = curId;
   makeDraggable(root);
   $('#minbtn').onclick = () => { const p = $('.p'); p.classList.toggle('min'); save('panel_min', p.classList.contains('min')); };
   $('#close').onclick = () => { host.remove(); host = null; };
@@ -875,15 +1099,21 @@ function render(root) {
   slider('#wpdim', 'wpDim', '#dimv');
   slider('#wpsee', 'wpSee', '#seev');
   $('#wpfit').onchange = e => { if (updateTheme({ wpFit: e.target.value })) render(root); };
-  $('#theme').onchange = e => { cfg.theme = e.target.value; saveSiteCfg(cfg); refresh(true); render(root); };
+  $('#theme').onchange = e => {
+    const v = e.target.value;
+    if (!v && dailyState().on) save('daily', Object.assign(dailyState(), { on: false }));   // Off also stops theme of the day
+    setActiveTheme(v); refresh(true); render(root);
+  };
+  $('#daily').onchange = e => { const d = dailyState(); d.on = e.target.checked; if (d.on) d.date = ''; save('daily', d); refresh(true); render(root); };
+  if ($('#skip')) $('#skip').onclick = () => { skipDaily(); render(root); };
   $('#allsites').onclick = () => {
-    WORK_SITES.forEach(h => { const c = siteCfg(h); c.theme = cfg.theme; saveSiteCfg(c, h); });
+    WORK_SITES.forEach(h => { const c = siteCfg(h); c.theme = curId; saveSiteCfg(c, h); });
     alert('This theme is now set for: ' + WORK_SITES.join(', ') + '\nOther tabs change after a reload.');
   };
   if ($('#del')) $('#del').onclick = () => {
     if (!confirm('Delete this theme?')) return;
-    const c = customThemes(); delete c[cfg.theme]; save('custom_themes', c);
-    cfg.theme = ''; saveSiteCfg(cfg); refresh(true); render(root);
+    const c = customThemes(); delete c[curId]; save('custom_themes', c);
+    setActiveTheme(''); refresh(true); render(root);
   };
   root.querySelectorAll('input[type=color]').forEach(inp => {
     inp.oninput = () => {                       // live preview
@@ -899,7 +1129,7 @@ function render(root) {
   $('#clearpicks').onclick = () => { cfg.rules = []; saveSiteCfg(cfg); refresh(true); render(root); };
   $('#savecss').onclick = () => { cfg.css = $('#css').value; saveSiteCfg(cfg); refresh(false); };
   $('#copy').onclick = () => {
-    const code = JSON.stringify({ wrTheme: 1, theme: themes[cfg.theme] || null, rules: cfg.rules || [], css: cfg.css || '', site: HOST });
+    const code = JSON.stringify({ wrTheme: 1, theme: themes[curId] || null, rules: cfg.rules || [], css: cfg.css || '', site: HOST });
     $('#share').value = code; $('#share').select();
     try { navigator.clipboard.writeText(code).catch(() => {}); } catch (e) {}
   };
@@ -909,7 +1139,7 @@ function render(root) {
     if (o.theme) {
       const c = customThemes(); const id = 'shared_' + Date.now();
       c[id] = Object.assign({}, o.theme, { name: (o.theme.name || 'Shared theme') }); save('custom_themes', c);
-      cfg.theme = id;
+      setActiveTheme(id); cfg = siteCfg();
     }
     if (o.site === HOST && (o.rules.length || o.css) && confirm('Also load the picked colors and custom CSS for this site?')) {
       cfg.rules = o.rules; cfg.css = o.css;
