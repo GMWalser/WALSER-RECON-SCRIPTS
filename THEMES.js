@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      2.0
+// @version      2.1
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -9,6 +9,8 @@
 // @match        https://app.partstech.com/*
 // @match        https://shop.usautoforce.com/*
 // @match        https://repairlinkshop.com/*
+// @match        https://teams.microsoft.com/*
+// @match        https://teams.cloud.microsoft/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
@@ -134,6 +136,11 @@ const WALLPAPERS = {
   x_lr_bluepink: { name: "Candy Blue & Pink", css: "repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,63,164,.45) 26px 30px,transparent 30px 44px,rgba(120,60,200,.45) 44px 50px,transparent 50px 70px,rgba(102,200,255,.30) 70px 72px,transparent 72px 110px),linear-gradient(100deg,transparent 0 30%,rgba(255,63,164,.25) 30% 34%,transparent 34% 64%,rgba(120,60,200,.3) 64% 69%,transparent 69%),linear-gradient(180deg,#123a9c,#0a1d4f 60%,#04102e)" },
   x_lr_rainbow: { name: "Rainbow Flake", css: "repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 14px),linear-gradient(120deg,#3a137a 0%,#2050c8 30%,#13b5c0 48%,#ffc83d 52%,#e07a1a 62%,#6a1fb0 85%,#2a0a50 100%)" },
   x_lr_orange: { name: "Candy Orange Pinstripe", css: "repeating-radial-gradient(ellipse 120% 60% at 0% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),repeating-radial-gradient(ellipse 120% 60% at 100% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),linear-gradient(90deg,transparent 0 47%,rgba(255,255,255,.4) 47% 47.4%,transparent 47.4% 52.6%,rgba(255,255,255,.4) 52.6% 53%,transparent 53%),linear-gradient(180deg,#c2410c,#7a1f06 55%,#3a0c03)" },
+  ar_tw_temple: { name: "Temple Skull Mask", css: "radial-gradient(ellipse at 75% 50%,rgba(240,138,42,.18),transparent 60%),linear-gradient(#120d14,#120d14)" },
+  ar_vd_eye: { name: "Inked Eye", css: "linear-gradient(#080808,#080808)" },
+  ar_mg_cruiser: { name: "Speed Tunnel Cruiser", css: "linear-gradient(#1a1a1a,#1a1a1a)" },
+  ar_mg_cruisergreen: { name: "Speed Tunnel Cruiser Green", css: "linear-gradient(#0f1a05,#0f1a05)" },
+  ar_mg_cruiserblue: { name: "Speed Tunnel Cruiser Blue", css: "linear-gradient(#071433,#071433)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
@@ -222,6 +229,11 @@ const ART = {
   mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
   mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f', hover: 'shine' },
   mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
+  tw_temple: { name: "Temple Skull Mask", about: "art: original ornate skull-mask illustration, screen-print inks (Tidwell-inspired)", bg: '#120d14', surface: '#221a28', text: '#efe8d6', accent: '#f08a2a', accentText: '#1a0a00', link: '#e3c06a', border: '#4a3a55', input: '#0e0a10', wp: WALLPAPERS.ar_tw_temple.css, wpDim: 0, wpSee: 35, art: 'temple', artOpacity: .75, hover: 'sparkle', hoverColor: '#d9a521' },
+  vd_eye: { name: "Inked Eye", about: "art: original giant eye in dense pen-and-ink crosshatching (Van Dyke-inspired)", bg: '#080808', surface: '#141414', text: '#f2f2f2', accent: '#e8e8e8', accentText: '#0a0a0a', link: '#c8c8c8', border: '#3a3a3a', input: '#060606', wp: WALLPAPERS.ar_vd_eye.css, wpDim: 0, wpSee: 35, art: 'inkeye', artOpacity: .5, hover: 'drip', hoverColor: '#b3001b' },
+  mg_cruiser: { name: "Speed Tunnel Cruiser", about: "art: original flat-vector coupe in a speed tunnel, gray ramp (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_cruiser.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#111111','#2a2a2a','#4a4a4a','#9a9a9a','#f2f2f2'], hover: 'shine' },
+  mg_cruisergreen: { name: "Speed Tunnel Cruiser Green", about: "art: original coupe illustration on a green ramp (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_cruisergreen.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#0b1404','#1f3a0a','#3f6a12','#9fd02a','#efffb0'], hover: 'shine' },
+  mg_cruiserblue: { name: "Speed Tunnel Cruiser Blue", about: "art: original coupe illustration on a blue ramp (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_cruiserblue.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#050f27','#0d2a6a','#2050a8','#7fb2ff','#eaf4ff'], hover: 'shine' },
 };
 Object.assign(PRESETS, ART);
 // Animated theme packs (each has its own background effect and hover effect).
@@ -275,13 +287,13 @@ function dailyState() { return load('daily', { on: false }); }
 function pickRandomTheme(not) { const ks = Object.keys(allThemes()).filter(k => k !== not); return ks[(Math.random() * ks.length) | 0]; }
 function activeThemeId() {
   const d = dailyState();
-  if (!d.on) return cfg.theme;
+  if (!d.on || !WORK_SITES.includes(HOST)) return cfg.theme;   // Teams etc. keep their own choice
   if (d.date !== todayStr() || !allThemes()[d.theme]) { d.date = todayStr(); d.theme = pickRandomTheme(d.theme); save('daily', d); }
   return d.theme;
 }
 function setActiveTheme(id) {                    // used by the dropdown and by color edits
   const d = dailyState();
-  if (d.on) { d.theme = id; d.date = todayStr(); save('daily', d); }
+  if (d.on && WORK_SITES.includes(HOST)) { d.theme = id; d.date = todayStr(); save('daily', d); }
   else { cfg.theme = id; saveSiteCfg(cfg); }
 }
 function skipDaily() { const d = dailyState(); d.on = true; d.date = todayStr(); d.theme = pickRandomTheme(d.theme); save('daily', d); refresh(true); }
@@ -363,6 +375,7 @@ body,[data-wr-bg=page]{background-color:transparent !important}
 `;
     }
     if (animOn()) css += animCss();
+    if (T.art) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
   }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
@@ -490,7 +503,14 @@ function animCss() {
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 1px ${g},0 0 12px ${rgba(g, .7)} !important;outline:none !important}
 a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
-  if (T.fx) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
+  if (T.fx || T.art) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
+  if (T.art) css += `
+@keyframes wrEye{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes wrPupil{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+@keyframes wrDash{to{stroke-dashoffset:-60}}
+#${OUR}-art .wr-art-glow{animation:wrEye 3.2s ease-in-out infinite}
+#${OUR}-art .wr-art-pupil{animation:wrPupil 7s ease-in-out infinite}
+#${OUR}-art .wr-art-dash{animation:wrDash .9s linear infinite}`;
   // ---- background effects drawn with CSS (html::before) ----
   if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
@@ -742,6 +762,157 @@ function startFx() {
   window.addEventListener('resize', resize); resize(); fx.raf = requestAnimationFrame(frame);
 }
 
+// ---------- original illustration art (drawn in code, as inline SVG behind the page) ----------
+// Inline SVG is part of the page itself, so sites that block outside pictures still show it.
+function artRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a); }; }
+const f1 = n => Math.round(n * 10) / 10;
+function svgPath(d, fill, stroke, sw, extra) { return `<path d="${d}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" stroke-linejoin="round" stroke-linecap="round" ${extra || ''}/>`; }
+function svgCircle(x, y, r, fill, stroke, sw, extra) { return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" ${extra || ''}/>`; }
+
+// Tidwell-inspired: ornate skull wearing a crowned temple mask (original design)
+function artTemple() {
+  const R = artRng(13), ink = '#0b0b0b', vio = '#5b4a6e', vio2 = '#3d2f4d', rust = '#a8382b', org = '#f08a2a', gold = '#d9a521', bone = '#c9c7a5', leafc = '#9a95a8';
+  let o = `<defs><pattern id="wrHt" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.1" fill="#000" opacity=".35"/></pattern></defs>`;
+  // flowing hair strands: fall from the crown like a curtain, plus a few spikes rising behind it
+  for (let i = 0; i < 96; i++) {
+    const side = i % 2 ? -1 : 1, a = -Math.PI + R(.15, Math.PI - .15);
+    const sx = 300 + Math.cos(a) * 150, sy = 255 + Math.sin(a) * 110;
+    const ex = 300 + side * R(40, 330), ey = R(640, 880);
+    const c1x = sx + side * R(60, 210), c1y = sy + R(-60, 40), c2x = ex + side * R(-80, 60), c2y = ey - R(170, 320);
+    const d = `M${f1(sx)} ${f1(sy)} C${f1(c1x)} ${f1(c1y)} ${f1(c2x)} ${f1(c2y)} ${f1(ex)} ${f1(ey)}`, w = R(9, 18), col = [rust, vio, vio2][i % 3];
+    o += svgPath(d, 'none', ink, w + 5) + svgPath(d, 'none', col, w) + svgPath(d, 'none', 'rgba(0,0,0,.45)', 1.4, 'stroke-dasharray="3 7"');
+  }
+  for (let i = 0; i < 16; i++) {
+    const a = -Math.PI + .3 + i * (Math.PI - .6) / 15, sx = 300 + Math.cos(a) * 120, sy = 250 + Math.sin(a) * 90;
+    const ex = 300 + Math.cos(a) * R(300, 360), ey = 250 + Math.sin(a) * R(230, 280), bend = R(-40, 40);
+    const d = `M${f1(sx)} ${f1(sy)} Q${f1((sx + ex) / 2 + bend)} ${f1((sy + ey) / 2 - bend)} ${f1(ex)} ${f1(ey)}`, w = R(8, 13), col = i % 2 ? rust : vio;
+    o += svgPath(d, 'none', ink, w + 5) + svgPath(d, 'none', col, w);
+  }
+  // bone curls scattered in the hair
+  for (let i = 0; i < 12; i++) {
+    const x = R(60, 540), y = R(470, 740), r = R(16, 26), s = R(0, 6.28);
+    const d = `M${f1(x + Math.cos(s) * r)} ${f1(y + Math.sin(s) * r)} A${f1(r)} ${f1(r)} 0 1 1 ${f1(x + Math.cos(s + 4.2) * r)} ${f1(y + Math.sin(s + 4.2) * r)}`;
+    o += svgPath(d, 'none', ink, 16) + svgPath(d, 'none', bone, 10);
+  }
+  // crown leaves
+  const leaf = (cx, cy, ang, len, wid, fill) => {
+    const tx = cx + Math.cos(ang) * len, ty = cy + Math.sin(ang) * len, nx = Math.cos(ang + 1.57) * wid, ny = Math.sin(ang + 1.57) * wid;
+    const mx = cx + Math.cos(ang) * len * .5, my = cy + Math.sin(ang) * len * .5;
+    return svgPath(`M${f1(cx)} ${f1(cy)} Q${f1(mx + nx)} ${f1(my + ny)} ${f1(tx)} ${f1(ty)} Q${f1(mx - nx)} ${f1(my - ny)} ${f1(cx)} ${f1(cy)} Z`, fill, ink, 4)
+      + svgPath(`M${f1(cx)} ${f1(cy)} L${f1(tx)} ${f1(ty)}`, 'none', ink, 1.5);
+  };
+  for (let i = 0; i < 11; i++) { const a = -Math.PI + .25 + i * (Math.PI - .5) / 10; o += leaf(300 + Math.cos(a) * 120, 250 + Math.sin(a) * 90, a, 120, 26, leafc); }
+  // gold flame petals with black orbs
+  for (let i = 0; i < 9; i++) {
+    const a = -Math.PI + .35 + i * (Math.PI - .7) / 8, bx = 300 + Math.cos(a) * 95, by = 235 + Math.sin(a) * 70;
+    o += leaf(bx, by, a, 75, 18, gold);
+    const ox = bx + Math.cos(a) * 52, oy = by + Math.sin(a) * 52;
+    o += svgCircle(ox, oy, 10, ink) + svgCircle(ox - 3, oy - 3, 3.5, org);
+  }
+  // bead strands hanging from the mask
+  [[175, 300, -1], [425, 300, 1]].forEach(([sx, sy, dir]) => {
+    for (let k = 0; k < 18; k++) { const t = k / 17, x = sx + dir * (40 * t + 60 * t * t), y = sy + t * 330; o += svgCircle(x, y, 7, k % 2 ? org : ink, ink, 2.5); }
+  });
+  // temple mask
+  o += svgPath('M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z', org, ink, 6);
+  for (let i = 0; i < 6; i++) {                                // swirl decorations
+    const x = 190 + i * 44, y = i % 2 ? 300 : 210;
+    o += svgPath(`M${x} ${y} q10 -14 20 0 q-4 10 -10 4 q-3 -4 2 -6`, 'none', rust, 3.5);
+  }
+  o += svgPath('M180 300 Q300 322 420 300', 'none', rust, 4) + `<path d="M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z" fill="url(#wrHt)"/>`;
+  const ringEye = (x, y, r) => svgCircle(x, y, r + 6, ink) + svgCircle(x, y, r, rust, ink, 3) + svgCircle(x, y, r * .66, org, ink, 3) + svgCircle(x, y, r * .34, ink) + svgCircle(x - r * .25, y - r * .25, r * .12, '#fff');
+  o += ringEye(232, 252, 32) + ringEye(368, 252, 32) + ringEye(300, 168, 24);
+  // tusks
+  o += svgPath('M206 318 Q166 405 186 488 Q206 412 234 334 Z', gold, ink, 5) + svgPath('M394 318 Q434 405 414 488 Q394 412 366 334 Z', gold, ink, 5);
+  // skull
+  o += svgPath('M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z', bone, ink, 6);
+  o += `<path d="M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z" fill="url(#wrHt)"/>`;
+  o += svgCircle(300, 356, 10, ink) + svgCircle(297, 353, 3, org);
+  [[262, 402], [338, 402]].forEach(([x, y]) => {
+    o += `<ellipse cx="${x}" cy="${y}" rx="32" ry="27" fill="${ink}"/>`;
+    o += svgCircle(x, y, 17, org, 'none', 0, 'class="wr-art-glow"') + svgCircle(x, y, 7, '#ffd27a', 'none', 0, 'class="wr-art-glow"');
+  });
+  o += svgPath('M300 432 L287 462 Q300 472 313 462 Z', ink);
+  o += svgPath('M232 360 l12 10 l-6 9 l10 8', 'none', ink, 2.5) + svgPath('M368 365 l-10 12 l8 6 l-9 10', 'none', ink, 2.5) + svgPath('M300 372 l-4 14 l6 8', 'none', ink, 2);
+  for (let i = 0; i < 8; i++) {                                 // teeth
+    const x = 254 + i * 11.5, gld = i === 2 || i === 5;
+    o += `<rect x="${f1(x)}" y="480" width="11" height="24" rx="3" fill="${gld ? gold : bone}" stroke="${ink}" stroke-width="2.5"/>`;
+  }
+  o += svgPath('M250 506 Q300 524 350 506', 'none', ink, 4);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 30 560 720" preserveAspectRatio="xMaxYMid meet" width="100%" height="100%">${o}</svg>`;
+}
+
+// Van Dyke-inspired: giant eye in dense pen-and-ink contours and crosshatching (original design)
+function artInkEye() {
+  const R = artRng(5), ln = '#efe9dc', cx = 400, cy = 300;
+  let o = '';
+  const ring = (k) => { const pts = []; for (let i = 0; i <= 48; i++) { const a = i / 48 * Math.PI * 2, rx = 150 + k * 19 + R(-4, 4) * (1 + k * .25), ry = 72 + k * 14 + R(-4, 4) * (1 + k * .2); pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]); } return pts; };
+  for (let k = 0; k < 24; k++) {
+    const p = ring(k); let d = `M${f1(p[0][0])} ${f1(p[0][1])}`;
+    for (let i = 1; i < p.length; i++) { const m = [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2]; d += ` Q${f1(p[i - 1][0])} ${f1(p[i - 1][1])} ${f1(m[0])} ${f1(m[1])}`; }
+    o += svgPath(d, 'none', ln, R(1, 2.2), 'opacity=".8"');
+    for (let n = 0; n < 70; n++) {                              // hatch strokes between contours
+      const a = R(0, 6.28), rr = k + R(.2, .8), rx = 150 + rr * 19, ry = 72 + rr * 14;
+      const x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry, t = a + 1.57 + R(.6, 1.1), l = R(5, 12);
+      o += `<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x + Math.cos(t) * l)}" y2="${f1(y + Math.sin(t) * l)}" stroke="${ln}" stroke-width=".8" opacity="${f1(R(.35, .7))}"/>`;
+      if (n % 3 === 0) { const t2 = t + 1.2; o += `<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x + Math.cos(t2) * l)}" y2="${f1(y + Math.sin(t2) * l)}" stroke="${ln}" stroke-width=".7" opacity=".4"/>`; }
+    }
+  }
+  // the eye
+  o += svgPath('M225 300 Q400 160 575 300 Q400 410 225 300 Z', '#e9e4d6', '#000', 6);
+  for (let i = 0; i < 26; i++) { const x = 250 + i * 12; o += `<line x1="${x}" y1="${f1(330 + Math.sin(i) * 6)}" x2="${x + 8}" y2="${f1(345 + Math.sin(i) * 6)}" stroke="#000" stroke-width=".8" opacity=".35"/>`; }
+  o += svgCircle(cx, cy, 72, '#16130f', '#000', 4);
+  for (let i = 0; i < 72; i++) { const a = i / 72 * 6.28, r1 = R(30, 40), r2 = R(58, 70); o += `<line x1="${f1(cx + Math.cos(a) * r1)}" y1="${f1(cy + Math.sin(a) * r1)}" x2="${f1(cx + Math.cos(a) * r2)}" y2="${f1(cy + Math.sin(a) * r2)}" stroke="${ln}" stroke-width="1" opacity=".65"/>`; }
+  o += svgCircle(cx, cy, 28, '#000', 'none', 0, 'class="wr-art-pupil" style="transform-origin:400px 300px"') + svgCircle(cx + 24, cy - 24, 10, '#fff', 'none', 0, 'opacity=".9"');
+  for (let i = 0; i < 22; i++) {                                // lashes
+    const t = i / 21, x = 240 + t * 320, y = 300 - Math.sin(t * Math.PI) * 112, a = -1.57 + (t - .5) * 1.6;
+    o += svgPath(`M${f1(x)} ${f1(y)} q${f1(Math.cos(a) * 20)} ${f1(Math.sin(a) * 30)} ${f1(Math.cos(a) * 34 + (t - .5) * 20)} ${f1(Math.sin(a) * 40)}`, 'none', ln, 2.2);
+  }
+  o += svgPath('M225 300 Q400 160 575 300', 'none', ln, 3) + svgPath('M225 300 Q400 410 575 300', 'none', ln, 2);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${o}</svg>`;
+}
+
+// Grundy-inspired: flat-vector 60s coupe rushing out of a speed tunnel, single color ramp (original design)
+function artCruiser(p) {                                         // p = ramp, darkest -> lightest (5 colors)
+  const vx = 820, vy = 250; let o = `<rect width="1000" height="620" fill="${p[1]}"/>`;
+  for (let i = 0; i < 28; i++) {                                // tunnel rays
+    const a1 = i / 28 * 6.28, a2 = a1 + 6.28 / 56, L = 1600;
+    o += svgPath(`M${vx} ${vy} L${f1(vx + Math.cos(a1) * L)} ${f1(vy + Math.sin(a1) * L)} L${f1(vx + Math.cos(a2) * L)} ${f1(vy + Math.sin(a2) * L)} Z`, i % 2 ? p[2] : p[1]);
+  }
+  for (let i = 0; i < 9; i++) o += svgCircle(vx, vy, 60 + i * 70, 'none', p[3], 3, 'opacity=".25"');
+  o += svgPath(`M${vx - 18} ${vy + 30} L${vx + 18} ${vy + 30} L1000 620 L-200 620 Z`, p[0]);
+  o += `<path class="wr-art-dash" d="M${vx} ${vy + 30} L380 620" stroke="${p[4]}" stroke-width="10" stroke-dasharray="26 34" fill="none"/>`;
+  for (let i = 0; i < 12; i++) { const y = 300 + i * 14; o += `<path class="wr-art-dash" d="M640 ${y} L1000 ${y - 40 + i * 6}" stroke="${p[4]}" stroke-width="${2 + i % 3}" stroke-dasharray="${40 + i * 7} 30" opacity=".55" fill="none"/>`; }
+  // the car
+  o += svgPath('M110 418 L170 358 L420 328 L560 334 L648 358 L668 405 L646 444 L170 474 Z', p[3], p[0], 4);
+  o += svgPath('M300 334 L362 268 L522 260 L604 300 L562 334 Z', p[2], p[0], 4);
+  o += svgPath('M316 332 L367 277 L470 271 L456 330 Z', p[0]) + svgPath('M482 271 L592 301 L560 331 L464 330 Z', p[1]);
+  o += svgPath('M180 372 L420 342 L432 350 L186 382 Z', p[4], 'none', 0, 'opacity=".8"') + svgPath('M440 345 L640 366 L644 376 L446 356 Z', p[4], 'none', 0, 'opacity=".6"');
+  o += svgPath('M122 405 L174 364 L262 356 L240 410 Z', p[0]);
+  for (let i = 0; i < 5; i++) o += svgPath(`M${130 + i * 4} ${399 - i * 8} L${244 - i * 3} ${396 - i * 8}`, 'none', p[3], 2.5);
+  o += `<ellipse cx="148" cy="392" rx="16" ry="13" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/><ellipse cx="226" cy="384" rx="16" ry="13" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
+  o += svgPath('M104 428 Q190 450 300 444 L304 456 Q190 464 100 440 Z', p[4], p[0], 3);
+  [[238, 468, 48], [566, 446, 42]].forEach(([x, y, r]) => {
+    o += `<ellipse cx="${x}" cy="${y}" rx="${r * .78}" ry="${r}" fill="${p[0]}"/><ellipse cx="${x}" cy="${y}" rx="${r * .56}" ry="${r * .72}" fill="${p[4]}"/><ellipse cx="${x}" cy="${y}" rx="${r * .42}" ry="${r * .55}" fill="${p[2]}" stroke="${p[0]}" stroke-width="3"/>`;
+    for (let k = 0; k < 6; k++) { const a = k / 6 * 6.28; o += `<line x1="${x}" y1="${y}" x2="${f1(x + Math.cos(a) * r * .4)}" y2="${f1(y + Math.sin(a) * r * .52)}" stroke="${p[0]}" stroke-width="2"/>`; }
+  });
+  for (let i = 0; i < 6; i++) o += svgCircle(640 + i * 26, 452 - i * 5, 18 + i * 6, p[3], 'none', 0, `opacity="${f1(.5 - i * .07)}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${o}</svg>`;
+}
+const ART_DRAW = { temple: artTemple, inkeye: artInkEye, cruiser: t => artCruiser(t.artRamp || ['#111111', '#2a2a2a', '#4a4a4a', '#9a9a9a', '#f2f2f2']) };
+let artEl = null, artSig = '';
+function startArt() {
+  const want = T && T.art && ART_DRAW[T.art] && window.top === window;
+  if (!want) { if (artEl) { artEl.remove(); artEl = null; artSig = ''; } return; }
+  const sig = T.art + '|' + JSON.stringify(T.artRamp || '') + '|' + (T.artOpacity || .6);
+  if (!artEl) { artEl = document.createElement('div'); artEl.id = OUR + '-art'; }
+  if (!artEl.isConnected) document.documentElement.appendChild(artEl);
+  if (sig === artSig) return;
+  artSig = sig;
+  artEl.style.cssText = `position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:${T.artOpacity || .6}`;
+  artEl.innerHTML = ART_DRAW[T.art](T);
+}
+
 // ---------- laser line that travels around a button while you hover it ----------
 // A separate see-through layer is drawn over the button; the button itself is not changed.
 const BTN_SEL = 'button,[role="button"],input[type="button"],input[type="submit"],a.btn,[data-wr-bg="accent"]';
@@ -792,7 +963,7 @@ function refresh(rescan) {
   T = allThemes()[activeThemeId()] || null;
   applyStyle();
   if (!document.body) return;
-  startFx();
+  startFx(); startArt();
   if (!T) { stopObserver(); unscanAll(); return; }
   if (rescan) { unscanAll(); scan([document.documentElement], false); }
   startObserver();
@@ -800,7 +971,7 @@ function refresh(rescan) {
 
 // ---------- start ----------
 applyStyle();                                   // early: avoids a white flash
-function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); } }
+function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); startArt(); } }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady, { once: true });
 else onReady();
 
