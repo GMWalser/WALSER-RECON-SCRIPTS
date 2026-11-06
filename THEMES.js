@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      3.4
+// @version      3.5
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -240,6 +240,43 @@ let ttPolicy = null;
 try { if (window.trustedTypes && trustedTypes.createPolicy) ttPolicy = trustedTypes.createPolicy('walserThemes', { createHTML: x => x }); }
 catch (e) { console.warn('[Page Themes] this site blocks our HTML policy:', e.message); }
 function safeHTML(html) { return ttPolicy ? ttPolicy.createHTML(html) : html; }
+// If the site also refuses our policy (Teams does), build the elements one by one instead.
+// Only used for this script's own panel markup.
+const VOID_TAGS = /^(input|br|img|hr|meta|link|area|base|col|embed|source|track|wbr)$/;
+function decodeEnt(t) { return t.replace(/&(amp|lt|gt|quot|#39|nbsp);/g, m => ({ '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ' })[m]); }
+function buildDom(html) {
+  const frag = document.createDocumentFragment(), stack = [frag], SVGNS = 'http://www.w3.org/2000/svg';
+  const re = /<!--[\s\S]*?-->|<\/([a-zA-Z0-9-]+)\s*>|<([a-zA-Z0-9-]+)((?:\s+[^\s=>\/]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>|([^<]+)/g;
+  let m;
+  while ((m = re.exec(html))) {
+    const top = stack[stack.length - 1];
+    if (m[1]) {                                        // closing tag
+      const t = m[1].toLowerCase();
+      for (let i = stack.length - 1; i > 0; i--) if (stack[i].tagName && stack[i].tagName.toLowerCase() === t) { stack.length = i; break; }
+    } else if (m[2]) {                                 // opening tag
+      const tag = m[2].toLowerCase();
+      if (tag === 'script') continue;
+      const svg = tag === 'svg' || stack.some(n => n.namespaceURI === SVGNS);
+      const el = svg ? document.createElementNS(SVGNS, tag) : document.createElement(tag);
+      const are = /([^\s=>\/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g; let a;
+      while ((a = are.exec(m[3] || ''))) el.setAttribute(a[1], decodeEnt(a[2] !== undefined ? a[2] : a[3] !== undefined ? a[3] : a[4] !== undefined ? a[4] : ''));
+      top.appendChild(el);
+      if (tag === 'style' || tag === 'textarea') {     // raw text up to the closing tag
+        const end = html.indexOf('</' + tag, re.lastIndex), raw = html.slice(re.lastIndex, end < 0 ? html.length : end);
+        el.textContent = tag === 'textarea' ? decodeEnt(raw) : raw;
+        re.lastIndex = end < 0 ? html.length : end;
+        stack.push(el);
+      } else if (!(m[4] === '/' || VOID_TAGS.test(tag))) stack.push(el);
+    } else if (m[5]) top.appendChild(document.createTextNode(decodeEnt(m[5])));
+  }
+  return frag;
+}
+let htmlBlocked = false;                          // remembered after the first refusal
+function setHTML(el, html) {
+  if (ttPolicy) { el.innerHTML = ttPolicy.createHTML(html); return; }
+  if (!htmlBlocked) { try { el.innerHTML = html; return; } catch (e) { htmlBlocked = true; } }
+  el.textContent = ''; el.appendChild(buildDom(html));
+}
 
 // ---------- storage ----------
 function load(k, d) { try { const v = GM_getValue(k); return v === undefined ? d : JSON.parse(v); } catch (e) { return d; } }
@@ -952,7 +989,7 @@ function render(root) {
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
   ].join('');
   const base = cur || PRESETS.midnight;
-  root.innerHTML = safeHTML(`
+  setHTML(root, `
 <style>
   *{box-sizing:border-box;font:13px "Segoe UI",Arial,sans-serif}
   .p{width:330px;max-height:92vh;overflow:auto;background:#1b1f27;color:#e5e7eb;border:1px solid #3b4252;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
@@ -1202,7 +1239,7 @@ function ruleForm(root, el) {
   const cs = getComputedStyle(el);
   const sel = selectorFor(el);
   const f = root.querySelector('#ruleform');
-  f.innerHTML = safeHTML(`
+  setHTML(f, `
   <div style="background:#0f1218;border:1px solid #3b4252;border-radius:6px;padding:8px;margin-top:6px">
     <div class="row" style="margin-bottom:4px"><button id="rup">⬆ Bigger area</button><button id="rdown">⬇ Smaller</button></div>
     <div class="note" style="margin:0 0 4px">Which elements (advanced users can edit):</div>
