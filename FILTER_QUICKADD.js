@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Filter Quick Add
 // @namespace    reconclipboard
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
@@ -275,13 +275,52 @@ async function handleRequest(raw) {
   }
 }
 
+
+// =====================================================================
+// AUTO GASKET WATCHER (Tekion): whenever an oil filter line is on the RO
+// of a listed make and there is no drain plug gasket yet, add the gasket -
+// no matter how the filter was added (typed, pasted, PartsTech cart, Enter).
+// =====================================================================
+const OIL_FILTER_RE = /\boil\s*filter\b|\bfilter\b[\s\w,.\-]{0,16}\boil\b|\boil\s*fltr\b/i;
+const NOT_FILTER_RE = /housing|adapter|\bcap\b|gasket|wrench|cooler|seal|o-?ring|bypass|plug/i;
+const autoDone = new Set();                      // RO + filter line already handled this session
+async function autoGasketCheck() {
+  if (busy || document.hidden) return;
+  const secs = [...document.querySelectorAll('[data-id^="Job"]')];
+  if (!secs.length) return;
+  for (const sec of secs) {
+    const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')].map(c => (c.textContent || '').trim().replace(/\s+/g, ' '));
+    const filt = cells.find(t => OIL_FILTER_RE.test(t) && !NOT_FILTER_RE.test(t));
+    if (!filt) continue;
+    const key = location.pathname + '|' + pageVin() + '|' + filt;
+    if (autoDone.has(key)) continue;
+    const mk = vehicleMake();
+    if (!mk.pn) {                                 // not a gasket make (or Subaru engine unknown)
+      autoDone.add(key);
+      if (mk.why) { log('Auto gasket:', mk.why); toast(mk.why, true); }
+      return;
+    }
+    const anyJob = secs.some(sx => gasketLine(sx, mk.pn));
+    if (anyJob) { autoDone.add(key); continue; }
+    autoDone.add(key);
+    busy = true;
+    try {
+      log('Auto gasket: oil filter line found (' + filt + ') on', mk.text, '-> adding', mk.pn);
+      if (await addOne(mk.pn)) toast('Auto-added gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : '') + ' for the oil filter');
+    } catch (e) { log('Auto gasket error:', e); }
+    finally { busy = false; }
+    return;
+  }
+}
+
 function initTekion() {
   GM_addValueChangeListener(REQ_KEY, (name, oldVal, newVal) => { handleRequest(newVal); });
   setInterval(rememberTrim, 1000);          // remember trim whenever the vehicle info panel is open
+  setInterval(autoGasketCheck, 2500);       // add the gasket for any oil filter line, however it was added
 }
 
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.4 loaded on', location.hostname);
+log('v1.5 loaded on', location.hostname);
 })();
