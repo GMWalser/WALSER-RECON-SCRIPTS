@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1229
+// @version      2026.1106.1301
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v2.2  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '2.2', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v3.0  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '3.0', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -312,21 +312,21 @@ const EXTRA_GROUPS = {"cyber": "Cyberpunk (animated)", "horror": "Horror", "outd
 const EXTRA = {
   megacity: { name: "Neon Megacity", about: "cyberpunk: green-teal megacity with drifting orange lights", bg: '#031512', surface: '#07241f', text: '#e6fff8', accent: '#2dffc4', accentText: '#00201a', link: '#ffb347', border: '#0f4a40', input: '#021210', wp: WALLPAPERS.x_megacity.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'bokeh', fxColor: '#ffb347', fxColors: ["#ffb347", "#ff8c2a", "#2dffc4"], hover: 'laser' },
   neonalley: { name: "Neon Alley", about: "cyberpunk: rainy alley of pink, red and blue neon signs", bg: '#0a0b1e', surface: '#141634', text: '#f2f0ff', accent: '#ff4fa0', accentText: '#1f0010', link: '#5ad7ff', border: '#2d3170', input: '#07081a', wp: WALLPAPERS.x_neonalley.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'rain', fxColor: '#7fd9ff', hover: 'laser' },
-  campslasher: { name: "Camp Slasher", about: "horror: moonlit foggy lake forest, slash marks, buttons bleed on hover (80s slasher-inspired)", bg: '#03080a', surface: '#0b1518', text: '#e8ecea', accent: '#e8e4da', accentText: '#120000', link: '#ff5a5a', border: '#24363a', input: '#020507', wp: WALLPAPERS.x_campslasher.css, wpDim: 20, wpSee: 30, group: 'horror', glow: false, fx: 'fog slash', fxColor: '#9fb9c4', hover: 'drip', hoverColor: '#9e0000' },
-  madlab: { name: "Mad Lab", about: "horror: monster-green laboratory, lightning and sparking buttons (classic monster movie-inspired)", bg: '#050a07', surface: '#0c1810', text: '#e6f2e8', accent: '#7bd389', accentText: '#04140a', link: '#9be7ff', border: '#23402c', input: '#040805', wp: WALLPAPERS.x_madlab.css, wpDim: 20, wpSee: 30, group: 'horror', glow: true, fx: 'lightning', fxColor: '#bfefff', hover: 'spark' },
-  silverscreen: { name: "Silver Screen Monster", about: "horror: black and white 1930s film, flicker, grain and lightning", bg: '#0a0a0a', surface: '#161616', text: '#f0f0f0', accent: '#d9d9d9', accentText: '#0a0a0a', link: '#ff7a52', border: '#3a3a3a', input: '#070707', wp: WALLPAPERS.x_silverscreen.css, wpDim: 20, wpSee: 30, group: 'horror', glow: false, fx: 'lightning grain', fxColor: '#ffffff', hover: 'spark' },
-  camo: { name: "Woodland Camo", about: "hunting: woodland camo with blaze orange, falling leaves", bg: '#10130c', surface: '#1b2015', text: '#f1f0e4', accent: '#ff6a13', accentText: '#1a0800', link: '#c9d38a', border: '#3a412c', input: '#0c0f09', wp: WALLPAPERS.x_camo.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'leaves', fxColor: '#8a5a2b', fxColors: ["#8a5a2b", "#b5782f", "#6b7a35", "#a0522d"], hover: 'laser', wpFit: 'tile', wpTile: '280px 280px' },
-  blaze: { name: "Blaze Orange Hunter", about: "hunting: blaze orange dawn over the tree line, morning fog", bg: '#0f0a06', surface: '#1c140c', text: '#fff3e6', accent: '#ff6a00', accentText: '#1a0800', link: '#ffd08a', border: '#4a321c', input: '#0b0704', wp: WALLPAPERS.x_blaze.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'fog', fxColor: '#ffcf9a', hover: 'laser' },
-  marsh: { name: "Duck Marsh", about: "waterfowl: cattail marsh at dusk, mallard teal, falling leaves", bg: '#0d0f0a', surface: '#181c12', text: '#f0efe2', accent: '#c9a24a', accentText: '#1a1200', link: '#7fc6a4', border: '#383d28', input: '#0a0b07', wp: WALLPAPERS.x_marsh.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'leaves', fxColor: '#c9a24a', fxColors: ["#c9a24a", "#8a6a2b", "#5a4a2a"], hover: 'laser' },
-  walleye: { name: "Walleye Lake", about: "fishing: Minnesota lake underwater, sun rays, bubbles and fish swimming by", bg: '#04141a', surface: '#0a2530', text: '#e9fbff', accent: '#e8c547', accentText: '#1a1400', link: '#7fe0ff', border: '#1a4655', input: '#031017', wp: WALLPAPERS.x_walleye.css, wpDim: 20, wpSee: 30, group: 'outdoor', glow: false, fx: 'bubbles', fxColor: '#cfefff', fxColors: ["#cfefff", "#e8c547"], hover: 'laser' },
-  garden: { name: "Garden Bloom", about: "cute: pastel flower garden, falling petals, sparkles on hover", bg: '#1c1220', surface: '#2a1b30', text: '#fff0f7', accent: '#ff9ccf', accentText: '#2a0b1c', link: '#b8f0c8', border: '#4c3354', input: '#160e1a', wp: WALLPAPERS.x_garden.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'petals', fxColor: '#ffc1e0', fxColors: ["#ffc1e0", "#ff9ccf", "#e7c6ff", "#fff0f7"], hover: 'sparkle', wpFit: 'tile', wpTile: '110px 110px' },
-  kawaii: { name: "Kawaii Pastel", about: "cute: pastel candy colors with twinkling sparkles", bg: '#171631', surface: '#232246', text: '#fff4fb', accent: '#ffb3d9', accentText: '#2a0b1f', link: '#a8e6ff', border: '#3e3c78', input: '#121128', wp: WALLPAPERS.x_kawaii.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd1ec", "#c9f1ff"], hover: 'sparkle' },
-  anime: { name: "Anime Sky", about: "anime: sunset sky with rotating speed lines and sparkles", bg: '#0d1430', surface: '#172150', text: '#f3f6ff', accent: '#ff7ab6', accentText: '#2a0016', link: '#ffe27a', border: '#2e3d80', input: '#0a1026', wp: WALLPAPERS.x_anime.css, wpDim: 20, wpSee: 30, group: 'cute', glow: true, fx: 'spin', fxColor: '#ffffff', hover: 'sparkle' },
-  graffiti: { name: "Street Graffiti", about: "street: brick wall with spray paint splats, paint drips on hover", bg: '#121212', surface: '#1e1e1e', text: '#f5f5f5', accent: '#39ff14', accentText: '#0a1a00', link: '#ff5fd8', border: '#3a3a3a', input: '#0d0d0d', wp: WALLPAPERS.x_graffiti.css, wpDim: 20, wpSee: 30, group: 'street', glow: false, fx: 'pulse', fxColor: '#ff5fd8', hover: 'drip', hoverColor: '#39ff14' },
-  lr_teal: { name: "Candy Teal Lowrider", about: "lowrider: candy teal with white lace, gold pinstripes and orange flake", bg: '#031a1c', surface: '#072b2e', text: '#effffd', accent: '#2fd6d0', accentText: '#012020', link: '#ffb547', border: '#b08a3a', input: '#021416', wp: WALLPAPERS.x_lr_teal.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#9ff6ef", "#ffcf6a"], hover: 'shine' },
-  lr_bluepink: { name: "Candy Blue & Pink", about: "lowrider: blue metal flake with pink and purple stripe patterns", bg: '#04102e', surface: '#0a1d4f', text: '#f2f6ff', accent: '#ff3fa4', accentText: '#22000f', link: '#66c8ff', border: '#2a49a0', input: '#030b22', wp: WALLPAPERS.x_lr_bluepink.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#9fd8ff', fxColors: ["#9fd8ff", "#ffffff", "#ff8fd0"], hover: 'shine' },
-  lr_rainbow: { name: "Rainbow Flake", about: "lowrider: purple, teal and gold candy fade with patterned panels", bg: '#150a2a', surface: '#22123f', text: '#fff6e8', accent: '#ffc83d', accentText: '#1f1400', link: '#5fe6ff', border: '#6a3fb0', input: '#10071f', wp: WALLPAPERS.x_lr_rainbow.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffd76a', fxColors: ["#ffd76a", "#ffffff", "#8ff0ff", "#d6a8ff"], hover: 'shine' },
-  lr_orange: { name: "Candy Orange Pinstripe", about: "lowrider: candy orange with flowing white pinstripes", bg: '#1a0703', surface: '#2a0f07', text: '#fff2ea', accent: '#ff7a2e', accentText: '#1f0800', link: '#ffd9c2', border: '#8a3a1a', input: '#140502', wp: WALLPAPERS.x_lr_orange.css, wpDim: 20, wpSee: 30, group: 'lowrider', glow: true, fx: 'flake', fxColor: '#ffd0a0', fxColors: ["#ffd0a0", "#ffffff"], hover: 'shine' },
+  campslasher: { name: "Lakeside Night", about: "horror: moon through a dead forest, lake mist, blade gashes, buttons bleed (slasher-inspired)", bg: '#03080a', surface: '#0b1518', text: '#e8ecea', accent: '#e8e4da', accentText: '#120000', link: '#ff6a6a', border: '#24363a', input: '#020507', wp: 'linear-gradient(#03080a,#03080a)', wpDim: 0, wpSee: 30, art: 'lakeside', artOpacity: 0.95, glow: false, fx: 'fog', fxColor: '#9fb9c4', hover: 'drip', hoverColor: '#8a0000' },
+  madlab: { name: "Laboratory", about: "horror: painted lab with twin coil towers and live electric arcs (classic monster-inspired)", bg: '#030a08', surface: '#0a1814', text: '#e6f4ee', accent: '#7fe0c0', accentText: '#02140e', link: '#b8ffe6', border: '#1f4a3c', input: '#020806', wp: 'linear-gradient(#030a08,#030a08)', wpDim: 0, wpSee: 30, art: 'lab', artOpacity: 0.95, glow: true, fx: 'arc', fxColor: '#d8ffff', hover: 'spark' },
+  silverscreen: { name: "Monochrome Terror", about: "horror: 1930s film still, gothic window light, lightning, grain and scratches", bg: '#0a0a0a', surface: '#151515', text: '#f0f0f0', accent: '#d9d9d9', accentText: '#0a0a0a', link: '#ff8a62', border: '#3a3a3a', input: '#070707', wp: 'linear-gradient(#0a0a0a,#0a0a0a)', wpDim: 0, wpSee: 30, art: 'mono', artOpacity: 0.95, glow: false, fx: 'lightning grain', fxColor: '#ffffff', hover: 'spark' },
+  camo: { name: "Timber Camo", about: "hunting: vertical bark grain with layered oak leaves and branches", bg: '#14110c', surface: '#1f1a13', text: '#f3eee2', accent: '#ff6a13', accentText: '#1a0800', link: '#d6c88a', border: '#3d3326', input: '#100d09', wp: 'linear-gradient(#14110c,#14110c)', wpDim: 0, wpSee: 30, art: 'timber', artOpacity: 0.9, glow: false, fx: 'leaves', fxColor: '#7a5a30', fxColors: ["#7a5a30", "#5a4a26", "#4a4a26"], hover: 'laser' },
+  blaze: { name: "Dawn Stand", about: "hunting: dawn over layered ridges and spruce in rolling fog", bg: '#0d1220', surface: '#161c2c', text: '#f2eee6', accent: '#ff8a3a', accentText: '#1a0a00', link: '#ffd2a0', border: '#2c3550', input: '#0a0e18', wp: 'linear-gradient(#0d1220,#0d1220)', wpDim: 0, wpSee: 30, art: 'dawn', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'laser' },
+  marsh: { name: "Marsh Dusk", about: "waterfowl: cattail marsh at dusk, a flock crossing the sky", bg: '#120e18', surface: '#1c1622', text: '#f6efe6', accent: '#f2a35a', accentText: '#1a0d00', link: '#a8d8c8', border: '#3a2e40', input: '#0e0b12', wp: 'linear-gradient(#120e18,#120e18)', wpDim: 0, wpSee: 30, art: 'marsh', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'laser' },
+  walleye: { name: "Deep Water", about: "fishing: under the lake, light shafts, walleye with glowing eyes", bg: '#03141a', surface: '#0a222b', text: '#e9fbff', accent: '#e8c547', accentText: '#1a1400', link: '#8fe6ff', border: '#1a4655', input: '#021016', wp: 'linear-gradient(#03141a,#03141a)', wpDim: 0, wpSee: 30, art: 'deep', artOpacity: 0.95, glow: false, fx: 'bubbles', fxColor: '#cfefff', noFish: true, hover: 'laser' },
+  garden: { name: "Hanami", about: "woodblock print: vermilion sun, misty mountains, cherry branch, wave pattern", bg: '#141c30', surface: '#1c2640', text: '#f6efe2', accent: '#f2d6a2', accentText: '#1c2640', link: '#f7c8d4', border: '#33406a', input: '#0f1526', wp: 'linear-gradient(#141c30,#141c30)', wpDim: 0, wpSee: 30, art: 'hanami', artOpacity: 0.95, glow: false, fx: 'petals', fxColor: '#f7c8d4', fxColors: ["#f7c8d4", "#ffffff", "#f2a8bc"], hover: 'sparkle', hoverColor: '#f7c8d4' },
+  kawaii: { name: "Holographic", about: "iridescent oil-slick foil with a moving sheen", bg: '#120e24', surface: '#1c1734', text: '#fbf6ff', accent: '#b48cff', accentText: '#12082a', link: '#7fe8ff', border: '#3c3466', input: '#0e0b1c', wp: 'linear-gradient(#120e24,#120e24)', wpDim: 0, wpSee: 30, art: 'holo', artOpacity: 0.9, glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd1ec", "#c9f1ff"], hover: 'shine' },
+  anime: { name: "Anime Night Sky", about: "sunset clouds, shooting star, city lights and power lines", bg: '#0a0f2e', surface: '#151a44', text: '#f3f6ff', accent: '#ff9ac0', accentText: '#2a0016', link: '#ffe27a', border: '#2e3478', input: '#080c24', wp: 'linear-gradient(#0a0f2e,#0a0f2e)', wpDim: 0, wpSee: 30, art: 'animesky', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'sparkle' },
+  graffiti: { name: "Underpass", about: "street: buffed concrete, chrome tags, drips, sodium light and a fence shadow", bg: '#121212', surface: '#1c1c1c', text: '#f2f2f2', accent: '#ffb04a', accentText: '#1a0d00', link: '#7fe0ff', border: '#3a3a3a', input: '#0d0d0d', wp: 'linear-gradient(#121212,#121212)', wpDim: 0, wpSee: 30, art: 'street', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'drip', hoverColor: '#d8dde2' },
+  lr_teal: { name: "Candy Teal", about: "lowrider: teal candy, lace, gold-leaf maze panels, pearl teardrop patterns", bg: '#031a1c', surface: '#072b2e', text: '#effffd', accent: '#2fd6d0', accentText: '#012020', link: '#ffc56a', border: '#b08a3a', input: '#021416', wp: 'linear-gradient(#031a1c,#031a1c)', wpDim: 0, wpSee: 30, art: 'lrteal', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#9ff6ef", "#ffcf6a"], hover: 'shine' },
+  lr_bluepink: { name: "Candy Blue & Pink", about: "lowrider: blue flake with pink and purple teardrop patterns", bg: '#04102e', surface: '#0a1d4f', text: '#f2f6ff', accent: '#ff5fb4', accentText: '#22000f', link: '#8fd2ff', border: '#2a49a0', input: '#030b22', wp: 'linear-gradient(#04102e,#04102e)', wpDim: 0, wpSee: 30, art: 'lrbluepink', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#9fd8ff', fxColors: ["#9fd8ff", "#ffffff", "#ff8fd0"], hover: 'shine' },
+  lr_rainbow: { name: "Kandy Flame", about: "lowrider: purple-teal-gold candy fade with blue flames and gold leaf", bg: '#150a2a', surface: '#22123f', text: '#fff6e8', accent: '#ffc83d', accentText: '#1f1400', link: '#6fe8ff', border: '#6a3fb0', input: '#10071f', wp: 'linear-gradient(#150a2a,#150a2a)', wpDim: 0, wpSee: 30, art: 'lrrainbow', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#ffd76a', fxColors: ["#ffd76a", "#ffffff", "#8ff0ff"], hover: 'shine' },
+  lr_orange: { name: "Orange Pinstripe", about: "lowrider: deep candy orange with a symmetric white pinstripe design", bg: '#1a0703', surface: '#2a0f07', text: '#fff2ea', accent: '#ffd9c2', accentText: '#2a0f07', link: '#ffb27a', border: '#8a3a1a', input: '#140502', wp: 'linear-gradient(#1a0703,#1a0703)', wpDim: 0, wpSee: 30, art: 'lrorange', artOpacity: 0.95, glow: false, fx: 'flake', fxColor: '#ffd0a0', fxColors: ["#ffd0a0", "#ffffff"], hover: 'shine' },
 };
 Object.assign(PRESETS, EXTRA);
 const FIELDS = [
@@ -581,7 +581,30 @@ a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
 @keyframes wrDash{to{stroke-dashoffset:-60}}
 #${OUR}-art .wr-art-glow{animation:wrEye 3.2s ease-in-out infinite}
 #${OUR}-art .wr-art-pupil{animation:wrPupil 7s ease-in-out infinite}
-#${OUR}-art .wr-art-dash{animation:wrDash .9s linear infinite}`;
+#${OUR}-art .wr-art-dash{animation:wrDash .9s linear infinite}
+@keyframes wrScFog{0%,100%{transform:translateX(-90px)}50%{transform:translateX(90px)}}
+@keyframes wrScShim{0%,100%{opacity:.08}50%{opacity:.45}}
+@keyframes wrScFlock{from{transform:translate(-700px,60px)}to{transform:translate(1500px,-80px)}}
+@keyframes wrScRays{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes wrScSwim{0%,100%{transform:translateX(0)}50%{transform:translateX(-120px)}}
+@keyframes wrScGlow{0%,100%{opacity:.55}45%{opacity:1}50%{opacity:.35}55%{opacity:.95}}
+@keyframes wrScFlick{0%,100%{opacity:0}48%{opacity:0}50%{opacity:.06}52%{opacity:0}80%{opacity:.03}}
+@keyframes wrScScratch{0%,100%{opacity:0;transform:translateX(0)}10%{opacity:.25}30%{opacity:0;transform:translateX(40px)}}
+@keyframes wrScShine{from{transform:translateX(0) skewX(-20deg)}to{transform:translateX(2600px) skewX(-20deg)}}
+@keyframes wrScTw{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes wrScComet{0%{opacity:0;transform:translate(0,0)}5%{opacity:.9}15%{opacity:0;transform:translate(-500px,150px)}100%{opacity:0;transform:translate(-500px,150px)}}
+#${OUR}-art .wr-sc-fog{animation:wrScFog 26s ease-in-out infinite}
+#${OUR}-art .wr-sc-shim{animation:wrScShim 3.5s ease-in-out infinite}
+#${OUR}-art .wr-sc-flock{animation:wrScFlock 60s linear infinite}
+#${OUR}-art .wr-sc-rays{animation:wrScRays 7s ease-in-out infinite}
+#${OUR}-art .wr-sc-swim{animation:wrScSwim 30s ease-in-out infinite}
+#${OUR}-art .wr-sc-eye{animation:wrEye 4s ease-in-out infinite}
+#${OUR}-art .wr-sc-glow{animation:wrScGlow 2.4s ease-in-out infinite}
+#${OUR}-art .wr-sc-flick{animation:wrScFlick 4s steps(1) infinite}
+#${OUR}-art .wr-sc-scratch{animation:wrScScratch 2.6s linear infinite}
+#${OUR}-art .wr-sc-shine2{animation:wrScShine 9s ease-in-out infinite}
+#${OUR}-art .wr-sc-twinkle{animation:wrScTw 2.2s ease-in-out infinite}
+#${OUR}-art .wr-sc-comet{animation:wrScComet 11s linear infinite}`;
   // ---- background effects drawn with CSS (html::before) ----
   if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
@@ -646,7 +669,7 @@ function stopFx() {
   if (!fx) return;
   cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
 }
-const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh'];
+const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc'];
 function startFx() {
   const mode = T && animOn() ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
@@ -682,7 +705,7 @@ function startFx() {
     }
     if (mode === 'bubbles') {
       P = Array.from({ length: 40 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(1.5, 5), s: rand(.4, 1.3), w: rand(0, 6.28) }));
-      F = Array.from({ length: 4 }, () => ({ x: rand(0, W), y: rand(H * .2, H * .9), dir: Math.random() < .5 ? -1 : 1, s: rand(.4, 1.1), sz: rand(18, 38), w: rand(0, 6.28), c: colors[1] || color }));
+      F = T.noFish ? [] : Array.from({ length: 4 }, () => ({ x: rand(0, W), y: rand(H * .2, H * .9), dir: Math.random() < .5 ? -1 : 1, s: rand(.4, 1.1), sz: rand(18, 38), w: rand(0, 6.28), c: colors[1] || color }));
     }
     if (mode === 'flake') P = Array.from({ length: Math.round(W * H / 4500) }, () => ({ x: rand(0, W), y: rand(0, H), ph: rand(0, 6.28), sp: rand(.03, .09), c: pick() }));
     if (mode === 'fog') P = Array.from({ length: 7 }, () => ({ x: rand(-W * .3, W), y: rand(H * .3, H), r: rand(W * .2, W * .45), s: rand(.15, .45) }));
@@ -816,6 +839,19 @@ function startFx() {
         }
       });
     }
+    if (mode === 'arc') {                                    // electric arcs between the two coil tops of the scene
+      const sc = Math.max(W / 1600, H / 900), ox = (W - 1600 * sc) / 2, oy = (H - 900 * sc) / 2, pa = T.fxArc || [260, 250, 1340, 250];
+      const x1 = ox + pa[0] * sc, y1 = oy + pa[1] * sc, x2 = ox + pa[2] * sc, y2 = oy + pa[3] * sc;
+      if (Math.random() < .55) {
+        for (let n = 0; n < 2; n++) {
+          ctx.globalAlpha = n ? .35 : .9; ctx.strokeStyle = n ? color : '#ffffff'; ctx.lineWidth = n ? 6 : 1.8; ctx.shadowColor = color; ctx.shadowBlur = 14;
+          ctx.beginPath(); ctx.moveTo(x1, y1);
+          const steps = 18; for (let i = 1; i < steps; i++) { const t2 = i / steps; ctx.lineTo(x1 + (x2 - x1) * t2 + rand(-6, 6), y1 + (y2 - y1) * t2 - Math.sin(t2 * Math.PI) * 60 * sc + rand(-28, 28) * sc); }
+          ctx.lineTo(x2, y2); ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+      }
+    }
     if (mode === 'lightning') {                              // a bolt every 5-12 seconds
       if (!bolt && t > nextBolt) { bolt = nextBolt ? makeBolt() : null; nextBolt = t + rand(5000, 12000); }
       if (bolt) {
@@ -839,79 +875,6 @@ function artRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 |
 const f1 = n => Math.round(n * 10) / 10;
 function svgPath(d, fill, stroke, sw, extra) { return `<path d="${d}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" stroke-linejoin="round" stroke-linecap="round" ${extra || ''}/>`; }
 function svgCircle(x, y, r, fill, stroke, sw, extra) { return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" ${extra || ''}/>`; }
-
-// Tidwell-inspired: ornate skull wearing a crowned temple mask (original design)
-function artTemple() {
-  const R = artRng(13), ink = '#0b0b0b', vio = '#5b4a6e', vio2 = '#3d2f4d', rust = '#a8382b', org = '#f08a2a', gold = '#d9a521', bone = '#c9c7a5', leafc = '#9a95a8';
-  let o = `<defs><pattern id="wrHt" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.1" fill="#000" opacity=".35"/></pattern></defs>`;
-  // flowing hair strands: fall from the crown like a curtain, plus a few spikes rising behind it
-  for (let i = 0; i < 96; i++) {
-    const side = i % 2 ? -1 : 1, a = -Math.PI + R(.15, Math.PI - .15);
-    const sx = 300 + Math.cos(a) * 150, sy = 255 + Math.sin(a) * 110;
-    const ex = 300 + side * R(40, 330), ey = R(640, 880);
-    const c1x = sx + side * R(60, 210), c1y = sy + R(-60, 40), c2x = ex + side * R(-80, 60), c2y = ey - R(170, 320);
-    const d = `M${f1(sx)} ${f1(sy)} C${f1(c1x)} ${f1(c1y)} ${f1(c2x)} ${f1(c2y)} ${f1(ex)} ${f1(ey)}`, w = R(9, 18), col = [rust, vio, vio2][i % 3];
-    o += svgPath(d, 'none', ink, w + 5) + svgPath(d, 'none', col, w) + svgPath(d, 'none', 'rgba(0,0,0,.45)', 1.4, 'stroke-dasharray="3 7"');
-  }
-  for (let i = 0; i < 16; i++) {
-    const a = -Math.PI + .3 + i * (Math.PI - .6) / 15, sx = 300 + Math.cos(a) * 120, sy = 250 + Math.sin(a) * 90;
-    const ex = 300 + Math.cos(a) * R(300, 360), ey = 250 + Math.sin(a) * R(230, 280), bend = R(-40, 40);
-    const d = `M${f1(sx)} ${f1(sy)} Q${f1((sx + ex) / 2 + bend)} ${f1((sy + ey) / 2 - bend)} ${f1(ex)} ${f1(ey)}`, w = R(8, 13), col = i % 2 ? rust : vio;
-    o += svgPath(d, 'none', ink, w + 5) + svgPath(d, 'none', col, w);
-  }
-  // bone curls scattered in the hair
-  for (let i = 0; i < 12; i++) {
-    const x = R(60, 540), y = R(470, 740), r = R(16, 26), s = R(0, 6.28);
-    const d = `M${f1(x + Math.cos(s) * r)} ${f1(y + Math.sin(s) * r)} A${f1(r)} ${f1(r)} 0 1 1 ${f1(x + Math.cos(s + 4.2) * r)} ${f1(y + Math.sin(s + 4.2) * r)}`;
-    o += svgPath(d, 'none', ink, 16) + svgPath(d, 'none', bone, 10);
-  }
-  // crown leaves
-  const leaf = (cx, cy, ang, len, wid, fill) => {
-    const tx = cx + Math.cos(ang) * len, ty = cy + Math.sin(ang) * len, nx = Math.cos(ang + 1.57) * wid, ny = Math.sin(ang + 1.57) * wid;
-    const mx = cx + Math.cos(ang) * len * .5, my = cy + Math.sin(ang) * len * .5;
-    return svgPath(`M${f1(cx)} ${f1(cy)} Q${f1(mx + nx)} ${f1(my + ny)} ${f1(tx)} ${f1(ty)} Q${f1(mx - nx)} ${f1(my - ny)} ${f1(cx)} ${f1(cy)} Z`, fill, ink, 4)
-      + svgPath(`M${f1(cx)} ${f1(cy)} L${f1(tx)} ${f1(ty)}`, 'none', ink, 1.5);
-  };
-  for (let i = 0; i < 11; i++) { const a = -Math.PI + .25 + i * (Math.PI - .5) / 10; o += leaf(300 + Math.cos(a) * 120, 250 + Math.sin(a) * 90, a, 120, 26, leafc); }
-  // gold flame petals with black orbs
-  for (let i = 0; i < 9; i++) {
-    const a = -Math.PI + .35 + i * (Math.PI - .7) / 8, bx = 300 + Math.cos(a) * 95, by = 235 + Math.sin(a) * 70;
-    o += leaf(bx, by, a, 75, 18, gold);
-    const ox = bx + Math.cos(a) * 52, oy = by + Math.sin(a) * 52;
-    o += svgCircle(ox, oy, 10, ink) + svgCircle(ox - 3, oy - 3, 3.5, org);
-  }
-  // bead strands hanging from the mask
-  [[175, 300, -1], [425, 300, 1]].forEach(([sx, sy, dir]) => {
-    for (let k = 0; k < 18; k++) { const t = k / 17, x = sx + dir * (40 * t + 60 * t * t), y = sy + t * 330; o += svgCircle(x, y, 7, k % 2 ? org : ink, ink, 2.5); }
-  });
-  // temple mask
-  o += svgPath('M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z', org, ink, 6);
-  for (let i = 0; i < 6; i++) {                                // swirl decorations
-    const x = 190 + i * 44, y = i % 2 ? 300 : 210;
-    o += svgPath(`M${x} ${y} q10 -14 20 0 q-4 10 -10 4 q-3 -4 2 -6`, 'none', rust, 3.5);
-  }
-  o += svgPath('M180 300 Q300 322 420 300', 'none', rust, 4) + `<path d="M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z" fill="url(#wrHt)"/>`;
-  const ringEye = (x, y, r) => svgCircle(x, y, r + 6, ink) + svgCircle(x, y, r, rust, ink, 3) + svgCircle(x, y, r * .66, org, ink, 3) + svgCircle(x, y, r * .34, ink) + svgCircle(x - r * .25, y - r * .25, r * .12, '#fff');
-  o += ringEye(232, 252, 32) + ringEye(368, 252, 32) + ringEye(300, 168, 24);
-  // tusks
-  o += svgPath('M206 318 Q166 405 186 488 Q206 412 234 334 Z', gold, ink, 5) + svgPath('M394 318 Q434 405 414 488 Q394 412 366 334 Z', gold, ink, 5);
-  // skull
-  o += svgPath('M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z', bone, ink, 6);
-  o += `<path d="M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z" fill="url(#wrHt)"/>`;
-  o += svgCircle(300, 356, 10, ink) + svgCircle(297, 353, 3, org);
-  [[262, 402], [338, 402]].forEach(([x, y]) => {
-    o += `<ellipse cx="${x}" cy="${y}" rx="32" ry="27" fill="${ink}"/>`;
-    o += svgCircle(x, y, 17, org, 'none', 0, 'class="wr-art-glow"') + svgCircle(x, y, 7, '#ffd27a', 'none', 0, 'class="wr-art-glow"');
-  });
-  o += svgPath('M300 432 L287 462 Q300 472 313 462 Z', ink);
-  o += svgPath('M232 360 l12 10 l-6 9 l10 8', 'none', ink, 2.5) + svgPath('M368 365 l-10 12 l8 6 l-9 10', 'none', ink, 2.5) + svgPath('M300 372 l-4 14 l6 8', 'none', ink, 2);
-  for (let i = 0; i < 8; i++) {                                 // teeth
-    const x = 254 + i * 11.5, gld = i === 2 || i === 5;
-    o += `<rect x="${f1(x)}" y="480" width="11" height="24" rx="3" fill="${gld ? gold : bone}" stroke="${ink}" stroke-width="2.5"/>`;
-  }
-  o += svgPath('M250 506 Q300 524 350 506', 'none', ink, 4);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 30 560 720" preserveAspectRatio="xMaxYMid meet" width="100%" height="100%">${o}</svg>`;
-}
 
 // Van Dyke-inspired: giant eye in dense pen-and-ink contours and crosshatching (original design)
 function artInkEye() {
@@ -943,34 +906,611 @@ function artInkEye() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${o}</svg>`;
 }
 
-// Grundy-inspired: flat-vector 60s coupe rushing out of a speed tunnel, single color ramp (original design)
-function artCruiser(p) {                                         // p = ramp, darkest -> lightest (5 colors)
-  const vx = 820, vy = 250; let o = `<rect width="1000" height="620" fill="${p[1]}"/>`;
-  for (let i = 0; i < 28; i++) {                                // tunnel rays
-    const a1 = i / 28 * 6.28, a2 = a1 + 6.28 / 56, L = 1600;
-    o += svgPath(`M${vx} ${vy} L${f1(vx + Math.cos(a1) * L)} ${f1(vy + Math.sin(a1) * L)} L${f1(vx + Math.cos(a2) * L)} ${f1(vy + Math.sin(a2) * L)} Z`, i % 2 ? p[2] : p[1]);
-  }
-  for (let i = 0; i < 9; i++) o += svgCircle(vx, vy, 60 + i * 70, 'none', p[3], 3, 'opacity=".25"');
-  o += svgPath(`M${vx - 18} ${vy + 30} L${vx + 18} ${vy + 30} L1000 620 L-200 620 Z`, p[0]);
-  o += `<path class="wr-art-dash" d="M${vx} ${vy + 30} L380 620" stroke="${p[4]}" stroke-width="10" stroke-dasharray="26 34" fill="none"/>`;
-  for (let i = 0; i < 12; i++) { const y = 300 + i * 14; o += `<path class="wr-art-dash" d="M640 ${y} L1000 ${y - 40 + i * 6}" stroke="${p[4]}" stroke-width="${2 + i % 3}" stroke-dasharray="${40 + i * 7} 30" opacity=".55" fill="none"/>`; }
-  // the car
-  o += svgPath('M110 418 L170 358 L420 328 L560 334 L648 358 L668 405 L646 444 L170 474 Z', p[3], p[0], 4);
-  o += svgPath('M300 334 L362 268 L522 260 L604 300 L562 334 Z', p[2], p[0], 4);
-  o += svgPath('M316 332 L367 277 L470 271 L456 330 Z', p[0]) + svgPath('M482 271 L592 301 L560 331 L464 330 Z', p[1]);
-  o += svgPath('M180 372 L420 342 L432 350 L186 382 Z', p[4], 'none', 0, 'opacity=".8"') + svgPath('M440 345 L640 366 L644 376 L446 356 Z', p[4], 'none', 0, 'opacity=".6"');
-  o += svgPath('M122 405 L174 364 L262 356 L240 410 Z', p[0]);
-  for (let i = 0; i < 5; i++) o += svgPath(`M${130 + i * 4} ${399 - i * 8} L${244 - i * 3} ${396 - i * 8}`, 'none', p[3], 2.5);
-  o += `<ellipse cx="148" cy="392" rx="16" ry="13" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/><ellipse cx="226" cy="384" rx="16" ry="13" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
-  o += svgPath('M104 428 Q190 450 300 444 L304 456 Q190 464 100 440 Z', p[4], p[0], 3);
-  [[238, 468, 48], [566, 446, 42]].forEach(([x, y, r]) => {
-    o += `<ellipse cx="${x}" cy="${y}" rx="${r * .78}" ry="${r}" fill="${p[0]}"/><ellipse cx="${x}" cy="${y}" rx="${r * .56}" ry="${r * .72}" fill="${p[4]}"/><ellipse cx="${x}" cy="${y}" rx="${r * .42}" ry="${r * .55}" fill="${p[2]}" stroke="${p[0]}" stroke-width="3"/>`;
-    for (let k = 0; k < 6; k++) { const a = k / 6 * 6.28; o += `<line x1="${x}" y1="${y}" x2="${f1(x + Math.cos(a) * r * .4)}" y2="${f1(y + Math.sin(a) * r * .52)}" stroke="${p[0]}" stroke-width="2"/>`; }
-  });
-  for (let i = 0; i < 6; i++) o += svgCircle(640 + i * 26, 452 - i * 5, 18 + i * 6, p[3], 'none', 0, `opacity="${f1(.5 - i * .07)}"`);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${o}</svg>`;
+// ---------- illustrated scenes (original, drawn in code; still layer + light moving layer) ----------
+// ---- shared helpers for illustrated scenes (all original, drawn in code) ----
+function sRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a); }; }
+const r1 = n => Math.round(n * 10) / 10;
+const SW = 1600, SH = 900;
+function sScene(defs, base, anim) { return { base: sSvg(defs, base), anim: anim ? sSvg(defs, anim) : '' }; }
+function sSvg(defs, body, par) { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="${par || 'xMidYMid slice'}" width="100%" height="100%"><defs>${defs}</defs>${body}</svg>`; }
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+// grain / paper texture overlay
+function sGrain(id, amt) { return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  ${amt} 0 0 0 ${-amt * .45}"/></filter>`; }
+// map a noise field onto a palette (camo, bark, concrete...)
+function sPaletteNoise(id, freq, oct, seed, cols) {
+  const ch = i => cols.map(c => r1(hexRgb(c)[i] / 255)).join(' ');
+  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="${oct}" seed="${seed}"/>
+<feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
+<feComponentTransfer><feFuncR type="discrete" tableValues="${ch(0)}"/><feFuncG type="discrete" tableValues="${ch(1)}"/><feFuncB type="discrete" tableValues="${ch(2)}"/></feComponentTransfer></filter>`;
 }
-const ART_DRAW = { temple: artTemple, inkeye: artInkEye, cruiser: t => artCruiser(t.artRamp || ['#111111', '#2a2a2a', '#4a4a4a', '#9a9a9a', '#f2f2f2']) };
+// jagged ridge line (midpoint displacement) -> closed path down to the bottom
+function sRidge(R, y, rough, n) {
+  let pts = [[0, y], [SW, y]];
+  for (let k = 0, d = rough; k < (n || 7); k++, d *= .55) {
+    const np = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; np.push(a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + R(-d, d)]); }
+    np.push(pts[pts.length - 1]); pts = np;
+  }
+  return pts;
+}
+const sPolyPath = pts => 'M' + pts.map(p => r1(p[0]) + ' ' + r1(p[1])).join(' L') + ` L${SW} ${SH} L0 ${SH} Z`;
+// spruce silhouette
+function sSpruce(x, base, h, w, fill) {
+  let d = `M${r1(x)} ${r1(base - h)}`; const tiers = 7;
+  for (let i = 1; i <= tiers; i++) { const y = base - h + h * i / tiers, ww = w * (i / tiers) * (.55 + .45 * (i % 2)); d += ` L${r1(x + ww)} ${r1(y)} L${r1(x + ww * .35)} ${r1(y - h / tiers * .25)}`; }
+  d += ` L${r1(x + w * .08)} ${r1(base)} L${r1(x - w * .08)} ${r1(base)}`;
+  for (let i = tiers; i >= 1; i--) { const y = base - h + h * i / tiers, ww = w * (i / tiers) * (.55 + .45 * (i % 2)); d += ` L${r1(x - ww * .35)} ${r1(y - h / tiers * .25)} L${r1(x - ww)} ${r1(y)}`; }
+  return `<path d="${d} Z" fill="${fill}"/>`;
+}
+
+// Dawn Stand: layered ridges into fog, spruce lines, low sun, distant birds
+function sceneDawn() {
+  const R = sRng(21);
+  const layers = [['#3c4a63', 300], ['#2f3a50', 390], ['#242c3d', 480], ['#1a1f2b', 570], ['#10131a', 680]];
+  let defs = `<linearGradient id="dsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1526"/><stop offset=".45" stop-color="#3b3f5c"/><stop offset=".7" stop-color="#c46a3a"/><stop offset=".82" stop-color="#ffb066"/></linearGradient>
+<radialGradient id="dsSun" cx="1120" cy="430" r="420" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c8" stop-opacity=".95"/><stop offset=".08" stop-color="#ffd08a" stop-opacity=".8"/><stop offset=".35" stop-color="#ff8a3a" stop-opacity=".25"/><stop offset="1" stop-color="#ff8a3a" stop-opacity="0"/></radialGradient>
+<linearGradient id="dsFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9b0" stop-opacity="0"/><stop offset=".5" stop-color="#ffd9b0" stop-opacity=".22"/><stop offset="1" stop-color="#ffd9b0" stop-opacity="0"/></linearGradient>` + sGrain('dsG', .5);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#dsSky)"/><rect width="${SW}" height="${SH}" fill="url(#dsSun)"/><circle cx="1120" cy="430" r="34" fill="#fff4d6" opacity=".9"/>`;
+  for (let i = 0; i < 9; i++) { const x = R(300, 900), y = R(150, 300), s = R(5, 9); b += `<path d="M${r1(x - s)} ${r1(y)} q${r1(s / 2)} ${r1(-s / 2)} ${r1(s)} 0 q${r1(s / 2)} ${r1(-s / 2)} ${r1(s)} 0" stroke="#141820" stroke-width="1.6" fill="none" opacity=".7"/>`; }
+  layers.forEach(([col, y], li) => {
+    const pts = sRidge(R, y, 90 - li * 8, 7);
+    b += `<path d="${sPolyPath(pts)}" fill="${col}"/>`;
+    const step = 26 - li * 3;
+    for (let x = R(0, step); x < SW; x += step * R(.6, 1.6)) {
+      const i = Math.min(pts.length - 1, Math.round(x / SW * (pts.length - 1))), base = pts[i][1] + 4, h = R(30, 70) * (1 + li * .45);
+      if (R(0, 1) < .85) b += sSpruce(x, base, h, h * .26, col);
+    }
+    a += `<rect x="-200" y="${y - 40}" width="${SW + 400}" height="${120 + li * 10}" fill="url(#dsFog)" class="wr-sc-fog" style="animation-delay:${-li * 3}s"/>`;
+  });
+  b += sSpruce(90, 900, 620, 160, '#07090d') + sSpruce(1520, 900, 540, 140, '#07090d');
+  b += `<rect width="${SW}" height="${SH}" filter="url(#dsG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Timber Camo: vertical bark grain, deep shadows, layered realistic leaves and branches
+function sceneTimber() {
+  const R = sRng(8);
+  let defs = `<filter id="tcBark" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".09 .0035" numOctaves="4" seed="11"/><feColorMatrix values=".62 0 0 0 -.08  .5 0 0 0 -.07  .36 0 0 0 -.05  0 0 0 0 1"/></filter>`
+    + `<filter id="tcSh" color-interpolation-filters="sRGB"><feDropShadow dx="4" dy="7" stdDeviation="5" flood-color="#000" flood-opacity=".65"/></filter>
+<filter id="tcLeafTex" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 -.1" result="d"/><feComposite in="d" in2="SourceGraphic" operator="in" result="t"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="t"/></feMerge></filter>
+<radialGradient id="tcVig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient>` + sGrain('tcG', .5);
+  let b = `<rect width="${SW}" height="${SH}" filter="url(#tcBark)"/>`;
+  // big trunk shadows for depth
+  for (let i = 0; i < 6; i++) { const x = R(0, SW), w = R(60, 180); b += `<rect x="${r1(x)}" y="0" width="${r1(w)}" height="${SH}" fill="#000" opacity="${r1(R(.15, .35))}"/>`; }
+  const branch = (x, y, a, len, w, depth) => {
+    if (depth > 3 || len < 30) return '';
+    const bx = x + Math.cos(a) * len, by = y + Math.sin(a) * len, cx = (x + bx) / 2 + R(-25, 25), cy = (y + by) / 2 + R(-25, 25);
+    let o = `<path d="M${r1(x)} ${r1(y)} Q${r1(cx)} ${r1(cy)} ${r1(bx)} ${r1(by)}" stroke="#15110c" stroke-width="${r1(w)}" fill="none" stroke-linecap="round"/>`;
+    o += `<path d="M${r1(x)} ${r1(y)} Q${r1(cx)} ${r1(cy)} ${r1(bx)} ${r1(by)}" stroke="#4a3d2c" stroke-width="${r1(w * .3)}" fill="none" stroke-linecap="round" opacity=".5" transform="translate(-1 -1)"/>`;
+    for (let k = 0; k < 2; k++) o += branch(bx, by, a + R(-.8, .8), len * R(.5, .75), w * .6, depth + 1);
+    return o;
+  };
+  const leaf = (s) => {                                   // oak leaf with rounded lobes
+    let d = `M0 ${r1(-s)}`; const lobes = 4;
+    for (let k = 0; k < lobes; k++) { const y0 = -s + k * s * .45, y1 = y0 + s * .45; d += ` C${r1(s * .25)} ${r1(y0)} ${r1(s * .62)} ${r1(y0 + s * .12)} ${r1(s * .5)} ${r1(y0 + s * .28)} C${r1(s * .42)} ${r1(y0 + s * .38)} ${r1(s * .2)} ${r1(y1 - s * .05)} ${r1(s * .22)} ${r1(y1)}`; }
+    d += ` L${r1(s * .05)} ${r1(s * 1.0)} L${r1(-s * .05)} ${r1(s * 1.0)}`;
+    for (let k = lobes - 1; k >= 0; k--) { const y0 = -s + k * s * .45, y1 = y0 + s * .45; d += ` L${r1(-s * .22)} ${r1(y1)} C${r1(-s * .2)} ${r1(y1 - s * .05)} ${r1(-s * .42)} ${r1(y0 + s * .38)} ${r1(-s * .5)} ${r1(y0 + s * .28)} C${r1(-s * .62)} ${r1(y0 + s * .12)} ${r1(-s * .25)} ${r1(y0)} 0 ${r1(y0 + (k ? 0 : 0))}`; }
+    return d + ' Z';
+  };
+  const cols = ['#5a4a2a', '#6b5530', '#4a4a26', '#3a4220', '#7a5a30', '#544028', '#33381c'];
+  let g = '';
+  for (let i = 0; i < 9; i++) g += branch(R(-100, SW + 100), R(-100, SH + 100), R(0, 6.28), R(160, 320), R(10, 18), 0);
+  for (let layer = 0; layer < 2; layer++) {
+    for (let i = 0; i < 55; i++) {
+      const x = R(-40, SW + 40), y = R(-40, SH + 40), s = R(34, 70) * (layer ? 1.15 : .85), a = R(0, 360), c = cols[(R(0, cols.length)) | 0];
+      g += `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(a)})" filter="url(#tcSh)"><path d="${leaf(s)}" fill="${c}" opacity="${layer ? 1 : .85}"/>
+<path d="M0 ${r1(-s)} L0 ${r1(s)}" stroke="#1d170c" stroke-width="1.6" opacity=".7"/>${[-.5, -.05, .4].map(t => `<path d="M0 ${r1(s * t)} L${r1(s * .38)} ${r1(s * t - s * .18)} M0 ${r1(s * t)} L${r1(-s * .38)} ${r1(s * t - s * .18)}" stroke="#1d170c" stroke-width="1" opacity=".5"/>`).join('')}</g>`;
+    }
+  }
+  b += `<g filter="url(#tcLeafTex)">${g}</g><rect width="${SW}" height="${SH}" fill="url(#tcVig)"/><rect width="${SW}" height="${SH}" filter="url(#tcG)"/>`;
+  return sScene(defs, b, '');
+}
+
+// Marsh Dusk: sky into water reflection, distant treeline, flock in a V, reed silhouettes
+function sceneMarsh() {
+  const R = sRng(31);
+  let defs = `<linearGradient id="mdSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1530"/><stop offset=".35" stop-color="#4a2e4e"/><stop offset=".55" stop-color="#c0603a"/><stop offset=".62" stop-color="#f2a35a"/></linearGradient>
+<linearGradient id="mdWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e08a4a"/><stop offset=".3" stop-color="#6a3a40"/><stop offset="1" stop-color="#120e18"/></linearGradient>` + sGrain('mdG', .45);
+  let a = '';
+  let b = `<rect width="${SW}" height="560" fill="url(#mdSky)"/><rect y="556" width="${SW}" height="344" fill="url(#mdWater)"/>`;
+  b += `<ellipse cx="1000" cy="560" rx="70" ry="70" fill="#ffd08a" opacity=".85"/><rect x="0" y="556" width="${SW}" height="10" fill="#120e18" opacity=".6"/>`;
+  b += `<path d="${sPolyPath(sRidge(R, 548, 14, 7)).replace(` L${SW} ${SH} L0 ${SH} Z`, ` L${SW} 562 L0 562 Z`)}" fill="#120e18"/>`;
+  for (let i = 0; i < 60; i++) { const y = R(570, 880), x = R(0, SW), w = R(40, 260); a += `<rect class="wr-sc-shim" x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(R(1, 2.5))}" fill="#ffc890" opacity="${r1(R(.08, .3))}" style="animation-delay:${r1(R(-6, 0))}s"/>`; }
+  let flock = '';
+  for (let i = 0; i < 11; i++) { const side = i % 2 ? 1 : -1, k = Math.ceil(i / 2), x = 520 + k * 34, y = 230 + side * k * 22, s = 12 - k * .5; flock += `<path d="M${r1(x - s)} ${r1(y - s * .3)} Q${r1(x - s * .4)} ${r1(y - s * .9)} ${r1(x)} ${r1(y)} Q${r1(x + s * .4)} ${r1(y - s * .9)} ${r1(x + s)} ${r1(y - s * .3)}" stroke="#120e18" stroke-width="2.4" fill="none" stroke-linecap="round"/>`; }
+  a += `<g class="wr-sc-flock">${flock}</g>`;
+  let reeds = '';
+  for (let i = 0; i < 170; i++) {
+    const x = R(-20, SW + 20), base = SH + 10, h = R(160, 420) * (x < 420 || x > 1200 ? 1.2 : .7), lean = R(-60, 60);
+    reeds += `<path d="M${r1(x)} ${base} Q${r1(x + lean * .3)} ${r1(base - h * .5)} ${r1(x + lean)} ${r1(base - h)}" stroke="#0b0910" stroke-width="${r1(R(2, 4.5))}" fill="none" stroke-linecap="round"/>`;
+    if (R(0, 1) < .16) reeds += `<rect x="${r1(x + lean - 6)}" y="${r1(base - h + 14)}" width="12" height="${r1(R(40, 62))}" rx="6" fill="#1a110c"/>`;
+  }
+  a += `<g>${reeds}</g>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#mdG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Deep Water: light shafts, caustics, weeds, big walleye-style fish with glowing eyes
+function sceneDeep() {
+  const R = sRng(44);
+  let defs = `<linearGradient id="dwBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d6a78"/><stop offset=".35" stop-color="#0b3a46"/><stop offset="1" stop-color="#020b10"/></linearGradient>
+<linearGradient id="dwRay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8fbff" stop-opacity=".35"/><stop offset="1" stop-color="#d8fbff" stop-opacity="0"/></linearGradient>
+<linearGradient id="dwFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#000"/></linearGradient><mask id="dwM"><rect width="${SW}" height="${SH}" fill="url(#dwFade)"/></mask>
+<filter id="dwCaus" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".012 .02" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 .85  0 0 0 0 1  0 0 0 0 1  -6 0 0 0 1.4"/></filter>
+<linearGradient id="dwFish" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a14"/><stop offset=".6" stop-color="#2a3a22"/><stop offset="1" stop-color="#6a6a3a"/></linearGradient>` + sGrain('dwG', .4);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#dwBg)"/><rect width="${SW}" height="${SH}" filter="url(#dwCaus)" mask="url(#dwM)" opacity=".55"/>`;
+  let rays = ''; for (let i = 0; i < 9; i++) { const x = R(100, 1500), w = R(40, 140), sk = R(-200, 200); rays += `<path d="M${r1(x)} 0 L${r1(x + w)} 0 L${r1(x + w + sk + 120)} ${SH} L${r1(x + sk - 60)} ${SH} Z" fill="url(#dwRay)"/>`; }
+  a += `<g class="wr-sc-rays">${rays}</g>`;
+  const fish = (x, y, s, flip, op) => {
+    const body = `M${-s} 0 C${-s * .7} ${-s * .32} ${s * .45} ${-s * .34} ${s} ${-s * .05} C${s * 1.05} 0 ${s * 1.05} ${s * .05} ${s} ${s * .07} C${s * .45} ${s * .3} ${-s * .7} ${s * .26} ${-s} 0 Z`;
+    const tail = `M${-s * .92} 0 L${-s * 1.35} ${-s * .32} Q${-s * 1.2} 0 ${-s * 1.35} ${s * .32} Z`;
+    let dorsal = `M${-s * .35} ${-s * .26}`; for (let k = 0; k < 7; k++) dorsal += ` L${r1(-s * .3 + k * s * .1)} ${r1(-s * .46 + (k % 2) * s * .1)}`; dorsal += ` L${r1(s * .4)} ${r1(-s * .27)} Z`;
+    return `<g transform="translate(${x} ${y}) scale(${flip} 1)" opacity="${op}"><path d="${dorsal}" fill="#0d1a14"/><path d="${tail}" fill="#0d1a14"/><path d="${body}" fill="url(#dwFish)"/>
+<path d="M${-s * .6} ${-s * .05} Q0 ${-s * .12} ${s * .6} ${-s * .02}" stroke="#8a8a4a" stroke-width="1.2" fill="none" opacity=".5"/>
+<circle cx="${r1(s * .72)}" cy="${r1(-s * .06)}" r="${r1(s * .07)}" fill="#e8d27a" class="wr-sc-eye"/><circle cx="${r1(s * .73)}" cy="${r1(-s * .06)}" r="${r1(s * .03)}" fill="#1a1a0a"/></g>`;
+  };
+  a += `<g class="wr-sc-swim">${fish(1080, 360, 210, -1, .85)}${fish(480, 520, 140, 1, .6)}${fish(1350, 600, 90, -1, .45)}</g>`;
+  let weeds = ''; for (let i = 0; i < 60; i++) { const x = R(0, SW), h = R(120, 420), c = R(-60, 60); weeds += `<path d="M${r1(x)} ${SH} C${r1(x + c)} ${r1(SH - h * .4)} ${r1(x - c)} ${r1(SH - h * .7)} ${r1(x + c * .5)} ${r1(SH - h)}" stroke="#041810" stroke-width="${r1(R(4, 10))}" fill="none" stroke-linecap="round"/>`; }
+  a += `<g>${weeds}</g>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#dwG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Lakeside Night: moon through layered dead forest, ground mist, lake reflection, blade gashes
+function sceneLakeside() {
+  const R = sRng(66);
+  let defs = `<radialGradient id="lnMoon" cx="800" cy="250" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e6f4ff" stop-opacity=".95"/><stop offset=".06" stop-color="#cfe6f2" stop-opacity=".85"/><stop offset=".25" stop-color="#5f8f9e" stop-opacity=".45"/><stop offset="1" stop-color="#0b1a20" stop-opacity="0"/></radialGradient>
+<linearGradient id="lnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03080a"/><stop offset=".55" stop-color="#0d2329"/><stop offset=".78" stop-color="#183a40"/><stop offset="1" stop-color="#020506"/></linearGradient>
+<linearGradient id="lnMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fc4cc" stop-opacity="0"/><stop offset=".6" stop-color="#9fc4cc" stop-opacity=".35"/><stop offset="1" stop-color="#9fc4cc" stop-opacity="0"/></linearGradient>
+<linearGradient id="lnGash" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a0000"/><stop offset=".5" stop-color="#7a0000"/><stop offset=".56" stop-color="#c01818"/><stop offset="1" stop-color="#2a0000"/></linearGradient>
+<filter id="lnBlur"><feGaussianBlur stdDeviation="3"/></filter><filter id="lnBlur2"><feGaussianBlur stdDeviation="1.2"/></filter>` + sGrain('lnG', .55);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#lnSky)"/><rect width="${SW}" height="${SH}" fill="url(#lnMoon)"/><circle cx="800" cy="250" r="62" fill="#eef8ff" opacity=".92"/>`;
+  const trunk = (x, w, top, col, blur) => {                     // tall bare tree with crooked branches
+    let o = `<path d="M${r1(x - w / 2)} ${SH} L${r1(x - w * .3)} ${r1(top)} L${r1(x + w * .3)} ${r1(top)} L${r1(x + w / 2)} ${SH} Z" fill="${col}"/>`;
+    for (let k = 0; k < 6; k++) {
+      const y = top + R(20, 420), dir = R(0, 1) < .5 ? -1 : 1, l = R(40, 160), ex = x + dir * l, ey = y - R(20, 120);
+      o += `<path d="M${r1(x)} ${r1(y)} Q${r1(x + dir * l * .4)} ${r1(y - 10)} ${r1(ex)} ${r1(ey)} M${r1(x + dir * l * .6)} ${r1(y - 18)} L${r1(x + dir * l * .8)} ${r1(y - R(50, 90))}" stroke="${col}" stroke-width="${r1(Math.max(1.5, w * .14))}" fill="none" stroke-linecap="round"/>`;
+    }
+    return blur ? `<g filter="url(#${blur})">${o}</g>` : o;
+  };
+  [['#2d5258', 9, 'lnBlur', 26], ['#1a353a', 15, 'lnBlur2', 16], ['#0a171a', 24, '', 11], ['#020405', 46, '', 6]].forEach(([col, w, bl, n], li) => {
+    let o = ''; for (let i = 0; i < n; i++) { const x = R(-40, SW + 40); if (li === 3 && x > 520 && x < 1080) continue; o += trunk(x, w * R(.7, 1.4), R(-80, 120), col, ''); }
+    b += bl ? `<g filter="url(#${bl})">${o}</g>` : o;
+    a += `<rect x="-200" y="${560 + li * 40}" width="${SW + 400}" height="200" fill="url(#lnMist)" class="wr-sc-fog" style="animation-delay:${-li * 4}s"/>`;
+  });
+  b += `<rect x="0" y="760" width="${SW}" height="140" fill="#04090b"/><rect x="0" y="760" width="${SW}" height="140" fill="url(#lnMoon)" opacity=".35"/>`;
+  for (let i = 0; i < 40; i++) { const y = R(770, 890), w = R(20, 140) * (1 - (y - 770) / 200); a += `<rect class="wr-sc-shim" x="${r1(800 - w / 2 + R(-30, 30))}" y="${r1(y)}" width="${r1(w)}" height="1.5" fill="#dff2ff" opacity="${r1(R(.15, .5))}" style="animation-delay:${r1(R(-5, 0))}s"/>`; }
+  [[0, 0], [38, 10], [76, 22]].forEach(([dx, dy]) => {          // three blade gashes, upper right
+    const x = 1150 + dx, y = 420 + dy;
+    b += `<path d="M${x} ${y} Q${x + 120} ${y - 150} ${x + 260} ${y - 330} Q${x + 132} ${y - 140} ${x + 6} ${y + 4} Z" fill="url(#lnGash)" opacity=".92"/><path d="M${x + 8} ${y - 6} Q${x + 125} ${y - 150} ${x + 252} ${y - 322}" stroke="#ff4040" stroke-width="1" opacity=".5" fill="none"/>`;
+  });
+  b += `<rect width="${SW}" height="${SH}" filter="url(#lnG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Laboratory: painted teal-green dark lab, twin coil towers, glow halos (arcs are animated on canvas)
+function sceneLab() {
+  const R = sRng(77);
+  let defs = `<filter id="lbPaint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="2"/><feColorMatrix values=".05 0 0 0 .01  .32 0 0 0 .03  .3 0 0 0 .03  0 0 0 0 1"/></filter>
+<radialGradient id="lbHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8ffff" stop-opacity=".9"/><stop offset=".25" stop-color="#6ff0d8" stop-opacity=".45"/><stop offset="1" stop-color="#6ff0d8" stop-opacity="0"/></radialGradient>
+<radialGradient id="lbVig" cx=".5" cy=".45" r=".75"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient>
+<linearGradient id="lbMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#061210"/><stop offset=".45" stop-color="#3f6e62"/><stop offset=".55" stop-color="#9fd8c4"/><stop offset=".7" stop-color="#2a4a42"/><stop offset="1" stop-color="#050c0a"/></linearGradient>` + sGrain('lbG', .55);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" filter="url(#lbPaint)"/>`;
+  const tower = (x) => {
+    let o = `<rect x="${x - 14}" y="300" width="28" height="600" fill="url(#lbMetal)"/>`;
+    for (let i = 0; i < 9; i++) { const y = 330 + i * 46, w = 120 - i * 6; o += `<ellipse cx="${x}" cy="${y}" rx="${w / 2}" ry="12" fill="url(#lbMetal)" stroke="#020605" stroke-width="2"/>`; }
+    o += `<ellipse cx="${x}" cy="250" rx="70" ry="60" fill="url(#lbMetal)" stroke="#020605" stroke-width="3"/>`; a += `<circle cx="${x}" cy="250" r="190" fill="url(#lbHalo)" class="wr-sc-glow"/>`;
+    o += `<rect x="${x - 90}" y="820" width="180" height="80" fill="#030807" stroke="#2a4a42" stroke-width="2"/>`;
+    return o;
+  };
+  b += tower(260) + tower(1340);
+  for (let i = 0; i < 5; i++) {                                 // hanging cables
+    const x1 = R(300, 700), x2 = R(900, 1300), y = R(80, 200);
+    b += `<path d="M${r1(x1)} -10 Q${r1((x1 + x2) / 2)} ${r1(y + 260)} ${r1(x2)} -10" stroke="#020605" stroke-width="${r1(R(3, 7))}" fill="none"/>`;
+  }
+  b += `<rect y="860" width="${SW}" height="40" fill="#020605"/><rect width="${SW}" height="${SH}" fill="url(#lbVig)"/><rect width="${SW}" height="${SH}" filter="url(#lbG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Monochrome Terror: 1930s film still, gothic window light cast across stone, chiaroscuro
+function sceneMono() {
+  const R = sRng(88);
+  let defs = `<filter id="mtStone" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".02 .05" numOctaves="4" seed="6"/><feColorMatrix values=".35 0 0 0 0  .35 0 0 0 0  .35 0 0 0 0  0 0 0 0 1"/></filter>
+<linearGradient id="mtBeam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<radialGradient id="mtVig" cx=".42" cy=".45" r=".7"><stop offset=".25" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".95"/></radialGradient>
+<filter id="mtSoft"><feGaussianBlur stdDeviation="6"/></filter>` + sGrain('mtG', .7);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" filter="url(#mtStone)"/>`;
+  for (let r = 0; r < 12; r++) for (let c = 0; c < 9; c++) { const w = 190, h = 80, x = c * w + (r % 2) * 95 - 95, y = r * h; b += `<rect x="${x}" y="${y}" width="${w - 4}" height="${h - 4}" fill="none" stroke="#000" stroke-width="3" opacity=".55"/>`; }
+  // gothic window high left, its light cast diagonally across the wall
+  b += `<path d="M180 120 L180 380 L380 380 L380 120 Q280 -10 180 120 Z" fill="#f4f4f4"/><path d="M280 40 L280 380 M180 250 L380 250" stroke="#0a0a0a" stroke-width="12"/><path d="M180 120 Q280 -10 380 120" stroke="#0a0a0a" stroke-width="10" fill="none"/>`;
+  b += `<g filter="url(#mtSoft)"><path d="M180 120 L380 120 L1500 700 L860 900 Z" fill="url(#mtBeam)" opacity=".55"/>
+<path d="M900 560 L1180 560 L1290 860 L950 860 Q900 700 900 560 Z" fill="#fff" opacity=".22"/><path d="M1040 560 L1110 860 M915 700 L1240 700" stroke="#000" stroke-width="16" opacity=".5"/></g>`;
+  b += `<rect width="${SW}" height="${SH}" fill="url(#mtVig)"/>`;
+  for (let i = 0; i < 7; i++) { const x = R(0, SW); a += `<rect class="wr-sc-scratch" x="${r1(x)}" y="0" width="1.2" height="${SH}" fill="#fff" opacity="${r1(R(.08, .25))}" style="animation-delay:${r1(R(-3, 0))}s"/>`; }
+  b += `<rect width="${SW}" height="${SH}" filter="url(#mtG)"/>`;
+  a += `<rect class="wr-sc-flick" width="${SW}" height="${SH}" fill="#fff" opacity="0"/>`;
+  return sScene(defs, b, a);
+}
+
+// metal flake: fine noise lit by a point light = glitter in the paint
+function sFlake(id, col, seed) {
+  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="${seed}" result="n"/>
+<feSpecularLighting in="n" surfaceScale="3" specularConstant="1.1" specularExponent="22" lighting-color="${col}" result="s"><fePointLight x="1000" y="-300" z="600"/></feSpecularLighting>
+<feComposite in="s" in2="SourceGraphic" operator="in"/></filter>`;
+}
+// candy body: deep color with a curved light reflection band (like a car panel)
+function sCandy(id, dark, mid, light) {
+  return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".38" stop-color="${mid}"/><stop offset=".47" stop-color="${light}"/><stop offset=".53" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></linearGradient>`;
+}
+// lace: noise thresholded into thin white web lines
+function sLace(id, seed, freq) {
+  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency="${freq}" numOctaves="2" seed="${seed}"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.6"/></filter>`;
+}
+// mirrored pinstripe scroll design around a vertical axis
+function sPinstripe(R, cx, cy, s, col) {
+  let o = '';
+  const sym = d => `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" transform="translate(${cx * 2} 0) scale(-1 1)"/>`;
+  for (let k = 0; k < 7; k++) {
+    const y0 = cy - s + k * s * .3, sp = R(.5, 1.2) * s;
+    o += sym(`M${cx} ${r1(y0)} C${r1(cx + sp * .6)} ${r1(y0 - s * .25)} ${r1(cx + sp)} ${r1(y0 + s * .2)} ${r1(cx + sp * .45)} ${r1(y0 + s * .35)} C${r1(cx + sp * .2)} ${r1(y0 + s * .42)} ${r1(cx + sp * .3)} ${r1(y0 + s * .15)} ${r1(cx + sp * .5)} ${r1(y0 + s * .2)}`);
+    o += sym(`M${cx} ${r1(y0 + s * .1)} Q${r1(cx + sp * 1.4)} ${r1(y0 + s * .05)} ${r1(cx + sp * 1.9)} ${r1(y0 + s * .55)}`);
+  }
+  o += `<path d="M${cx} ${r1(cy - s * 1.2)} L${r1(cx + s * .12)} ${cy} L${cx} ${r1(cy + s * 1.2)} L${r1(cx - s * .12)} ${cy} Z" fill="none" stroke="${col}" stroke-width="2.2"/>`;
+  return o;
+}
+
+// Candy Teal: teal candy body, white lace fade, gold-leaf panels with orange flake and maze lines
+function sceneLrTeal() {
+  const R = sRng(101);
+  let defs = sCandy('ltBody', '#04302f', '#0e8a86', '#7ff2ea') + sFlake('ltFl', '#e6fffd', 3) + sLace('ltLace', 5, '.015 .03') + sFlake('ltFl2', '#ffe0a0', 9)
+    + `<linearGradient id="ltGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a5a1a"/><stop offset=".45" stop-color="#ffe09a"/><stop offset=".55" stop-color="#c89a3a"/><stop offset="1" stop-color="#6a4a12"/></linearGradient>
+<linearGradient id="ltOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".5" stop-color="#e06a10"/><stop offset="1" stop-color="#8a3a06"/></linearGradient>
+<linearGradient id="ltLaceFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#000"/></linearGradient><mask id="ltLM"><rect width="${SW}" height="${SH}" fill="url(#ltLaceFade)"/></mask>
+<filter id="ltSh"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity=".55"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#ltBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#ltFl)" opacity=".55"/>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#ltLace)" mask="url(#ltLM)" opacity=".7"/>`;
+  const panel = (x, y, w, h, sk) => {
+    const d = `M${x + sk} ${y} L${x + w + sk} ${y} L${x + w} ${y + h} L${x} ${y + h} Z`;
+    let maze = ''; for (let i = 0; i < 14; i++) { let px = x + R(20, w - 40), py = y + R(15, h - 25); let m = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 6; k++) { if (k % 2) px += R(-40, 40); else py += R(-25, 25); m += ` L${r1(Math.min(x + w - 15, Math.max(x + 15, px)))} ${r1(Math.min(y + h - 10, Math.max(y + 10, py)))}`; } maze += `<path d="${m}" stroke="#ffe7b0" stroke-width="1.6" fill="none" stroke-linejoin="round" opacity=".8"/>`; }
+    return `<g filter="url(#ltSh)"><path d="${d}" fill="url(#ltOrange)"/><path d="${d}" fill="#fff" filter="url(#ltFl2)" opacity=".6"/>${maze}<path d="${d}" fill="none" stroke="url(#ltGold)" stroke-width="12"/><path d="${d}" fill="none" stroke="#2a1a04" stroke-width="2" transform="translate(0 0)"/></g>`;
+  };
+  b += panel(880, 120, 300, 180, 40) + panel(1220, 120, 300, 180, 40) + panel(860, 330, 300, 180, 40) + panel(1200, 330, 300, 180, 40);
+  b += `<path d="M0 640 C500 600 1000 700 1600 610" stroke="url(#ltGold)" stroke-width="16" fill="none"/><path d="M0 668 C500 628 1000 728 1600 638" stroke="#ffffff" stroke-width="3" fill="none" opacity=".85"/>`;
+  b += `<path d="M0 0 L1600 0 L1600 50 Q800 120 0 50 Z" fill="#fff" opacity=".07" class="wr-sc-shine"/>`;
+  return sSvg(defs, b);
+}
+
+// Candy Blue & Pink: blue flake with long tapered pattern bars in pink, magenta, purple
+function sceneLrBluePink() {
+  const R = sRng(202);
+  let defs = sCandy('lbBody', '#05103a', '#1a4fc8', '#7fb8ff') + sFlake('lbFl', '#bfe4ff', 7)
+    + `<filter id="lbSh"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity=".5"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#lbBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lbFl)" opacity=".7"/>`;
+  const cols = ['#ff3fa4', '#c2187a', '#6a1fb0', '#ff7ac8'];
+  let g = '';
+  for (let i = 0; i < 26; i++) {
+    const y = 60 + i * 32 + R(-6, 6), x = R(-200, 900), l = R(380, 1100), h = R(10, 22), c = cols[i % cols.length], t = R(30, 70);
+    g += `<path d="M${r1(x)} ${r1(y + h)} L${r1(x + t)} ${r1(y)} L${r1(x + l)} ${r1(y)} L${r1(x + l + t * .6)} ${r1(y + h * .5)} L${r1(x + l)} ${r1(y + h)} Z" fill="${c}" stroke="#9fd8ff" stroke-width="1.5"/>`;
+    if (R(0, 1) < .4) { const cx = x + R(100, l - 100); g += `<path d="M${r1(cx)} ${r1(y)} L${r1(cx + 24)} ${r1(y - 26)} L${r1(cx + 90)} ${r1(y - 26)} L${r1(cx + 66)} ${r1(y)} Z" fill="${cols[(i + 2) % 4]}" stroke="#9fd8ff" stroke-width="1.5"/>`; }
+  }
+  b += `<g filter="url(#lbSh)">${g}</g>`;
+  return sSvg(defs, b);
+}
+
+// Rainbow Flake: purple to blue to teal to gold fade, scalloped gold-leaf edges, patterned panel
+function sceneLrRainbow() {
+  const R = sRng(303);
+  let defs = `<linearGradient id="lrBody" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#3a0f7a"/><stop offset=".28" stop-color="#1f4fd0"/><stop offset=".45" stop-color="#12b8c4"/><stop offset=".55" stop-color="#ffd24a"/><stop offset=".7" stop-color="#e0761a"/><stop offset="1" stop-color="#4a0c6e"/></linearGradient>` + sFlake('lrFl', '#ffffff', 11)
+    + `<pattern id="lrPat" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M0 17 Q8.5 0 17 17 T34 17" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".55"/><circle cx="17" cy="17" r="2" fill="#ffe7a0" opacity=".7"/></pattern>
+<linearGradient id="lrGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#c8902a"/><stop offset="1" stop-color="#ffe09a"/></linearGradient>
+<filter id="lrSh"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".6"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#lrBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lrFl)" opacity=".6"/>`;
+  let sc = `M0 300`; for (let x = 0; x <= SW; x += 100) sc += ` Q${x + 50} ${R(360, 420)} ${x + 100} 300`;
+  b += `<g filter="url(#lrSh)"><path d="${sc} L${SW} 0 L0 0 Z" fill="#2a0a5a" opacity=".55"/><path d="${sc}" fill="none" stroke="url(#lrGold)" stroke-width="10"/></g>`;
+  const pnl = `M820 470 Q1180 410 1540 470 L1500 800 Q1180 760 860 800 Z`;
+  b += `<g filter="url(#lrSh)"><path d="${pnl}" fill="#6a1fb0"/><path d="${pnl}" fill="url(#lrPat)"/><path d="${pnl}" fill="none" stroke="#12d8e0" stroke-width="6"/><path d="${pnl}" fill="none" stroke="url(#lrGold)" stroke-width="3" transform="translate(0 -9)"/></g>`;
+  for (let i = 0; i < 5; i++) { const y = 520 + i * 50; b += `<path d="M60 ${y} C300 ${y - 60} 520 ${y + 40} 760 ${y - 20}" stroke="#ffe7a0" stroke-width="2" fill="none" opacity=".75"/>`; }
+  return sSvg(defs, b);
+}
+
+// Candy Orange Pinstripe: deep candy orange, symmetric white pinstripe scrolls (top and bottom)
+function sceneLrOrange() {
+  const R = sRng(404);
+  let defs = `<radialGradient id="loBody" cx=".5" cy=".5" r=".75"><stop offset="0" stop-color="#ff8a3a"/><stop offset=".45" stop-color="#d0480e"/><stop offset=".8" stop-color="#7a1a04"/><stop offset="1" stop-color="#3a0a02"/></radialGradient>` + sFlake('loFl', '#ffd8b0', 13)
+    + `<filter id="loSh"><feDropShadow dx="1" dy="2" stdDeviation="1.2" flood-opacity=".7"/></filter><filter id="loDeep" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .02" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .08  0 0 0 0 .02  0 0 0 .6 -.15"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#loBody)"/><rect width="${SW}" height="${SH}" filter="url(#loDeep)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#loFl)" opacity=".55"/>`;
+  b += `<g filter="url(#loSh)">${sPinstripe(R, 800, 210, 150, '#fff6ee')}${sPinstripe(R, 800, 690, 150, '#fff6ee')}`;
+  b += `<path d="M120 60 L120 840 M1480 60 L1480 840 M140 70 Q800 20 1460 70 M140 830 Q800 880 1460 830" stroke="#fff6ee" stroke-width="2" fill="none"/></g>`;
+  return sSvg(defs, b);
+}
+
+// teardrop / flame shape: round head at (x,y), sweeping tail to a sharp tip
+function sTear(x, y, len, w, ang, bend) {
+  const ca = Math.cos(ang), sa = Math.sin(ang), P = (u, v) => [x + ca * u - sa * v, y + sa * u + ca * v];
+  const tip = P(len, bend * len), a1 = P(len * .35, -w * .9 + bend * len * .3), a2 = P(len * .8, -w * .2 + bend * len * .8), b1 = P(len * .8, w * .2 + bend * len * .8), b2 = P(len * .35, w * .9 + bend * len * .3);
+  const h1 = P(-w * .9, -w), h2 = P(-w * .9, w);
+  const f = p => r1(p[0]) + ' ' + r1(p[1]);
+  return `M${f(P(0, -w))} C${f(a1)} ${f(a2)} ${f(tip)} C${f(b1)} ${f(b2)} ${f(P(0, w))} C${f(h2)} ${f(h1)} ${f(P(0, -w))} Z`;
+}
+// a bundle of teardrops sweeping from one point, filled + double pinstripe outline
+function sTearBundle(R, x, y, n, len, w, ang, spread, fill, line1, line2) {
+  let o = '';
+  for (let i = 0; i < n; i++) {
+    const a = ang + (i - (n - 1) / 2) * spread, l = len * R(.75, 1.1), ww = w * R(.7, 1), bend = R(-.12, .12);
+    const d = sTear(x + Math.cos(a) * i * 6, y + Math.sin(a) * i * 6, l, ww, a, bend);
+    o += `<path d="${d}" fill="none" stroke="${line2}" stroke-width="7" stroke-linejoin="round" opacity=".9"/><path d="${d}" fill="${fill}" stroke="${line1}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  }
+  return o;
+}
+
+function sceneLrTeal() {
+  const R = sRng(101);
+  let defs = sCandy('ltBody', '#04302f', '#0e8a86', '#7ff2ea') + sFlake('ltFl', '#e6fffd', 3) + sFlake('ltFl2', '#ffe0a0', 9)
+    + `<pattern id="ltLaceP" width="46" height="46" patternUnits="userSpaceOnUse"><g fill="none" stroke="#fff" stroke-width="1.3"><circle cx="23" cy="23" r="9"/><circle cx="23" cy="23" r="3"/>${[0, 60, 120, 180, 240, 300].map(a => `<circle cx="${r1(23 + Math.cos(a / 57.3) * 15)}" cy="${r1(23 + Math.sin(a / 57.3) * 15)}" r="6.5"/>`).join('')}<circle cx="0" cy="0" r="4"/><circle cx="46" cy="0" r="4"/><circle cx="0" cy="46" r="4"/><circle cx="46" cy="46" r="4"/></g></pattern>
+<linearGradient id="ltLaceFade" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="ltLM"><rect width="${SW}" height="${SH}" fill="url(#ltLaceFade)"/></mask>
+<linearGradient id="ltGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a5a1a"/><stop offset=".45" stop-color="#ffe09a"/><stop offset=".55" stop-color="#c89a3a"/><stop offset="1" stop-color="#6a4a12"/></linearGradient>
+<linearGradient id="ltOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".5" stop-color="#e06a10"/><stop offset="1" stop-color="#8a3a06"/></linearGradient>
+<linearGradient id="ltTear" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#bff7f2"/><stop offset="1" stop-color="#2fd6d0"/></linearGradient>
+<filter id="ltSh"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-opacity=".55"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#ltBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#ltFl)" opacity=".55"/>`;
+  b += `<rect width="${SW}" height="${SH}" fill="url(#ltLaceP)" mask="url(#ltLM)"/>`;
+  const panel = (x, y, w, h, sk) => {
+    const d = `M${x + sk} ${y} L${x + w + sk} ${y} L${x + w} ${y + h} L${x} ${y + h} Z`;
+    let maze = ''; for (let i = 0; i < 26; i++) { let px = x + R(20, w - 30), py = y + R(15, h - 20); let m = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 8; k++) { if (k % 2) px += R(-46, 46); else py += R(-28, 28); px = Math.min(x + w - 14, Math.max(x + 14 + sk * (1 - (py - y) / h), px)); py = Math.min(y + h - 10, Math.max(y + 10, py)); m += ` L${r1(px)} ${r1(py)}`; } maze += `<path d="${m}" stroke="#ffe7b0" stroke-width="1.7" fill="none" stroke-linejoin="round" opacity=".85"/>`; }
+    return `<g filter="url(#ltSh)"><path d="${d}" fill="url(#ltOrange)"/><path d="${d}" fill="#fff" filter="url(#ltFl2)" opacity=".6"/>${maze}<path d="${d}" fill="none" stroke="url(#ltGold)" stroke-width="12"/><path d="${d}" fill="none" stroke="#2a1a04" stroke-width="2"/></g>`;
+  };
+  b += panel(900, 110, 290, 170, 40) + panel(1230, 110, 290, 170, 40) + panel(880, 315, 290, 170, 40) + panel(1210, 315, 290, 170, 40);
+  b += `<g filter="url(#ltSh)">${sTearBundle(R, 90, 700, 6, 640, 40, -.08, .09, 'url(#ltTear)', '#0a3a38', '#d8b25a')}</g>`;
+  b += `<path d="M0 560 C500 520 1000 620 1600 530" stroke="url(#ltGold)" stroke-width="14" fill="none"/><path d="M0 586 C500 546 1000 646 1600 556" stroke="#ffffff" stroke-width="3" fill="none" opacity=".85"/>`;
+  return sScene(defs, b, '');
+}
+
+function sceneLrBluePink() {
+  const R = sRng(202);
+  let defs = sCandy('lbBody', '#05103a', '#1a4fc8', '#7fb8ff') + sFlake('lbFl', '#bfe4ff', 7)
+    + `<linearGradient id="lbPink" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ac8"/><stop offset=".5" stop-color="#ff2f9a"/><stop offset="1" stop-color="#7a0a52"/></linearGradient>
+<linearGradient id="lbPurp" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b48cff"/><stop offset=".6" stop-color="#5a1fb0"/><stop offset="1" stop-color="#22085a"/></linearGradient>
+<filter id="lbSh"><feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-opacity=".55"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#lbBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lbFl)" opacity=".7"/>`;
+  let g = '';
+  [[60, 220, 0, 'url(#lbPurp)'], [120, 330, .04, 'url(#lbPink)'], [40, 520, -.05, 'url(#lbPurp)'], [100, 640, .02, 'url(#lbPink)'], [820, 150, .06, 'url(#lbPink)'], [760, 760, -.06, 'url(#lbPurp)']].forEach(([x, y, a, f]) => {
+    g += sTearBundle(R, x, y, 4, R(700, 900), R(22, 32), a, .05, f, '#a8dcff', '#0a1a4a');
+  });
+  b += `<g filter="url(#lbSh)">${g}</g>`;
+  b += `<path d="M0 452 L${SW} 430" stroke="#ff2f9a" stroke-width="5"/><path d="M0 462 L${SW} 440" stroke="#a8dcff" stroke-width="1.5"/>`;
+  return sScene(defs, b, '');
+}
+
+function sceneLrRainbow() {
+  const R = sRng(303);
+  let defs = `<linearGradient id="lrBody" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#2a0a6a"/><stop offset=".3" stop-color="#1f4fd0"/><stop offset=".46" stop-color="#12b8c4"/><stop offset=".54" stop-color="#ffd24a"/><stop offset=".68" stop-color="#e0761a"/><stop offset="1" stop-color="#3a0a5e"/></linearGradient>` + sFlake('lrFl', '#ffffff', 11)
+    + `<linearGradient id="lrFlame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8fdff"/><stop offset=".35" stop-color="#5fe6ff"/><stop offset=".8" stop-color="#1f4fd0"/><stop offset="1" stop-color="#2a0a6a"/></linearGradient>
+<linearGradient id="lrGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#c8902a"/><stop offset="1" stop-color="#ffe09a"/></linearGradient>
+<filter id="lrSh"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".6"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#lrBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lrFl)" opacity=".65"/>`;
+  b += `<g filter="url(#lrSh)">${sTearBundle(R, -40, 760, 7, 900, 44, -.02, .06, 'url(#lrFlame)', '#ffe7a0', '#2a0a6a')}${sTearBundle(R, -60, 200, 5, 760, 34, .03, .05, 'url(#lrFlame)', '#ffe7a0', '#2a0a6a')}</g>`;
+  b += `<path d="M0 470 C400 430 1100 520 1600 450" stroke="url(#lrGold)" stroke-width="18" fill="none" filter="url(#lrSh)"/><path d="M0 470 C400 430 1100 520 1600 450" stroke="#2a0a6a" stroke-width="2" fill="none"/>`;
+  return sScene(defs, b, '');
+}
+
+function sceneLrOrange() {
+  const R = sRng(404);
+  let defs = `<radialGradient id="loBody" cx=".5" cy=".5" r=".75"><stop offset="0" stop-color="#ff8a3a"/><stop offset=".45" stop-color="#d0480e"/><stop offset=".8" stop-color="#7a1a04"/><stop offset="1" stop-color="#3a0a02"/></radialGradient>` + sFlake('loFl', '#ffd8b0', 13)
+    + `<filter id="loSh"><feDropShadow dx="2" dy="3" stdDeviation="1.5" flood-opacity=".75"/></filter><filter id="loDeep" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .02" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .08  0 0 0 0 .02  0 0 0 .6 -.15"/></filter>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#loBody)"/><rect width="${SW}" height="${SH}" filter="url(#loDeep)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#loFl)" opacity=".55"/>`;
+  // symmetric pinstripe: outline-only teardrops mirrored around the center line
+  let half = '';
+  const line = d => `<path d="${d}" fill="none" stroke="#fff6ee" stroke-width="2.6" stroke-linejoin="round"/>`;
+  [[800, 140, 330, 34, .5, .18], [800, 200, 420, 24, .32, -.1], [800, 300, 300, 30, .62, .22], [800, 600, 330, 34, -.5, -.18], [800, 540, 420, 24, -.32, .1], [800, 440, 300, 30, -.62, -.22], [800, 370, 520, 16, 0, .04]].forEach(([x, y, l, w, a, bend]) => {
+    half += line(sTear(x + 30, y, l, w, a, bend)) + line(sTear(x + 30, y, l * .82, w * .55, a, bend));
+  });
+  half += line(`M800 60 C860 160 900 280 860 370 C900 460 860 580 800 680`) + line(`M830 370 m-26 0 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0`);
+  b += `<g filter="url(#loSh)">${half}<g transform="translate(1600 0) scale(-1 1)">${half}</g>`;
+  b += `<path d="M800 30 L828 370 L800 740 L772 370 Z" fill="none" stroke="#fff6ee" stroke-width="2.6"/></g>`;
+  b += `<g filter="url(#loSh)">${line('M40 860 C500 800 1100 800 1560 860')}${line('M40 40 C500 100 1100 100 1560 40')}</g>`;
+  return sScene(defs, b, '');
+}
+
+// Hanami: woodblock-print look - paper, big vermilion sun, misty mountain layers, cherry branch, wave pattern
+function sceneHanami() {
+  const R = sRng(505);
+  let defs = sGrain('hnG', .6) + `<filter id="hnPaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".02 .5" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 .07  0 0 0 0 .07  0 0 0 0 .14  0 0 0 .35 -.05"/></filter>
+<linearGradient id="hnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset=".6" stop-color="#3b4a6e"/><stop offset="1" stop-color="#e8d9c0"/></linearGradient>
+<pattern id="hnWave" width="80" height="40" patternUnits="userSpaceOnUse"><g fill="#1b2a4a" stroke="#e8d9c0" stroke-width="2.5">${[0, 1, 2].map(k => `<circle cx="${k * 40}" cy="40" r="38"/><circle cx="${k * 40}" cy="40" r="28"/><circle cx="${k * 40}" cy="40" r="18"/><circle cx="${k * 40 - 20}" cy="20" r="0"/>`).join('')}</g></pattern>
+<linearGradient id="hnMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8d9c0" stop-opacity="0"/><stop offset="1" stop-color="#e8d9c0" stop-opacity=".55"/></linearGradient>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#hnSky)"/><circle cx="1130" cy="300" r="190" fill="#d9472b"/><circle cx="1130" cy="300" r="190" fill="none" stroke="#1b2a4a" stroke-width="4" opacity=".3"/>`;
+  [['#4a5a80', 520, 120], ['#33406a', 600, 90], ['#232e52', 690, 60]].forEach(([c, y, rough], i) => {
+    const pts = sRidge(R, y, rough, 6); b += `<path d="${sPolyPath(pts)}" fill="${c}"/><rect y="${y - 30}" width="${SW}" height="110" fill="url(#hnMist)"/>`;
+  });
+  b += `<rect y="770" width="${SW}" height="130" fill="url(#hnWave)"/>`;
+  const branch = (x, y, a, len, w, d) => {                      // recursive cherry branch
+    if (d > 5 || len < 18) return '';
+    const bx = x + Math.cos(a) * len, by = y + Math.sin(a) * len;
+    let o = `<path d="M${r1(x)} ${r1(y)} Q${r1((x + bx) / 2 + R(-15, 15))} ${r1((y + by) / 2 + R(-15, 15))} ${r1(bx)} ${r1(by)}" stroke="#1a120e" stroke-width="${r1(w)}" fill="none" stroke-linecap="round"/>`;
+    if (d >= 2) for (let k = 0; k < 3; k++) {
+      const fx = bx + R(-22, 22), fy = by + R(-22, 22), s = R(7, 13), c = R(0, 1) < .5 ? '#f7c8d4' : '#ffffff';
+      o += `<g transform="translate(${r1(fx)} ${r1(fy)}) rotate(${r1(R(0, 72))})">${[0, 72, 144, 216, 288].map(t => `<ellipse cx="0" cy="${r1(-s * .6)}" rx="${r1(s * .45)}" ry="${r1(s * .6)}" fill="${c}" transform="rotate(${t})"/>`).join('')}<circle r="${r1(s * .22)}" fill="#d9472b"/></g>`;
+    }
+    o += branch(bx, by, a + R(-.6, -.1), len * R(.6, .8), w * .65, d + 1) + branch(bx, by, a + R(.1, .7), len * R(.55, .75), w * .6, d + 1);
+    return o;
+  };
+  b += branch(-30, 40, .35, 300, 26, 0) + branch(-20, 260, .1, 220, 18, 1);
+  b += `<rect width="${SW}" height="${SH}" filter="url(#hnPaper)"/><rect width="${SW}" height="${SH}" filter="url(#hnG)"/>`;
+  return sScene(defs, b, '');
+}
+
+// Holographic: iridescent foil - swirled rainbow via displacement, specular sheen
+function sceneHolo() {
+  let defs = `<linearGradient id="hoBase" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset=".2" stop-color="#a99bff"/><stop offset=".4" stop-color="#7fe8ff"/><stop offset=".6" stop-color="#b8ffcf"/><stop offset=".8" stop-color="#ffe3a0"/><stop offset="1" stop-color="#ff9ad5"/></linearGradient>
+<filter id="hoSwirl" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".0035" numOctaves="3" seed="12" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="520" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="hoSheen" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".006" numOctaves="2" seed="3" result="n"/><feSpecularLighting in="n" surfaceScale="6" specularConstant=".9" specularExponent="18" lighting-color="#ffffff"><feDistantLight azimuth="235" elevation="40"/></feSpecularLighting><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .33 .33 .33 0 -.25"/></filter>
+<linearGradient id="hoDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140f2a" stop-opacity=".55"/><stop offset="1" stop-color="#140f2a" stop-opacity=".8"/></linearGradient>` + sGrain('hoG', .35);
+  let b = `<g filter="url(#hoSwirl)"><rect x="-200" y="-200" width="${SW + 400}" height="${SH + 400}" fill="url(#hoBase)"/>${[0, 1, 2, 3].map(i => `<rect x="${-200 + i * 520}" y="-200" width="260" height="${SH + 400}" fill="url(#hoBase)" transform="rotate(25 800 450)" opacity=".6"/>`).join('')}</g>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#hoSheen)"/><rect width="${SW}" height="${SH}" fill="url(#hoDark)"/>`;
+  b += `<rect class="wr-sc-shine2" x="-600" y="0" width="500" height="${SH}" fill="#fff" opacity=".12" transform="skewX(-20)"/><rect width="${SW}" height="${SH}" filter="url(#hoG)"/>`;
+  return sSvg(defs, b);
+}
+
+// Anime Night Sky: dramatic lit clouds, stars, skyline with lit windows, utility pole and wires
+function sceneAnime() {
+  const R = sRng(606);
+  let defs = `<linearGradient id="anSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0f2e"/><stop offset=".45" stop-color="#2a2a6a"/><stop offset=".75" stop-color="#b24a7a"/><stop offset=".9" stop-color="#ff9a6a"/></linearGradient>
+<filter id="anCloud" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="4" seed="8" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="60"/><feGaussianBlur stdDeviation="2"/></filter>
+<linearGradient id="anCl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a80"/><stop offset=".7" stop-color="#c06a9a"/><stop offset="1" stop-color="#ffc09a"/></linearGradient>` + sGrain('anG', .35);
+  let a = '';
+  let b = `<rect width="${SW}" height="${SH}" fill="url(#anSky)"/>`;
+  for (let i = 0; i < 180; i++) { const x = R(0, SW), y = R(0, 380), s = R(.6, 2); (i % 9 ? (v => { b += v; }) : (v => { a += v; }))(`<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(s)}" fill="#fff" opacity="${r1(R(.3, 1))}" ${i % 9 ? '' : 'class="wr-sc-twinkle"'}/>`); }
+  let cl = ''; for (let i = 0; i < 26; i++) { const x = R(-100, SW + 100), y = R(330, 560), rx = R(90, 260), ry = R(40, 90); cl += `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="url(#anCl)"/>`; }
+  b += `<g filter="url(#anCloud)" opacity=".95">${cl}</g>`;
+  a += `<path class="wr-sc-comet" d="M1300 90 L1500 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".9"/>`;
+  let city = ''; let x = 0;
+  while (x < SW) { const w = R(40, 120), h = R(60, 260); city += `<rect x="${r1(x)}" y="${r1(SH - h)}" width="${r1(w)}" height="${r1(h)}" fill="#07081a"/>`;
+    for (let wy = SH - h + 10; wy < SH - 10; wy += 14) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (R(0, 1) < .28) city += `<rect x="${r1(wx)}" y="${r1(wy)}" width="5" height="7" fill="${R(0, 1) < .8 ? '#ffd27a' : '#7fe0ff'}" opacity="${r1(R(.5, 1))}"/>`;
+    x += w + R(0, 8); }
+  b += city;
+  b += `<rect x="1180" y="420" width="16" height="480" fill="#05050f"/><rect x="1120" y="450" width="136" height="10" fill="#05050f"/><rect x="1140" y="500" width="96" height="8" fill="#05050f"/>`;
+  [[-40, 470, 1125, 455], [-40, 520, 1145, 505], [1250, 455, 1700, 400], [1230, 505, 1700, 470]].forEach(([x1, y1, x2, y2]) => { b += `<path d="M${x1} ${y1} Q${(x1 + x2) / 2} ${Math.max(y1, y2) + 70} ${x2} ${y2}" stroke="#05050f" stroke-width="2.2" fill="none"/>`; });
+  b += `<rect width="${SW}" height="${SH}" filter="url(#anG)"/>`;
+  return sScene(defs, b, a);
+}
+
+// Street Wall: concrete, soft spray clouds with drips, stencil shapes, torn halftone poster
+function sceneStreet() {
+  const R = sRng(707);
+  let defs = `<filter id="swCon" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".5" numOctaves="3" seed="3" result="f"/><feTurbulence type="fractalNoise" baseFrequency=".008" numOctaves="3" seed="9" result="c"/><feBlend in="f" in2="c" mode="multiply"/><feColorMatrix values=".55 0 0 0 0  .55 0 0 0 0  .57 0 0 0 0  0 0 0 0 1"/></filter>
+<filter id="swSpray" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="1" seed="5" result="n"/><feGaussianBlur in="SourceGraphic" stdDeviation="28" result="b"/><feComposite in="b" in2="n" operator="arithmetic" k1="1.6" k2=".2" k3="0" k4="0"/></filter>
+<pattern id="swHt" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(20)"><circle cx="4.5" cy="4.5" r="2.6" fill="#111"/></pattern>
+<filter id="swSh"><feDropShadow dx="3" dy="4" stdDeviation="3" flood-opacity=".6"/></filter>` + sGrain('swG', .45);
+  let b = `<rect width="${SW}" height="${SH}" filter="url(#swCon)"/>`;
+  for (let i = 0; i < 6; i++) b += `<rect x="0" y="${i * 150 + 148}" width="${SW}" height="3" fill="#1a1a1a" opacity=".35"/>`;
+  const spray = (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" filter="url(#swSpray)"/>` + Array.from({ length: 5 }, () => { const dx = R(-r * .6, r * .6), l = R(60, 220); return `<path d="M${r1(x + dx)} ${r1(y + r * .45)} L${r1(x + dx)} ${r1(y + r * .45 + l)}" stroke="${c}" stroke-width="${r1(R(2, 5))}" stroke-linecap="round" opacity=".85"/>`; }).join('');
+  b += spray(380, 300, 170, '#ff2fa0') + spray(620, 360, 140, '#00d4ff') + spray(1180, 260, 190, '#b6ff2a') + spray(1320, 520, 120, '#ff7a1a');
+  b += `<g filter="url(#swSh)"><path d="M880 180 L1080 160 L1100 470 L1070 480 L1090 520 L900 540 L870 500 L885 470 Z" fill="#e8e2d4"/><path d="M900 200 L1065 185 L1080 450 L905 470 Z" fill="url(#swHt)"/><path d="M905 470 L1080 450 L1070 480 L910 500 Z" fill="#d9472b"/></g>`;
+  b += `<g fill="#111" opacity=".85"><path d="M140 640 L320 640 L320 600 L420 680 L320 760 L320 720 L140 720 Z"/><path d="M1380 720 m-70 0 a70 70 0 1 0 140 0 a70 70 0 1 0 -140 0 M1380 720 m-40 0 a40 40 0 1 1 80 0 a40 40 0 1 1 -80 0" fill-rule="evenodd"/></g>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#swG)"/>`;
+  return sSvg(defs, b);
+}
+
+function sceneHolo() {
+  const R = sRng(808);
+  let defs = `<linearGradient id="hoBands" x1="0" y1="0" x2=".18" y2=".1" spreadMethod="repeat"><stop offset="0" stop-color="#ff7ac8"/><stop offset=".2" stop-color="#b48cff"/><stop offset=".4" stop-color="#6fd8ff"/><stop offset=".6" stop-color="#7affc8"/><stop offset=".8" stop-color="#fff08a"/><stop offset="1" stop-color="#ff7ac8"/></linearGradient>
+<filter id="hoSwirl" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".003" numOctaves="2" seed="12" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="380" xChannelSelector="R" yChannelSelector="B"/><feGaussianBlur stdDeviation="2"/></filter>
+<radialGradient id="hoVig" cx=".5" cy=".5" r=".8"><stop offset=".2" stop-color="#0c0820" stop-opacity=".35"/><stop offset="1" stop-color="#0c0820" stop-opacity=".9"/></radialGradient>` + sGrain('hoG', .3);
+  let b = `<g filter="url(#hoSwirl)"><rect x="-300" y="-300" width="${SW + 600}" height="${SH + 600}" fill="url(#hoBands)"/></g>`;
+  b += `<rect width="${SW}" height="${SH}" fill="url(#hoVig)"/><rect width="${SW}" height="${SH}" filter="url(#hoG)"/>`;
+  return sScene(defs, b, `<rect class="wr-sc-shine2" x="-600" y="0" width="420" height="${SH}" fill="#fff" opacity=".14" transform="skewX(-20)"/>`);
+}
+
+function sceneStreet() {
+  const R = sRng(919);
+  let defs = `<filter id="swCon" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="3" seed="3" result="f"/><feTurbulence type="fractalNoise" baseFrequency=".005" numOctaves="4" seed="9" result="c"/><feBlend in="f" in2="c" mode="multiply"/><feColorMatrix values=".42 0 0 0 0  .41 0 0 0 0  .42 0 0 0 0  0 0 0 0 1"/></filter>
+<filter id="swRough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="14"/></filter>
+<filter id="swOver" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
+<pattern id="swFence" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="60" height="60" fill="none" stroke="#000" stroke-width="5"/></pattern>
+<filter id="swFenceBlur"><feGaussianBlur stdDeviation="2.5"/></filter>
+<linearGradient id="swFenceFade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity=".5"/></linearGradient><mask id="swFM"><rect width="${SW}" height="${SH}" fill="url(#swFenceFade)"/></mask>
+<radialGradient id="swLamp" cx="1350" cy="-60" r="900" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffb04a" stop-opacity=".6"/><stop offset=".5" stop-color="#ff8a2a" stop-opacity=".18"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/></radialGradient>` + sGrain('swG', .5);
+  let b = `<rect width="${SW}" height="${SH}" filter="url(#swCon)"/>`;
+  // old colorful pieces, mostly buffed over with flat gray rollers
+  b += `<g filter="url(#swOver)" opacity=".7"><ellipse cx="420" cy="420" rx="360" ry="200" fill="#c2187a"/><ellipse cx="1040" cy="380" rx="380" ry="190" fill="#0a8ab0"/><ellipse cx="760" cy="640" rx="300" ry="130" fill="#b8d82a"/></g>`;
+  const grays = ['#4a4a4c', '#56555a', '#3e3f42', '#5e5c58', '#47484e'];
+  for (let i = 0; i < 7; i++) { const x = R(60, 1300), y = R(120, 640), w = R(220, 520), h = R(120, 300); b += `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="${grays[i % 5]}" filter="url(#swRough)" opacity=".95"/>`; }
+  // drips under the buffs
+  for (let i = 0; i < 30; i++) { const dx = R(80, 1520), y0 = R(380, 720), l = R(40, 200), c = ['#c2187a', '#0a8ab0', '#b8d82a', '#e8e8e8'][(R(0, 4)) | 0]; b += `<path d="M${r1(dx)} ${r1(y0)} L${r1(dx)} ${r1(y0 + l)}" stroke="${c}" stroke-width="${r1(R(2, 5))}" stroke-linecap="round" opacity=".8"/>`; }
+  // tag scribbles: chrome and black, layered over everything (abstract, no words)
+  const tag = (px, py, sc, col, out) => { let d = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 12; k++) { const nx = px + R(18, 46) * sc, ny = py + R(-40, 40) * sc; d += ` C${r1(px + R(-10, 40) * sc)} ${r1(py - R(20, 70) * sc)} ${r1(nx - R(-10, 30) * sc)} ${r1(ny + R(20, 70) * sc)} ${r1(nx)} ${r1(ny)}`; px = nx; py = ny; } d += ` M${r1(px - 300 * sc)} ${r1(py + 50 * sc)} L${r1(px + 20 * sc)} ${r1(py + 30 * sc)}`; return `<path d="${d}" stroke="${out}" stroke-width="${r1(10 * sc)}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${r1(4.5 * sc)}" fill="none" stroke-linecap="round"/>`; };
+  b += tag(160, 230, 1.3, '#d8dde2', '#0a0a0a') + tag(820, 180, 1.1, '#0a0a0a', '#0a0a0a') + tag(1000, 640, 1.4, '#e8e2d4', '#1a1a1a') + tag(260, 700, .9, '#ff3fa4', '#0a0a0a');
+  b += `<rect width="${SW}" height="${SH}" fill="url(#swLamp)"/>`;
+  b += `<g mask="url(#swFM)"><rect width="${SW}" height="${SH}" fill="url(#swFence)" filter="url(#swFenceBlur)" opacity=".55"/></g>`;
+  b += `<rect width="${SW}" height="${SH}" filter="url(#swG)"/>`;
+  return sScene(defs, b, '');
+}
+
+// Temple Skull Mask v2 (Tidwell-inspired, original): fine-line hair bundles, paper, misregistered ink
+function sceneTemple() {
+  const R = sRng(13), ink = '#0d0b0c', vio = '#5b4a6e', vio2 = '#3b2e4b', rust = '#a8382b', org = '#f08a2a', gold = '#d9a521', bone = '#cdc9a6', leafc = '#9a95a8', paper = '#8f8c86';
+  let defs = `<filter id="tpPaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .09  0 0 0 .5 -.12"/></filter>
+<pattern id="tpHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="1.4" height="6" fill="${ink}"/></pattern>
+<pattern id="tpDots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.2" fill="${ink}" opacity=".55"/></pattern>`;
+  let col = '', lines = '';                                    // col = ink colors layer, lines = black key layer
+  let colA = '', linA = '';
+  // hair: bundles of thin parallel strokes sweeping down from the crown
+  for (let i = 0; i < 46; i++) {
+    const side = i % 2 ? -1 : 1, a = -Math.PI + R(.1, Math.PI - .1);
+    const sx = 300 + Math.cos(a) * 140, sy = 260 + Math.sin(a) * 100, ex = 300 + side * R(40, 340), ey = R(650, 900);
+    const c1x = sx + side * R(60, 220), c1y = sy + R(-70, 30), c2x = ex + side * R(-90, 60), c2y = ey - R(180, 330), cc = [rust, vio, vio2][i % 3], width = R(18, 34);
+    const d0 = `M${r1(sx)} ${r1(sy)} C${r1(c1x)} ${r1(c1y)} ${r1(c2x)} ${r1(c2y)} ${r1(ex)} ${r1(ey)}`;
+    col += `<path d="${d0}" stroke="${cc}" stroke-width="${r1(width)}" fill="none" stroke-linecap="round"/>`;
+    for (let k = 0; k < 7; k++) { const o = (k - 3) * width / 7; lines += `<path d="M${r1(sx + o * .3)} ${r1(sy)} C${r1(c1x + o)} ${r1(c1y)} ${r1(c2x + o)} ${r1(c2y)} ${r1(ex + o)} ${r1(ey)}" stroke="${ink}" stroke-width="${k === 0 || k === 6 ? 2.6 : 1}" fill="none" opacity="${k === 0 || k === 6 ? 1 : .55}"/>`; }
+  }
+  // bone curls
+  for (let i = 0; i < 14; i++) { const x = R(50, 550), y = R(480, 760), r = R(16, 28), s = R(0, 6.28); const d = `M${r1(x + Math.cos(s) * r)} ${r1(y + Math.sin(s) * r)} A${r1(r)} ${r1(r)} 0 1 1 ${r1(x + Math.cos(s + 4.2) * r)} ${r1(y + Math.sin(s + 4.2) * r)}`; col += `<path d="${d}" stroke="${bone}" stroke-width="12" fill="none" stroke-linecap="round"/>`; lines += `<path d="${d}" stroke="${ink}" stroke-width="15" fill="none" stroke-linecap="round" opacity="0"/><path d="${d}" stroke="${ink}" stroke-width="2.5" fill="none" transform="translate(0 6)"/>`; }
+  const leaf = (cx, cy, ang, len, wid) => { const tx = cx + Math.cos(ang) * len, ty = cy + Math.sin(ang) * len, nx = Math.cos(ang + 1.57) * wid, ny = Math.sin(ang + 1.57) * wid, mx = cx + Math.cos(ang) * len * .5, my = cy + Math.sin(ang) * len * .5; return `M${r1(cx)} ${r1(cy)} Q${r1(mx + nx)} ${r1(my + ny)} ${r1(tx)} ${r1(ty)} Q${r1(mx - nx)} ${r1(my - ny)} ${r1(cx)} ${r1(cy)} Z`; };
+  for (let i = 0; i < 11; i++) { const a = -Math.PI + .25 + i * (Math.PI - .5) / 10, d = leaf(300 + Math.cos(a) * 120, 250 + Math.sin(a) * 90, a, 125, 26); col += `<path d="${d}" fill="${leafc}"/>`; lines += `<path d="${d}" fill="url(#tpHatch)" opacity=".35"/><path d="${d}" fill="none" stroke="${ink}" stroke-width="3.5"/>`; }
+  for (let i = 0; i < 9; i++) { const a = -Math.PI + .35 + i * (Math.PI - .7) / 8, bx = 300 + Math.cos(a) * 95, by = 235 + Math.sin(a) * 70, d = leaf(bx, by, a, 78, 18); col += `<path d="${d}" fill="${gold}"/>`; lines += `<path d="${d}" fill="none" stroke="${ink}" stroke-width="3.5"/>`; const ox = bx + Math.cos(a) * 54, oy = by + Math.sin(a) * 54; lines += `<circle cx="${r1(ox)}" cy="${r1(oy)}" r="10" fill="${ink}"/>`; col += `<circle cx="${r1(ox - 3)}" cy="${r1(oy - 3)}" r="3.5" fill="${org}"/>`; }
+  [[175, 300, -1], [425, 300, 1]].forEach(([sx, sy, dir]) => { for (let k = 0; k < 20; k++) { const t = k / 19, x = sx + dir * (40 * t + 70 * t * t), y = sy + t * 360; col += `<circle cx="${r1(x)}" cy="${r1(y)}" r="7" fill="${k % 3 ? org : gold}"/>`; lines += `<circle cx="${r1(x)}" cy="${r1(y)}" r="7" fill="none" stroke="${ink}" stroke-width="2.5"/>`; } });
+  colA = col; linA = lines; col = ''; lines = '';          // back layer done: hair, curls, crown, beads
+  const mask = 'M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z';
+  col += `<path d="${mask}" fill="${org}"/>`; lines += `<path d="${mask}" fill="url(#tpDots)"/><path d="${mask}" fill="none" stroke="${ink}" stroke-width="5"/>`;
+  for (let i = 0; i < 7; i++) { const x = 185 + i * 38, y = i % 2 ? 302 : 214; lines += `<path d="M${x} ${y} q11 -15 22 0 q-4 11 -11 4 q-3 -4 2 -6" fill="none" stroke="${ink}" stroke-width="2.4"/>`; }
+  const ring = (x, y, r) => { col += `<circle cx="${x}" cy="${y}" r="${r}" fill="${rust}"/><circle cx="${x}" cy="${y}" r="${r1(r * .66)}" fill="${org}"/>`; lines += `<circle cx="${x}" cy="${y}" r="${r + 6}" fill="none" stroke="${ink}" stroke-width="7"/><circle cx="${x}" cy="${y}" r="${r1(r * .66)}" fill="none" stroke="${ink}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${r1(r * .34)}" fill="${ink}"/><circle cx="${r1(x - r * .25)}" cy="${r1(y - r * .25)}" r="${r1(r * .12)}" fill="#fff"/>`; };
+  ring(232, 252, 32); ring(368, 252, 32); ring(300, 168, 24);
+  ['M206 318 Q166 405 186 488 Q206 412 234 334 Z', 'M394 318 Q434 405 414 488 Q394 412 366 334 Z'].forEach(d => { col += `<path d="${d}" fill="${gold}"/>`; lines += `<path d="${d}" fill="url(#tpHatch)" opacity=".3"/><path d="${d}" fill="none" stroke="${ink}" stroke-width="4"/>`; });
+  const skull = 'M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z';
+  col += `<path d="${skull}" fill="${bone}"/>`;
+  lines += `<path d="M214 332 Q206 425 240 472 L262 470 Q236 420 240 340 Z" fill="url(#tpHatch)" opacity=".55"/><path d="M386 332 Q394 425 360 472 L338 470 Q364 420 360 340 Z" fill="url(#tpHatch)" opacity=".55"/><path d="${skull}" fill="none" stroke="${ink}" stroke-width="5.5"/>`;
+  lines += `<circle cx="300" cy="356" r="10" fill="${ink}"/>`;
+  [[262, 402], [338, 402]].forEach(([x, y]) => { lines += `<ellipse cx="${x}" cy="${y}" rx="32" ry="27" fill="${ink}"/>`; col += ''; });
+  let glow = [[262, 402], [338, 402]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="17" fill="${org}" class="wr-art-glow"/><circle cx="${x}" cy="${y}" r="7" fill="#ffd27a" class="wr-art-glow"/>`).join('');
+  lines += `<path d="M300 432 L287 462 Q300 472 313 462 Z" fill="${ink}"/><path d="M232 360 l12 10 l-6 9 l10 8 M368 365 l-10 12 l8 6 l-9 10 M300 372 l-4 14 l6 8" fill="none" stroke="${ink}" stroke-width="2.4"/>`;
+  for (let i = 0; i < 8; i++) { const x = 254 + i * 11.5, g = i === 2 || i === 5; col += `<rect x="${r1(x)}" y="480" width="11" height="24" rx="3" fill="${g ? gold : bone}"/>`; lines += `<rect x="${r1(x)}" y="480" width="11" height="24" rx="3" fill="none" stroke="${ink}" stroke-width="2.4"/>`; }
+  lines += `<path d="M250 506 Q300 524 350 506" fill="none" stroke="${ink}" stroke-width="4"/>`;
+  // screen print: color layer slightly off-register from the black key layer
+  const body = `<rect x="-200" y="-100" width="1000" height="1100" fill="${paper}" opacity=".0"/><g transform="translate(4 -3)">${colA}</g><g>${linA}</g><g transform="translate(4 -3)">${col}</g><g>${lines}</g><rect x="-200" y="-100" width="1000" height="1100" filter="url(#tpPaper)"/>`;
+  const wrap = x => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 30 560 720" preserveAspectRatio="xMaxYMid meet" width="100%" height="100%"><defs>${defs}</defs>${x}</svg>`;
+  return { base: wrap(body), anim: wrap(glow) };
+}
+
+// Speed Tunnel Cruiser v2 (Grundy-inspired, original): long side-profile coupe, flat highlight bands
+function sceneCruiser(p) {
+  p = p || ['#111111', '#2a2a2a', '#4a4a4a', '#9a9a9a', '#f2f2f2'];
+  const vx = 1500, vy = 380;
+  let defs = `<clipPath id="crBody"><path d="M170 560 L215 500 L470 470 L600 395 L900 385 L1030 455 L1330 470 L1380 520 L1375 585 L180 600 Z"/></clipPath>`;
+  let b = `<rect width="${SW}" height="${SH}" fill="${p[1]}"/>`;
+  for (let i = 0; i < 40; i++) { const a1 = i / 40 * 6.283, a2 = a1 + 6.283 / 80, L = 2400; b += `<path d="M${vx} ${vy} L${r1(vx + Math.cos(a1) * L)} ${r1(vy + Math.sin(a1) * L)} L${r1(vx + Math.cos(a2) * L)} ${r1(vy + Math.sin(a2) * L)} Z" fill="${i % 2 ? p[2] : p[1]}"/>`; }
+  for (let i = 0; i < 12; i++) b += `<circle cx="${vx}" cy="${vy}" r="${80 + i * 110}" fill="none" stroke="${p[3]}" stroke-width="4" opacity=".18"/>`;
+  b += `<path d="M0 640 L${SW} 610 L${SW} ${SH} L0 ${SH} Z" fill="${p[0]}"/>`;
+  b += `<path class="wr-art-dash" d="M-100 760 L${SW + 100} 700" stroke="${p[4]}" stroke-width="12" stroke-dasharray="90 70" fill="none"/>`;
+  for (let i = 0; i < 14; i++) { const y = 400 + i * 16; b += `<path class="wr-art-dash" d="M1380 ${y} L${SW} ${y + 4}" stroke="${p[4]}" stroke-width="${2 + i % 3}" stroke-dasharray="${60 + i * 9} 40" opacity=".55" fill="none"/>`; }
+  // body
+  const body = 'M170 560 L215 500 L470 470 L600 395 L900 385 L1030 455 L1330 470 L1380 520 L1375 585 L180 600 Z';
+  b += `<path d="M150 610 L1395 600 L1390 625 L160 640 Z" fill="${p[0]}" opacity=".7"/>`;
+  b += `<path d="${body}" fill="${p[3]}" stroke="${p[0]}" stroke-width="6" stroke-linejoin="round"/>`;
+  b += `<g clip-path="url(#crBody)"><path d="M150 500 L1400 470 L1400 505 L150 535 Z" fill="${p[4]}" opacity=".85"/><path d="M150 548 L1400 528 L1400 540 L150 560 Z" fill="${p[4]}" opacity=".5"/><path d="M150 570 L1400 560 L1400 610 L150 620 Z" fill="${p[2]}"/></g>`;
+  b += `<path d="M620 403 L890 395 L1000 455 L560 463 Z" fill="${p[0]}"/><path d="M790 398 L800 459" stroke="${p[3]}" stroke-width="10"/><path d="M640 412 L700 410 L640 452 L600 455 Z" fill="${p[4]}" opacity=".35"/>`;
+  b += `<path d="M175 545 L1375 525" stroke="${p[4]}" stroke-width="5"/><path d="M150 585 Q300 575 420 585 L420 602 L150 606 Z" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/><path d="M1240 574 L1390 568 L1392 590 L1240 596 Z" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
+  b += `<rect x="180" y="512" width="44" height="22" rx="6" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
+  [[380, 600, 78], [1135, 595, 78]].forEach(([x, y, r]) => {
+    b += `<path d="M${x - r - 18} ${y - 4} A${r + 18} ${r + 18} 0 0 1 ${x + r + 18} ${y - 4}" fill="${p[0]}"/>`;
+    b += `<circle cx="${x}" cy="${y}" r="${r}" fill="${p[0]}"/><circle cx="${x}" cy="${y}" r="${r * .7}" fill="${p[4]}"/><circle cx="${x}" cy="${y}" r="${r * .52}" fill="${p[2]}" stroke="${p[0]}" stroke-width="4"/>`;
+    for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; b += `<line x1="${x}" y1="${y}" x2="${r1(x + Math.cos(a) * r * .5)}" y2="${r1(y + Math.sin(a) * r * .5)}" stroke="${p[0]}" stroke-width="3"/>`; }
+    b += `<circle cx="${x}" cy="${y}" r="${r * .14}" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
+  });
+  for (let i = 0; i < 7; i++) b += `<circle cx="${1240 + i * 40}" cy="${640 - i * 6}" r="${26 + i * 9}" fill="${p[3]}" opacity="${r1(.5 - i * .06)}"/>`;
+  return sScene(defs, b, '');
+}
+
+const ART_DRAW = {
+  temple: () => sceneTemple(), inkeye: artInkEye, cruiser: t => sceneCruiser(t.artRamp),
+  timber: sceneTimber, dawn: sceneDawn, marsh: sceneMarsh, deep: sceneDeep,
+  lakeside: sceneLakeside, lab: sceneLab, mono: sceneMono,
+  hanami: sceneHanami, holo: sceneHolo, animesky: sceneAnime, street: sceneStreet,
+  lrteal: sceneLrTeal, lrbluepink: sceneLrBluePink, lrrainbow: sceneLrRainbow, lrorange: sceneLrOrange,
+};
 let artEl = null, artSig = '';
 function startArt() {
   const want = T && T.art && ART_DRAW[T.art] && window.top === window;
@@ -981,9 +1521,34 @@ function startArt() {
   if (sig === artSig) return;
   artSig = sig;
   artEl.style.cssText = `position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:${T.artOpacity || .6}`;
-  artEl.innerHTML = ART_DRAW[T.art](T);
+  const out = ART_DRAW[T.art](T), base = typeof out === 'string' ? out : out.base, anim = typeof out === 'string' ? '' : out.anim;
+  // two separate layers: the textured still picture is drawn once, only the light moving layer repaints
+  artEl.innerHTML = `<div style="position:absolute;inset:0;will-change:transform">${base}</div>` + (anim ? `<div style="position:absolute;inset:0;will-change:transform">${anim}</div>` : '');
+  flattenArt(base, sig);
 }
-
+// Turn the still picture into a flat image once (cheap to repaint behind moving things).
+// If the site blocks this kind of image, the picture simply stays as it is.
+let flatTimer = 0;
+function flattenArt(base, sig) {
+  const holder = artEl && artEl.firstChild; if (!holder) return;
+  const W = innerWidth, H = innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const svg = base.replace('width="100%" height="100%"', `width="${W}" height="${H}"`);
+  const img = new Image();
+  img.onload = () => {
+    if (artSig !== sig || !artEl) return;
+    try {
+      const cv = document.createElement('canvas'); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      cv.style.cssText = 'width:100%;height:100%;display:block';
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      holder.innerHTML = ''; holder.appendChild(cv);
+    } catch (e) { /* keep the live picture */ }
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+window.addEventListener('resize', () => {
+  clearTimeout(flatTimer);
+  flatTimer = setTimeout(() => { if (artEl && T && T.art) { artSig = ''; startArt(); } }, 400);
+});
 // ---------- laser line that travels around a button while you hover it ----------
 // A separate see-through layer is drawn over the button; the button itself is not changed.
 const BTN_SEL = 'button,[role="button"],input[type="button"],input[type="submit"],a.btn,[data-wr-bg="accent"]';
@@ -1146,7 +1711,7 @@ function render(root) {
   const curId = activeThemeId(), cur = themes[curId] || null;
   const opts = ['<option value="">Off (site\'s normal look)</option>',
     '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k] && !EXTRA[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
-    ...Object.keys(EXTRA_GROUPS).map(g => `<optgroup label="${esc(EXTRA_GROUPS[g])}">` + Object.keys(EXTRA).filter(k => EXTRA[k].group === g).map(k => `<option value="${k}" title="${esc(EXTRA[k].about)}">${esc(PRESETS[k].name)}</option>`).join('') + '</optgroup>'),
+    '<optgroup label="Signature scenes (illustrated + animated)">', ...Object.keys(EXTRA).map(k => `<option value="${k}" title="${esc(EXTRA[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Themed: cyberpunk, space, cars, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
