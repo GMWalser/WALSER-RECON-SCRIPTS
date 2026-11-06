@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1306
+// @version      2026.1106.1312
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v3.1  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '3.1', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v3.3  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '3.3', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -190,48 +190,31 @@ const WALLPAPERS = {
   th_xenohive: { name: "Xeno Hive", css: "repeating-radial-gradient(ellipse at 50% 120%,rgba(160,175,170,.10) 0 3px,transparent 3px 14px),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 8px,rgba(120,135,130,.07) 8px 11px,transparent 11px 26px),radial-gradient(ellipse at 50% 100%,rgba(156,255,46,.15),transparent 50%),linear-gradient(#050607,#0b0d0e)" },
   th_tracker: { name: "Motion Tracker", css: "repeating-radial-gradient(circle at 50% 50%,rgba(57,255,136,.14) 0 1px,transparent 1px 70px),linear-gradient(90deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(0deg,transparent 49.9%,rgba(57,255,136,.12) 50%,transparent 50.1%),linear-gradient(#000a04,#000a04)" },
   th_marine: { name: "Colonial Marine", css: "repeating-linear-gradient(135deg,rgba(242,169,0,.18) 0 14px,rgba(0,0,0,.35) 14px 28px),radial-gradient(ellipse at 30% 40%,rgba(85,90,50,.55),transparent 35%),radial-gradient(ellipse at 70% 60%,rgba(60,65,35,.55),transparent 35%),linear-gradient(#0e0f0a,#0e0f0a)" },
-  x_megacity: { name: "Neon Megacity", css: "repeating-linear-gradient(90deg,rgba(45,255,196,.07) 0 2px,transparent 2px 38px,rgba(45,255,196,.12) 38px 40px,transparent 40px 95px),radial-gradient(ellipse at 50% 30%,rgba(45,255,196,.35),transparent 55%),radial-gradient(circle at 80% 70%,rgba(255,140,42,.25),transparent 35%),linear-gradient(180deg,#05261f,#031512)" },
-  x_neonalley: { name: "Neon Alley", css: "linear-gradient(90deg,transparent 0 8%,rgba(255,60,90,.45) 8% 11%,transparent 11% 22%,rgba(255,79,160,.35) 22% 24%,transparent 24% 72%,rgba(90,215,255,.35) 72% 75%,transparent 75% 86%,rgba(255,120,60,.40) 86% 89%,transparent 89%),radial-gradient(ellipse at 50% 0%,rgba(90,215,255,.35),transparent 55%),linear-gradient(180deg,#141634,#0a0b1e)" },
-  x_campslasher: { name: "Camp Slasher", css: "radial-gradient(ellipse at 50% 18%,rgba(190,220,235,.45),transparent 28%),repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 18px,transparent 18px 60px,rgba(0,0,0,.4) 60px 70px,transparent 70px 140px),linear-gradient(180deg,#0e2a33 0%,#061418 60%,#020507 100%)" },
-  x_madlab: { name: "Mad Lab", css: "repeating-linear-gradient(0deg,transparent 0 22px,rgba(123,211,137,.10) 22px 24px),repeating-linear-gradient(90deg,transparent 0 9px,rgba(123,211,137,.18) 9px 11px,transparent 11px 18px),radial-gradient(ellipse at 20% 30%,rgba(80,200,255,.30),transparent 40%),radial-gradient(ellipse at 75% 60%,rgba(123,211,137,.30),transparent 45%),linear-gradient(#050a07,#0a140c)" },
-  x_silverscreen: { name: "Silver Screen Monster", css: "radial-gradient(ellipse at 50% 35%,rgba(255,255,255,.22),transparent 45%),radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,.85) 85%),linear-gradient(#111,#050505)" },
-  x_camo: { name: "Woodland Camo", css: "radial-gradient(ellipse 60px 34px at 20% 25%,#3b4a26 98%,transparent),radial-gradient(ellipse 70px 30px at 70% 18%,#4a3b26 98%,transparent),radial-gradient(ellipse 40px 50px at 45% 55%,#1c2414 98%,transparent),radial-gradient(ellipse 80px 36px at 80% 70%,#2e3a1e 98%,transparent),radial-gradient(ellipse 50px 28px at 18% 82%,#5a4a30 98%,transparent),radial-gradient(ellipse 30px 40px at 60% 88%,#141a0e 98%,transparent),linear-gradient(#262e1a,#262e1a)" },
-  x_blaze: { name: "Blaze Orange Hunter", css: "linear-gradient(180deg,transparent 0 62%,rgba(8,6,3,.95) 62%),repeating-linear-gradient(90deg,rgba(8,6,3,.9) 0 6px,transparent 6px 26px,rgba(8,6,3,.8) 26px 30px,transparent 30px 55px),linear-gradient(180deg,#2a1206 0%,#a8400c 40%,#ff8a2a 58%,#ffcf6a 64%,#1a0f06 66%)" },
-  x_marsh: { name: "Duck Marsh", css: "repeating-linear-gradient(96deg,transparent 0 9px,rgba(201,162,74,.20) 9px 10px,transparent 10px 23px,rgba(140,110,50,.25) 23px 24px,transparent 24px 37px),linear-gradient(180deg,#2c2a3e 0%,#7a5a3a 45%,#3a3420 70%,#14160e 100%)" },
-  x_walleye: { name: "Walleye Lake", css: "repeating-conic-gradient(from 160deg at 50% -10%,rgba(200,240,255,.10) 0 4deg,transparent 4deg 11deg),radial-gradient(ellipse at 50% 0%,rgba(127,224,255,.35),transparent 55%),linear-gradient(180deg,#0e4a5c 0%,#062a36 55%,#03141a 100%)" },
-  x_garden: { name: "Garden Bloom", css: "radial-gradient(circle at 50% 50%,#ffe27a 0 4px,transparent 5px),radial-gradient(circle at 50% 36%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 63% 46%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 58% 62%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 42% 62%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 37% 46%,rgba(255,156,207,.55) 0 7px,transparent 8px),radial-gradient(circle at 12% 12%,rgba(184,240,200,.35) 0 3px,transparent 4px),linear-gradient(#1c1220,#1c1220)" },
-  x_kawaii: { name: "Kawaii Pastel", css: "radial-gradient(ellipse at 20% 20%,rgba(255,179,217,.40),transparent 45%),radial-gradient(ellipse at 80% 30%,rgba(168,230,255,.35),transparent 45%),radial-gradient(ellipse at 50% 90%,rgba(206,180,255,.35),transparent 50%),linear-gradient(160deg,#232246,#171631)" },
-  x_anime: { name: "Anime Sky", css: "radial-gradient(circle at 50% 55%,rgba(255,226,122,.45),transparent 25%),linear-gradient(180deg,#1b2a6b 0%,#6a3c9c 45%,#ff7ab6 75%,#ffb36b 100%)" },
-  x_graffiti: { name: "Street Graffiti", css: "radial-gradient(circle at 18% 30%,rgba(255,95,216,.55) 0 60px,transparent 120px),radial-gradient(circle at 78% 25%,rgba(57,255,20,.40) 0 50px,transparent 110px),radial-gradient(circle at 60% 78%,rgba(0,200,255,.40) 0 70px,transparent 130px),radial-gradient(circle at 30% 80%,rgba(255,200,0,.35) 0 40px,transparent 90px),repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 2px,transparent 2px 30px),repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 2px,transparent 2px 62px),linear-gradient(#3a1f18,#2a1510)" },
-  x_lr_teal: { name: "Candy Teal Lowrider", css: "repeating-radial-gradient(ellipse at 15% 20%,rgba(255,255,255,.10) 0 2px,transparent 2px 13px),repeating-radial-gradient(ellipse at 85% 80%,rgba(255,255,255,.08) 0 2px,transparent 2px 15px),linear-gradient(115deg,transparent 0 46%,rgba(214,170,74,.7) 46% 46.6%,rgba(255,140,40,.35) 46.6% 55%,rgba(214,170,74,.7) 55% 55.6%,transparent 55.6%),linear-gradient(160deg,#0a4a4c,#063336 50%,#031a1c)" },
-  x_lr_bluepink: { name: "Candy Blue & Pink", css: "repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,63,164,.45) 26px 30px,transparent 30px 44px,rgba(120,60,200,.45) 44px 50px,transparent 50px 70px,rgba(102,200,255,.30) 70px 72px,transparent 72px 110px),linear-gradient(100deg,transparent 0 30%,rgba(255,63,164,.25) 30% 34%,transparent 34% 64%,rgba(120,60,200,.3) 64% 69%,transparent 69%),linear-gradient(180deg,#123a9c,#0a1d4f 60%,#04102e)" },
-  x_lr_rainbow: { name: "Rainbow Flake", css: "repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 14px),linear-gradient(120deg,#3a137a 0%,#2050c8 30%,#13b5c0 48%,#ffc83d 52%,#e07a1a 62%,#6a1fb0 85%,#2a0a50 100%)" },
-  x_lr_orange: { name: "Candy Orange Pinstripe", css: "repeating-radial-gradient(ellipse 120% 60% at 0% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),repeating-radial-gradient(ellipse 120% 60% at 100% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),linear-gradient(90deg,transparent 0 47%,rgba(255,255,255,.4) 47% 47.4%,transparent 47.4% 52.6%,rgba(255,255,255,.4) 52.6% 53%,transparent 53%),linear-gradient(180deg,#c2410c,#7a1f06 55%,#3a0c03)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
 const COLOR_THEORY = {
   synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true },
-  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#00f0ff', fxColors: ["#00f0ff", "#ff2bd6", "#f9f002"], hover: 'laser' },
-  lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30, fx: 'bubbles', fxColor: '#bdfcf5', fxColors: ["#bdfcf5", "#ff6f59"] },
-  autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30, fx: 'leaves', fxColor: '#e8a33d', fxColors: ["#e8a33d", "#c2551a", "#8a3a12", "#d4e157"] },
+  cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff00c8' },
+  lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30 },
+  autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30 },
   aurora: { name: "Nordic Aurora \u00b7 triadic", bg: '#0b1622', surface: '#13233a', text: '#e8f1ff', accent: '#34d399', accentText: '#04221a', link: '#c4b5fd', border: '#24405e', input: '#08111b', wp: WALLPAPERS.aurora.css, wpDim: 35, wpSee: 30 },
-  royal: { name: "Royal Gold \u00b7 complementary", bg: '#0a0f2c', surface: '#141b45', text: '#f4f1e6', accent: '#d4af37', accentText: '#0a0f2c', link: '#e9c46a', border: '#2c3672', input: '#070b22', wp: WALLPAPERS.golddust.css, wpDim: 35, wpSee: 30, fx: 'flake', fxColor: '#d4af37', fxColors: ["#d4af37", "#f5e3a0", "#ffffff"], hover: 'shine' },
+  royal: { name: "Royal Gold \u00b7 complementary", bg: '#0a0f2c', surface: '#141b45', text: '#f4f1e6', accent: '#d4af37', accentText: '#0a0f2c', link: '#e9c46a', border: '#2c3672', input: '#070b22', wp: WALLPAPERS.golddust.css, wpDim: 35, wpSee: 30 },
   amethyst: { name: "Amethyst & Citrine \u00b7 complementary", bg: '#160f24', surface: '#241838', text: '#f3ecff', accent: '#fbbf24', accentText: '#1b1206', link: '#c4b5fd', border: '#3d2b5c', input: '#110b1c', wp: WALLPAPERS.amethyst.css, wpDim: 35, wpSee: 30 },
   oceansun: { name: "Ocean Sunset \u00b7 split-complementary", bg: '#0b1a33', surface: '#13284d', text: '#eaf2ff', accent: '#ff8c42', accentText: '#1a0d00', link: '#ff8fb8', border: '#23406e', input: '#081429', wp: WALLPAPERS.sunset.css, wpDim: 35, wpSee: 30 },
   teal: { name: "Deep Teal \u00b7 monochromatic", bg: '#031c1c', surface: '#072c2c', text: '#d9fffb', accent: '#14b8a6', accentText: '#022020', link: '#5eead4', border: '#0f4a48', input: '#021616', wp: WALLPAPERS.teal.css, wpDim: 35, wpSee: 30 },
-  lava: { name: "Lava Flow \u00b7 analogous", bg: '#120808', surface: '#1f0e0c', text: '#ffece6', accent: '#ff5a1f', accentText: '#1a0500', link: '#ffb347', border: '#3d1a14', input: '#0d0505', wp: WALLPAPERS.ember.css, wpDim: 35, wpSee: 30, fx: 'fireflies', fxColor: '#ff5a1f' },
+  lava: { name: "Lava Flow \u00b7 analogous", bg: '#120808', surface: '#1f0e0c', text: '#ffece6', accent: '#ff5a1f', accentText: '#1a0500', link: '#ffb347', border: '#3d1a14', input: '#0d0505', wp: WALLPAPERS.ember.css, wpDim: 35, wpSee: 30 },
   matrix: { name: "Matrix \u00b7 monochromatic", bg: '#000a00', surface: '#031a05', text: '#b6ffb6', accent: '#00ff66', accentText: '#001a08', link: '#7dff9e', border: '#0f3d16', input: '#000700', wp: WALLPAPERS.matrix.css, wpDim: 35, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff66' },
-  sakura: { name: "Sakura Night \u00b7 complementary", bg: '#1f0f1a', surface: '#2e1727', text: '#ffeef6', accent: '#ff8fc7', accentText: '#2a0b1c', link: '#7ee8c8', border: '#4d2a42', input: '#180b14', wp: WALLPAPERS.sakura.css, wpDim: 35, wpSee: 30, fx: 'petals', fxColor: '#ffc1e0', fxColors: ["#ffc1e0", "#ff8fc7", "#fff0f7"], hover: 'sparkle' },
+  sakura: { name: "Sakura Night \u00b7 complementary", bg: '#1f0f1a', surface: '#2e1727', text: '#ffeef6', accent: '#ff8fc7', accentText: '#2a0b1c', link: '#7ee8c8', border: '#4d2a42', input: '#180b14', wp: WALLPAPERS.sakura.css, wpDim: 35, wpSee: 30 },
   ultraviolet: { name: "Ultraviolet \u00b7 tetradic", bg: '#0e0420', surface: '#1c0b3a', text: '#f3eaff', accent: '#7cff4f', accentText: '#0e0420', link: '#ff6ad5', border: '#3a1f6b', input: '#0a0318', wp: WALLPAPERS.ct_ultraviolet.css, wpDim: 30, wpSee: 30, glow: true },
   mojave: { name: "Mojave Desert \u00b7 complementary", bg: '#1d140e', surface: '#2b1e15', text: '#fbefe2', accent: '#3fc1b0', accentText: '#062420', link: '#f0a35e', border: '#4d3727', input: '#170f0a', wp: WALLPAPERS.ct_mojave.css, wpDim: 30, wpSee: 30 },
-  glacier: { name: "Glacier \u00b7 monochromatic", bg: '#06141f', surface: '#0c2233', text: '#e6f6ff', accent: '#7dd3fc', accentText: '#062033', link: '#bae6fd', border: '#1b3d57', input: '#041019', wp: WALLPAPERS.ct_glacier.css, wpDim: 30, wpSee: 30, fx: 'snow', fxColor: '#e6f6ff' },
+  glacier: { name: "Glacier \u00b7 monochromatic", bg: '#06141f', surface: '#0c2233', text: '#e6f6ff', accent: '#7dd3fc', accentText: '#062033', link: '#bae6fd', border: '#1b3d57', input: '#041019', wp: WALLPAPERS.ct_glacier.css, wpDim: 30, wpSee: 30 },
   volcano: { name: "Volcano Ash \u00b7 complementary", bg: '#15171c', surface: '#20242c', text: '#eef0f4', accent: '#ff7a1a', accentText: '#1a0c00', link: '#8fb3ff', border: '#363c48', input: '#101216', wp: WALLPAPERS.ct_volcano.css, wpDim: 30, wpSee: 30 },
   rainforest: { name: "Rainforest Orchid \u00b7 complementary", bg: '#07170e', surface: '#0e2618', text: '#e8fff0', accent: '#ff4fa3', accentText: '#26051a', link: '#6ee7a8', border: '#1d4a31', input: '#05110a', wp: WALLPAPERS.ct_rainforest.css, wpDim: 30, wpSee: 30 },
   racing: { name: "Midnight Racing \u00b7 complementary", bg: '#071226', surface: '#0f1f3d', text: '#eef4ff', accent: '#ff9f1c', accentText: '#1a0d00', link: '#5cc8ff', border: '#233b66', input: '#050d1c', wp: WALLPAPERS.ct_racing.css, wpDim: 30, wpSee: 30 },
   bubblegum: { name: "Bubblegum Pop \u00b7 triadic", bg: '#1b0f24', surface: '#2a1838', text: '#fff0fb', accent: '#ff5fc1', accentText: '#24061a', link: '#5ff2e2', border: '#4a2c5f', input: '#140b1b', wp: WALLPAPERS.ct_bubblegum.css, wpDim: 30, wpSee: 30 },
   copper: { name: "Copper Patina \u00b7 complementary", bg: '#10191a', surface: '#182527', text: '#effaf7', accent: '#d08a4e', accentText: '#1a0d04', link: '#6fd3b8', border: '#2d4245', input: '#0c1314', wp: WALLPAPERS.ct_copper.css, wpDim: 30, wpSee: 30 },
-  galaxy: { name: "Galaxy \u00b7 split-complementary", bg: '#0a0820', surface: '#15123a', text: '#eeeaff', accent: '#ffd166', accentText: '#1a1400', link: '#ef7ac0', border: '#2e2866', input: '#070617', wp: WALLPAPERS.ct_galaxy.css, wpDim: 30, wpSee: 30, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd166", "#ef7ac0"] },
+  galaxy: { name: "Galaxy \u00b7 split-complementary", bg: '#0a0820', surface: '#15123a', text: '#eeeaff', accent: '#ffd166', accentText: '#1a1400', link: '#ef7ac0', border: '#2e2866', input: '#070617', wp: WALLPAPERS.ct_galaxy.css, wpDim: 30, wpSee: 30 },
   slatemint: { name: "Slate & Mint \u00b7 analogous", bg: '#12181d', surface: '#1b242b', text: '#e9f1f5', accent: '#5eead4', accentText: '#06201c', link: '#93c5fd', border: '#2f3d47', input: '#0e1317', wp: WALLPAPERS.ct_slatemint.css, wpDim: 30, wpSee: 30 },
   peacock: { name: "Peacock \u00b7 analogous + gold", bg: '#04141f', surface: '#0a2233', text: '#e8f8ff', accent: '#00b4d8', accentText: '#021a24', link: '#f4c430', border: '#17405a', input: '#030f17', wp: WALLPAPERS.ct_peacock.css, wpDim: 30, wpSee: 30 },
   grape: { name: "Grape Soda \u00b7 complementary", bg: '#170a26', surface: '#25123d', text: '#f4ebff', accent: '#b388ff', accentText: '#170a26', link: '#c6ff6b', border: '#43266b', input: '#11071c', wp: WALLPAPERS.ct_grape.css, wpDim: 30, wpSee: 30 },
@@ -240,28 +223,28 @@ const COLOR_THEORY = {
   mintchoc: { name: "Mint Chocolate \u00b7 complementary", bg: '#1a120e', surface: '#261a14', text: '#f2fff9', accent: '#6ee7b7', accentText: '#08251a', link: '#a7f3d0', border: '#43302a', input: '#140d0a', wp: WALLPAPERS.ct_mintchoc.css, wpDim: 30, wpSee: 30 },
   lavender: { name: "Twilight Lavender \u00b7 analogous", bg: '#141326', surface: '#1f1d3a', text: '#efeeff', accent: '#a5b4fc', accentText: '#141326', link: '#f0abfc', border: '#39366a', input: '#0f0e1c', wp: WALLPAPERS.ct_lavender.css, wpDim: 30, wpSee: 30 },
   solar: { name: "Solar Flare \u00b7 analogous", bg: '#120d04', surface: '#1e1608', text: '#fff6e0', accent: '#ffc300', accentText: '#1a1200', link: '#ff8c42', border: '#3d2f12', input: '#0d0903', wp: WALLPAPERS.ct_solar.css, wpDim: 30, wpSee: 30 },
-  arctic: { name: "Arctic Night \u00b7 complementary", bg: '#0a1018', surface: '#121b28', text: '#ecf3ff', accent: '#4cc9f0', accentText: '#04161d', link: '#ff7eb6', border: '#24344a', input: '#070b11', wp: WALLPAPERS.ct_arctic.css, wpDim: 30, wpSee: 30, fx: 'snow', fxColor: '#ffffff' },
+  arctic: { name: "Arctic Night \u00b7 complementary", bg: '#0a1018', surface: '#121b28', text: '#ecf3ff', accent: '#4cc9f0', accentText: '#04161d', link: '#ff7eb6', border: '#24344a', input: '#070b11', wp: WALLPAPERS.ct_arctic.css, wpDim: 30, wpSee: 30 },
   cabin: { name: "Forest Cabin \u00b7 complementary", bg: '#0f140c', surface: '#182014', text: '#eef5e6', accent: '#e07a2f', accentText: '#1a0b00', link: '#a3d977', border: '#2e3a24', input: '#0b0f09', wp: WALLPAPERS.ct_cabin.css, wpDim: 30, wpSee: 30 },
   reef: { name: "Coral Reef \u00b7 split-complementary", bg: '#0a1626', surface: '#11223a', text: '#edf6ff', accent: '#ff7f6e', accentText: '#1f0806', link: '#4fd1c5', border: '#21395c', input: '#07111d', wp: WALLPAPERS.ct_reef.css, wpDim: 30, wpSee: 30 },
 };
 // Themed looks: cyberpunk, space opera, car, and art-inspired. Original palettes and patterns
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
-  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#ff2e97', fxColors: ["#00f5d4", "#ff2e97"] },
+  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff2e97' },
   nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
   vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true },
   hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#2ef2d0' },
   glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'scan', fxColor: '#ff6ec7' },
   hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30, fx: 'stars', fxColor: '#cfe8ff' },
-  twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30, fx: 'fog', fxColor: '#e2a45a' },
+  twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30 },
   darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'scan', fxColor: '#ff3b3b' },
   saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30, glow: true },
-  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30, fx: 'flake', fxColor: '#9fc2ff', fxColors: ["#9fc2ff", "#ffffff"], hover: 'shine' },
+  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30 },
   typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30 },
   screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: WALLPAPERS.th_screenprint.css, wpDim: 25, wpSee: 30, wpFit: 'tile', wpTile: '9px 9px' },
-  inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30, hover: 'drip', hoverColor: '#b3001b' },
-  bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156', hover: 'shine' },
-  bmx80sblue: { name: "80s Haro Blue", about: "80s freestyle BMX: teal/aqua frame color sampled from photos, white stripes, coral accents", bg: '#041314', surface: '#0a2224', text: '#effefe', accent: '#1ccacb', accentText: '#021a1a', link: '#ff8a7a', border: '#1a4547', input: '#030e0f', wp: WALLPAPERS.th_bmx80sblue.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#1ccacb', hover: 'shine' },
+  inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30 },
+  bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156' },
+  bmx80sblue: { name: "80s Haro Blue", about: "80s freestyle BMX: teal/aqua frame color sampled from photos, white stripes, coral accents", bg: '#041314', surface: '#0a2224', text: '#effefe', accent: '#1ccacb', accentText: '#021a1a', link: '#ff8a7a', border: '#1a4547', input: '#030e0f', wp: WALLPAPERS.th_bmx80sblue.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#1ccacb' },
   crawl: { name: "Opening Crawl", about: "space opera: yellow title text on a drifting starfield", bg: '#000000', surface: '#07080d', text: '#ffe81f', accent: '#ffe81f', accentText: '#000000', link: '#9fd8ff', border: '#2a2a18', input: '#000000', wp: WALLPAPERS.th_crawl.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#ffffff' },
   iceplanet: { name: "Ice Planet Outpost", about: "space opera: frozen rebel-style base, falling snow", bg: '#0a121a', surface: '#122030', text: '#eef6ff', accent: '#9ad7ff', accentText: '#06202f', link: '#ffb36b', border: '#27405a', input: '#08101a', wp: WALLPAPERS.th_iceplanet.css, wpDim: 20, wpSee: 30, glow: false, fx: 'snow', fxColor: '#ffffff' },
   forestmoon: { name: "Forest Moon", about: "space opera: giant redwood forest moon, fireflies", bg: '#0a1108', surface: '#132010', text: '#eef7e4', accent: '#d4a373', accentText: '#1a0f05', link: '#9bdb70', border: '#2d4224', input: '#070d06', wp: WALLPAPERS.th_forestmoon.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#d9ff8a' },
@@ -269,7 +252,7 @@ const THEMED = {
   imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#ff3b3b' },
   crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
   digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
-  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33', hover: 'spark' },
+  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'scan', fxColor: '#33ff33' },
   vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
   wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: 'pulse', fxColor: '#78be20' },
   thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff3b1f' },
@@ -287,38 +270,33 @@ const ART = {
   tw_teal: { name: "Teal & Burnt Orange", about: "art: teal, burnt orange and cream variant (Tidwell-inspired)", bg: '#0d1416', surface: '#172326', text: '#f3e6c6', accent: '#e2622a', accentText: '#1a0700', link: '#8fc3c8', border: '#2f4a4f', input: '#0a1012', wp: WALLPAPERS.ar_tw_teal.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   tw_phoenix: { name: "Phoenix Feathers", about: "art: rust, gold and teal on warm gray (Tidwell-inspired)", bg: '#1a1714', surface: '#26221d', text: '#f1e8d8', accent: '#e8a636', accentText: '#1a1000', link: '#4fc0d6', border: '#4a443b', input: '#14110f', wp: WALLPAPERS.ar_tw_phoenix.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#ffb347' },
   tw_tree: { name: "Twisted Tree Sunset", about: "art: purple-to-peach halftone sunset, olive and mint (Tidwell-inspired)", bg: '#1b1120', surface: '#2a1a30', text: '#fbe9d6', accent: '#f2a65e', accentText: '#20100a', link: '#9fd6cf', border: '#4c3254', input: '#150d19', wp: WALLPAPERS.ar_tw_tree.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
-  tw_slime: { name: "Blower & Slime", about: "art: fluorescent orange, slime green and chrome blue hot-rod print (Tidwell-inspired)", bg: '#120a06', surface: '#1f120b', text: '#fff1e8', accent: '#39e639', accentText: '#021a02', link: '#ff8a52', border: '#4a2a1a', input: '#0e0704', wp: WALLPAPERS.ar_tw_slime.css, wpDim: 20, wpSee: 30, glow: true, fx: 'bubbles', fxColor: '#39e639', fxColors: ["#39e639", "#39e639"], hover: 'drip', hoverColor: '#39e639' },
+  tw_slime: { name: "Blower & Slime", about: "art: fluorescent orange, slime green and chrome blue hot-rod print (Tidwell-inspired)", bg: '#120a06', surface: '#1f120b', text: '#fff1e8', accent: '#39e639', accentText: '#021a02', link: '#ff8a52', border: '#4a2a1a', input: '#0e0704', wp: WALLPAPERS.ar_tw_slime.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '' },
   vd_ballpoint: { name: "Ballpoint Blue", about: "art: dense blue ballpoint-pen hatching (Van Dyke-inspired)", bg: '#0c0f24', surface: '#141a3a', text: '#e6e9ff', accent: '#8f9bff', accentText: '#050824', link: '#c3caff', border: '#2a3370', input: '#090b1c', wp: WALLPAPERS.ar_vd_ballpoint.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   vd_hatch: { name: "Crosshatch Engraving", about: "art: black and white crosshatch engraving (Van Dyke-inspired)", bg: '#080808', surface: '#141414', text: '#f2f2f2', accent: '#e8e8e8', accentText: '#0a0a0a', link: '#c8c8c8', border: '#3a3a3a', input: '#060606', wp: WALLPAPERS.ar_vd_hatch.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '' },
   mg_speed: { name: "Speed Lines", about: "art: grayscale-ramp speed lines (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_speed.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#d0d0d0' },
   mg_green: { name: "Atomic Green", about: "art: lime-to-olive ramp with sunburst rays (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_green.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#c6f432' },
   mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
-  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f', hover: 'shine' },
+  mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f' },
   mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
 };
 Object.assign(PRESETS, ART);
-// Animated theme packs (each has its own background effect and hover effect).
-const EXTRA_GROUPS = {"cyber": "Cyberpunk (animated)", "horror": "Horror", "outdoor": "Hunting & fishing", "cute": "Cute & anime", "street": "Street & graffiti", "lowrider": "Lowrider candy paint"};
-const EXTRA = {
-  megacity: { name: "Neon Megacity", about: "cyberpunk: green-teal megacity with drifting orange lights", bg: '#031512', surface: '#07241f', text: '#e6fff8', accent: '#2dffc4', accentText: '#00201a', link: '#ffb347', border: '#0f4a40', input: '#021210', wp: WALLPAPERS.x_megacity.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'bokeh', fxColor: '#ffb347', fxColors: ["#ffb347", "#ff8c2a", "#2dffc4"], hover: 'laser' },
-  neonalley: { name: "Neon Alley", about: "cyberpunk: rainy alley of pink, red and blue neon signs", bg: '#0a0b1e', surface: '#141634', text: '#f2f0ff', accent: '#ff4fa0', accentText: '#1f0010', link: '#5ad7ff', border: '#2d3170', input: '#07081a', wp: WALLPAPERS.x_neonalley.css, wpDim: 20, wpSee: 30, group: 'cyber', glow: true, fx: 'rain', fxColor: '#7fd9ff', hover: 'laser' },
-  campslasher: { name: "Lakeside Night", about: "horror: moon through a dead forest, lake mist, blade gashes, buttons bleed (slasher-inspired)", bg: '#03080a', surface: '#0b1518', text: '#e8ecea', accent: '#e8e4da', accentText: '#120000', link: '#ff6a6a', border: '#24363a', input: '#020507', wp: 'linear-gradient(#03080a,#03080a)', wpDim: 0, wpSee: 30, art: 'lakeside', artOpacity: 0.95, glow: false, fx: 'fog', fxColor: '#9fb9c4', hover: 'drip', hoverColor: '#8a0000' },
-  madlab: { name: "Laboratory", about: "horror: painted lab with twin coil towers and live electric arcs (classic monster-inspired)", bg: '#030a08', surface: '#0a1814', text: '#e6f4ee', accent: '#7fe0c0', accentText: '#02140e', link: '#b8ffe6', border: '#1f4a3c', input: '#020806', wp: 'linear-gradient(#030a08,#030a08)', wpDim: 0, wpSee: 30, art: 'lab', artOpacity: 0.95, glow: true, fx: 'arc', fxColor: '#d8ffff', hover: 'spark' },
-  silverscreen: { name: "Monochrome Terror", about: "horror: 1930s film still, gothic window light, lightning, grain and scratches", bg: '#0a0a0a', surface: '#151515', text: '#f0f0f0', accent: '#d9d9d9', accentText: '#0a0a0a', link: '#ff8a62', border: '#3a3a3a', input: '#070707', wp: 'linear-gradient(#0a0a0a,#0a0a0a)', wpDim: 0, wpSee: 30, art: 'mono', artOpacity: 0.95, glow: false, fx: 'lightning grain', fxColor: '#ffffff', hover: 'spark' },
-  camo: { name: "Timber Camo", about: "hunting: vertical bark grain with layered oak leaves and branches", bg: '#14110c', surface: '#1f1a13', text: '#f3eee2', accent: '#ff6a13', accentText: '#1a0800', link: '#d6c88a', border: '#3d3326', input: '#100d09', wp: 'linear-gradient(#14110c,#14110c)', wpDim: 0, wpSee: 30, art: 'timber', artOpacity: 0.9, glow: false, fx: 'leaves', fxColor: '#7a5a30', fxColors: ["#7a5a30", "#5a4a26", "#4a4a26"], hover: 'laser' },
-  blaze: { name: "Dawn Stand", about: "hunting: dawn over layered ridges and spruce in rolling fog", bg: '#0d1220', surface: '#161c2c', text: '#f2eee6', accent: '#ff8a3a', accentText: '#1a0a00', link: '#ffd2a0', border: '#2c3550', input: '#0a0e18', wp: 'linear-gradient(#0d1220,#0d1220)', wpDim: 0, wpSee: 30, art: 'dawn', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'laser' },
-  marsh: { name: "Marsh Dusk", about: "waterfowl: cattail marsh at dusk, a flock crossing the sky", bg: '#120e18', surface: '#1c1622', text: '#f6efe6', accent: '#f2a35a', accentText: '#1a0d00', link: '#a8d8c8', border: '#3a2e40', input: '#0e0b12', wp: 'linear-gradient(#120e18,#120e18)', wpDim: 0, wpSee: 30, art: 'marsh', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'laser' },
-  walleye: { name: "Deep Water", about: "fishing: under the lake, light shafts, walleye with glowing eyes", bg: '#03141a', surface: '#0a222b', text: '#e9fbff', accent: '#e8c547', accentText: '#1a1400', link: '#8fe6ff', border: '#1a4655', input: '#021016', wp: 'linear-gradient(#03141a,#03141a)', wpDim: 0, wpSee: 30, art: 'deep', artOpacity: 0.95, glow: false, fx: 'bubbles', fxColor: '#cfefff', noFish: true, hover: 'laser' },
-  garden: { name: "Hanami", about: "woodblock print: vermilion sun, misty mountains, cherry branch, wave pattern", bg: '#141c30', surface: '#1c2640', text: '#f6efe2', accent: '#f2d6a2', accentText: '#1c2640', link: '#f7c8d4', border: '#33406a', input: '#0f1526', wp: 'linear-gradient(#141c30,#141c30)', wpDim: 0, wpSee: 30, art: 'hanami', artOpacity: 0.95, glow: false, fx: 'petals', fxColor: '#f7c8d4', fxColors: ["#f7c8d4", "#ffffff", "#f2a8bc"], hover: 'sparkle', hoverColor: '#f7c8d4' },
-  kawaii: { name: "Holographic", about: "iridescent oil-slick foil with a moving sheen", bg: '#120e24', surface: '#1c1734', text: '#fbf6ff', accent: '#b48cff', accentText: '#12082a', link: '#7fe8ff', border: '#3c3466', input: '#0e0b1c', wp: 'linear-gradient(#120e24,#120e24)', wpDim: 0, wpSee: 30, art: 'holo', artOpacity: 0.9, glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#ffd1ec", "#c9f1ff"], hover: 'shine' },
-  anime: { name: "Anime Night Sky", about: "sunset clouds, shooting star, city lights and power lines", bg: '#0a0f2e', surface: '#151a44', text: '#f3f6ff', accent: '#ff9ac0', accentText: '#2a0016', link: '#ffe27a', border: '#2e3478', input: '#080c24', wp: 'linear-gradient(#0a0f2e,#0a0f2e)', wpDim: 0, wpSee: 30, art: 'animesky', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'sparkle' },
-  graffiti: { name: "Underpass", about: "street: buffed concrete, chrome tags, drips, sodium light and a fence shadow", bg: '#121212', surface: '#1c1c1c', text: '#f2f2f2', accent: '#ffb04a', accentText: '#1a0d00', link: '#7fe0ff', border: '#3a3a3a', input: '#0d0d0d', wp: 'linear-gradient(#121212,#121212)', wpDim: 0, wpSee: 30, art: 'street', artOpacity: 0.95, glow: false, fx: '', fxColor: '', hover: 'drip', hoverColor: '#d8dde2' },
-  lr_teal: { name: "Candy Teal", about: "lowrider: teal candy, lace, gold-leaf maze panels, pearl teardrop patterns", bg: '#031a1c', surface: '#072b2e', text: '#effffd', accent: '#2fd6d0', accentText: '#012020', link: '#ffc56a', border: '#b08a3a', input: '#021416', wp: 'linear-gradient(#031a1c,#031a1c)', wpDim: 0, wpSee: 30, art: 'lrteal', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#9ff6ef", "#ffcf6a"], hover: 'shine' },
-  lr_bluepink: { name: "Candy Blue & Pink", about: "lowrider: blue flake with pink and purple teardrop patterns", bg: '#04102e', surface: '#0a1d4f', text: '#f2f6ff', accent: '#ff5fb4', accentText: '#22000f', link: '#8fd2ff', border: '#2a49a0', input: '#030b22', wp: 'linear-gradient(#04102e,#04102e)', wpDim: 0, wpSee: 30, art: 'lrbluepink', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#9fd8ff', fxColors: ["#9fd8ff", "#ffffff", "#ff8fd0"], hover: 'shine' },
-  lr_rainbow: { name: "Kandy Flame", about: "lowrider: purple-teal-gold candy fade with blue flames and gold leaf", bg: '#150a2a', surface: '#22123f', text: '#fff6e8', accent: '#ffc83d', accentText: '#1f1400', link: '#6fe8ff', border: '#6a3fb0', input: '#10071f', wp: 'linear-gradient(#150a2a,#150a2a)', wpDim: 0, wpSee: 30, art: 'lrrainbow', artOpacity: 0.95, glow: true, fx: 'flake', fxColor: '#ffd76a', fxColors: ["#ffd76a", "#ffffff", "#8ff0ff"], hover: 'shine' },
-  lr_orange: { name: "Orange Pinstripe", about: "lowrider: deep candy orange with a symmetric white pinstripe design", bg: '#1a0703', surface: '#2a0f07', text: '#fff2ea', accent: '#ffd9c2', accentText: '#2a0f07', link: '#ffb27a', border: '#8a3a1a', input: '#140502', wp: 'linear-gradient(#1a0703,#1a0703)', wpDim: 0, wpSee: 30, art: 'lrorange', artOpacity: 0.95, glow: false, fx: 'flake', fxColor: '#ffd0a0', fxColors: ["#ffd0a0", "#ffffff"], hover: 'shine' },
+// Color Lab: one color-theory scheme each, shown as a slowly drifting mesh of soft color fields.
+// Buttons use the scheme's lead color; the hover laser uses its complement on the color wheel.
+const LAB = {
+  lab_split: { name: "Split Signal \u00b7 split-complementary", about: "color lab: split-complementary", bg: '#03191c', surface: '#082a2e', text: '#eafcfb', accent: '#ff7a5c', accentText: '#1f0700', link: '#ff8fb4', border: '#16474c', input: '#021316', wp: 'linear-gradient(#03191c,#03191c)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#0e7f86", "#ff6b57", "#ff3d7f", "#06363b"], hover: 'laser', hoverColor: '#3be0d4' },
+  lab_triad: { name: "Triad Pulse \u00b7 triadic", about: "color lab: triadic", bg: '#0a0716', surface: '#141029', text: '#f3f0ff', accent: '#a78bfa', accentText: '#120a2e', link: '#fbbf24', border: '#2d2552', input: '#07050f', wp: 'linear-gradient(#0a0716,#0a0716)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#7c3aed", "#14b8a6", "#f59e0b", "#1e1145"], hover: 'laser', hoverColor: '#fbbf24' },
+  lab_tetrad: { name: "Tetrad Bloom \u00b7 tetradic (square)", about: "color lab: tetradic (square)", bg: '#0b0b12', surface: '#15151f', text: '#f7f7fb', accent: '#d4ff3a', accentText: '#141f00', link: '#5ee8ff', border: '#2e2e44', input: '#08080d', wp: 'linear-gradient(#0b0b12,#0b0b12)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#ff2fb3", "#b6ff2a", "#22d3ee", "#ff8a1f"], hover: 'laser', hoverColor: '#ff2fb3' },
+  lab_ember: { name: "Analog Ember \u00b7 analogous warm", about: "color lab: analogous warm", bg: '#140806', surface: '#22100b', text: '#fff0e8', accent: '#ffb020', accentText: '#1f1000', link: '#ffd27a', border: '#4a2418', input: '#0f0604', wp: 'linear-gradient(#140806,#140806)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh bokeh', fxColor: '#ffb020', fxColors: ["#ffb020", "#ff5a1f", "#ffd27a"], mesh: ["#b4141e", "#ff5a1f", "#ffb020", "#3a0a08"], hover: 'laser', hoverColor: '#20c8ff' },
+  lab_abyss: { name: "Analog Abyss \u00b7 analogous cool", about: "color lab: analogous cool", bg: '#04061a', surface: '#0a0f2e', text: '#eaf2ff', accent: '#38bdf8', accentText: '#021523', link: '#a5b4fc', border: '#1e2a5e', input: '#030414', wp: 'linear-gradient(#04061a,#04061a)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#a5b4fc", "#67e8f9"], mesh: ["#3730a3", "#1d4ed8", "#06b6d4", "#0b0b3a"], hover: 'laser', hoverColor: '#ffb020' },
+  lab_cobalt: { name: "Cobalt Mono \u00b7 monochromatic", about: "color lab: monochromatic", bg: '#030b1f', surface: '#081634', text: '#e8f0ff', accent: '#6ea8ff', accentText: '#041228', link: '#b9d3ff', border: '#18306a', input: '#020816', wp: 'linear-gradient(#030b1f,#030b1f)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#0a2a7a", "#1f5fff", "#7fb0ff", "#04102e"], hover: 'laser', hoverColor: '#ffa63d' },
+  lab_voltage: { name: "Complement Voltage \u00b7 complementary", about: "color lab: complementary", bg: '#050914', surface: '#0c1428', text: '#f2f6ff', accent: '#ff7a00', accentText: '#1f0d00', link: '#6ea2ff', border: '#1e2e5a', input: '#03060e', wp: 'linear-gradient(#050914,#050914)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh circuit', fxColor: '#2563ff', fxColors: ["#2563ff", "#ff7a00"], mesh: ["#2563ff", "#ff7a00", "#0a1a5a", "#ff3d00"], hover: 'laser', hoverColor: '#2f8bff' },
+  lab_acid: { name: "Acid Duotone \u00b7 complementary duotone", about: "color lab: complementary duotone", bg: '#0e0420', surface: '#190a33', text: '#f6f0ff', accent: '#c6ff00', accentText: '#162000', link: '#e0b8ff', border: '#3a1f66', input: '#0a0318', wp: 'linear-gradient(#0e0420,#0e0420)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#5b1fb8", "#c6ff00", "#2a0a5a", "#8a2be2"], hover: 'laser', hoverColor: '#b14dff' },
+  lab_pearl: { name: "Iridescent Pearl \u00b7 analogous pastel", about: "color lab: analogous pastel", bg: '#121218', surface: '#1c1c26', text: '#f8f6ff', accent: '#f0b8ff', accentText: '#25102e', link: '#a8f0e0', border: '#38384c', input: '#0e0e14', wp: 'linear-gradient(#121218,#121218)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#f0b8ff", "#a8f0e0"], mesh: ["#f0b8ff", "#a8d8ff", "#a8f0e0", "#ffe0c8"], hover: 'laser', hoverColor: '#ffe08a' },
+  lab_aurora: { name: "Borealis \u00b7 analogous green-teal-violet", about: "color lab: analogous green-teal-violet", bg: '#020d10', surface: '#081c22', text: '#e8fff8', accent: '#34f5a0', accentText: '#00200f', link: '#c4a6ff', border: '#164a44', input: '#010a0c', wp: 'linear-gradient(#020d10,#020d10)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#10b981", "#06b6d4", "#8b5cf6", "#022c22"], hover: 'laser', hoverColor: '#ff5fa8' },
+  lab_infrared: { name: "Infrared \u00b7 analogous red-magenta", about: "color lab: analogous red-magenta", bg: '#14030c', surface: '#230818', text: '#fff0f6', accent: '#ff4fa3', accentText: '#25000f', link: '#ffb27a', border: '#4a1430', input: '#0f0208', wp: 'linear-gradient(#14030c,#14030c)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#e11d48", "#db2777", "#f97316", "#3b0618"], hover: 'laser', hoverColor: '#2fffd0' },
+  lab_noir: { name: "Chromatic Noir \u00b7 neutral + single complementary pop", about: "color lab: neutral + single complementary pop", bg: '#08080a', surface: '#121216', text: '#f2f2f4', accent: '#00e5ff', accentText: '#001a1f', link: '#ff8a95', border: '#2c2c34', input: '#060608', wp: 'linear-gradient(#08080a,#08080a)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#1a1a22", "#ff3b4f", "#00e5ff", "#0d0d12"], hover: 'laser', hoverColor: '#ff3b4f' },
 };
-Object.assign(PRESETS, EXTRA);
+Object.assign(PRESETS, LAB);
 const FIELDS = [
   ['bg', 'Page background'], ['surface', 'Panels & cards'], ['text', 'Text'],
   ['accent', 'Buttons & highlights'], ['accentText', 'Button text'], ['link', 'Links'],
@@ -441,8 +419,8 @@ background-position:center,center !important;background-attachment:fixed,fixed !
 body,[data-wr-bg=page]{background-color:transparent !important}
 `;
     }
+    if (T.mesh) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
     if (animOn()) css += animCss();
-    if (T.art) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
   }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
@@ -570,37 +548,7 @@ function animCss() {
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 1px ${g},0 0 12px ${rgba(g, .7)} !important;outline:none !important}
 a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
-  if (T.fx || T.art) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
-  if (T.art) css += `
-@keyframes wrEye{0%,100%{opacity:1}50%{opacity:.45}}
-@keyframes wrPupil{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
-@keyframes wrDash{to{stroke-dashoffset:-60}}
-#${OUR}-art .wr-art-glow{animation:wrEye 3.2s ease-in-out infinite}
-#${OUR}-art .wr-art-pupil{animation:wrPupil 7s ease-in-out infinite}
-#${OUR}-art .wr-art-dash{animation:wrDash .9s linear infinite}
-@keyframes wrScFog{0%,100%{transform:translateX(-90px)}50%{transform:translateX(90px)}}
-@keyframes wrScShim{0%,100%{opacity:.08}50%{opacity:.45}}
-@keyframes wrScFlock{from{transform:translate(-700px,60px)}to{transform:translate(1500px,-80px)}}
-@keyframes wrScRays{0%,100%{opacity:.55}50%{opacity:1}}
-@keyframes wrScSwim{0%,100%{transform:translateX(0)}50%{transform:translateX(-120px)}}
-@keyframes wrScGlow{0%,100%{opacity:.55}45%{opacity:1}50%{opacity:.35}55%{opacity:.95}}
-@keyframes wrScFlick{0%,100%{opacity:0}48%{opacity:0}50%{opacity:.06}52%{opacity:0}80%{opacity:.03}}
-@keyframes wrScScratch{0%,100%{opacity:0;transform:translateX(0)}10%{opacity:.25}30%{opacity:0;transform:translateX(40px)}}
-@keyframes wrScShine{from{transform:translateX(0) skewX(-20deg)}to{transform:translateX(2600px) skewX(-20deg)}}
-@keyframes wrScTw{0%,100%{opacity:.2}50%{opacity:1}}
-@keyframes wrScComet{0%{opacity:0;transform:translate(0,0)}5%{opacity:.9}15%{opacity:0;transform:translate(-500px,150px)}100%{opacity:0;transform:translate(-500px,150px)}}
-#${OUR}-art .wr-sc-fog{animation:wrScFog 26s ease-in-out infinite}
-#${OUR}-art .wr-sc-shim{animation:wrScShim 3.5s ease-in-out infinite}
-#${OUR}-art .wr-sc-flock{animation:wrScFlock 60s linear infinite}
-#${OUR}-art .wr-sc-rays{animation:wrScRays 7s ease-in-out infinite}
-#${OUR}-art .wr-sc-swim{animation:wrScSwim 30s ease-in-out infinite}
-#${OUR}-art .wr-sc-eye{animation:wrEye 4s ease-in-out infinite}
-#${OUR}-art .wr-sc-glow{animation:wrScGlow 2.4s ease-in-out infinite}
-#${OUR}-art .wr-sc-flick{animation:wrScFlick 4s steps(1) infinite}
-#${OUR}-art .wr-sc-scratch{animation:wrScScratch 2.6s linear infinite}
-#${OUR}-art .wr-sc-shine2{animation:wrScShine 9s ease-in-out infinite}
-#${OUR}-art .wr-sc-twinkle{animation:wrScTw 2.2s ease-in-out infinite}
-#${OUR}-art .wr-sc-comet{animation:wrScComet 11s linear infinite}`;
+  if (T.fx) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
   // ---- background effects drawn with CSS (html::before) ----
   if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
@@ -865,581 +813,44 @@ function startFx() {
   window.addEventListener('resize', resize); resize(); fx.raf = requestAnimationFrame(frame);
 }
 
-// ---------- original illustration art (drawn in code, as inline SVG behind the page) ----------
-// Inline SVG is part of the page itself, so sites that block outside pictures still show it.
-function artRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a); }; }
-const f1 = n => Math.round(n * 10) / 10;
-function svgPath(d, fill, stroke, sw, extra) { return `<path d="${d}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" stroke-linejoin="round" stroke-linecap="round" ${extra || ''}/>`; }
-function svgCircle(x, y, r, fill, stroke, sw, extra) { return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" ${extra || ''}/>`; }
-
-// ---------- illustrated scenes (original, drawn in code; still layer + light moving layer) ----------
-// ---- shared helpers for illustrated scenes (all original, drawn in code) ----
-function sRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a); }; }
-const r1 = n => Math.round(n * 10) / 10;
-const SW = 1600, SH = 900;
-function sScene(defs, base, anim) { return { base: sSvg(defs, base), anim: anim ? sSvg(defs, anim) : '' }; }
-function sSvg(defs, body, par) { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="${par || 'xMidYMid slice'}" width="100%" height="100%"><defs>${defs}</defs>${body}</svg>`; }
-function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-// grain / paper texture overlay
-function sGrain(id, amt) { return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  ${amt} 0 0 0 ${-amt * .45}"/></filter>`; }
-// map a noise field onto a palette (camo, bark, concrete...)
-function sPaletteNoise(id, freq, oct, seed, cols) {
-  const ch = i => cols.map(c => r1(hexRgb(c)[i] / 255)).join(' ');
-  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="${oct}" seed="${seed}"/>
-<feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
-<feComponentTransfer><feFuncR type="discrete" tableValues="${ch(0)}"/><feFuncG type="discrete" tableValues="${ch(1)}"/><feFuncB type="discrete" tableValues="${ch(2)}"/></feComponentTransfer></filter>`;
-}
-// jagged ridge line (midpoint displacement) -> closed path down to the bottom
-function sRidge(R, y, rough, n) {
-  let pts = [[0, y], [SW, y]];
-  for (let k = 0, d = rough; k < (n || 7); k++, d *= .55) {
-    const np = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; np.push(a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + R(-d, d)]); }
-    np.push(pts[pts.length - 1]); pts = np;
+// ---------- Color Lab mesh: soft color fields drifting slowly ----------
+// Drawn on a tiny canvas (1/8 of the screen) that the browser stretches to full size:
+// the stretching gives the soft blended look and costs almost nothing.
+let meshFx = null;
+function stopMesh() { if (meshFx) { cancelAnimationFrame(meshFx.raf); window.removeEventListener('resize', meshFx.resize); meshFx.cv.remove(); meshFx = null; } }
+function startMesh() {
+  if (!T || !T.mesh || window.top !== window) { stopMesh(); return; }
+  const sig = JSON.stringify(T.mesh) + T.bg + animOn();
+  if (meshFx && meshFx.sig === sig) return;
+  stopMesh();
+  const cv = document.createElement('canvas'); cv.id = OUR + '-mesh';
+  cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none';
+  document.documentElement.insertBefore(cv, document.documentElement.firstChild);
+  const ctx = cv.getContext('2d'), m = T.mesh, bg = T.bg, moving = animOn();
+  const blobs = [[.2, .25, 0], [.78, .28, 1.7], [.34, .78, 3.1], [.82, .8, 4.4], [.55, .5, 2.2], [.1, .7, 5.3]].map(([x, y, ph], i) => ({ x, y, ph, c: m[i % m.length], ax: .12 + i * .015, ay: .1 + i * .012, sp: .00009 + i * .000013 }));
+  let W = 0, H = 0, last = 0;
+  function resize() { W = cv.width = Math.max(40, Math.ceil(innerWidth / 8)); H = cv.height = Math.max(24, Math.ceil(innerHeight / 8)); draw(performance.now()); }
+  function draw(t) {
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const R = Math.max(W, H) * .62;
+    blobs.forEach(bl => {
+      const x = (bl.x + Math.sin(t * bl.sp + bl.ph) * bl.ax) * W, y = (bl.y + Math.cos(t * bl.sp * 1.3 + bl.ph) * bl.ay) * H;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+      g.addColorStop(0, bl.c); g.addColorStop(.45, rgba(bl.c, .35)); g.addColorStop(1, rgba(bl.c, 0));
+      ctx.globalAlpha = .85; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    });
+    ctx.globalAlpha = .28; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);   // keep it deep enough for readable text
   }
-  return pts;
-}
-const sPolyPath = pts => 'M' + pts.map(p => r1(p[0]) + ' ' + r1(p[1])).join(' L') + ` L${SW} ${SH} L0 ${SH} Z`;
-// spruce silhouette
-function sSpruce(x, base, h, w, fill) {
-  let d = `M${r1(x)} ${r1(base - h)}`; const tiers = 7;
-  for (let i = 1; i <= tiers; i++) { const y = base - h + h * i / tiers, ww = w * (i / tiers) * (.55 + .45 * (i % 2)); d += ` L${r1(x + ww)} ${r1(y)} L${r1(x + ww * .35)} ${r1(y - h / tiers * .25)}`; }
-  d += ` L${r1(x + w * .08)} ${r1(base)} L${r1(x - w * .08)} ${r1(base)}`;
-  for (let i = tiers; i >= 1; i--) { const y = base - h + h * i / tiers, ww = w * (i / tiers) * (.55 + .45 * (i % 2)); d += ` L${r1(x - ww * .35)} ${r1(y - h / tiers * .25)} L${r1(x - ww)} ${r1(y)}`; }
-  return `<path d="${d} Z" fill="${fill}"/>`;
-}
-
-// Dawn Stand: layered ridges into fog, spruce lines, low sun, distant birds
-function sceneDawn() {
-  const R = sRng(21);
-  const layers = [['#3c4a63', 300], ['#2f3a50', 390], ['#242c3d', 480], ['#1a1f2b', 570], ['#10131a', 680]];
-  let defs = `<linearGradient id="dsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1526"/><stop offset=".45" stop-color="#3b3f5c"/><stop offset=".7" stop-color="#c46a3a"/><stop offset=".82" stop-color="#ffb066"/></linearGradient>
-<radialGradient id="dsSun" cx="1120" cy="430" r="420" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c8" stop-opacity=".95"/><stop offset=".08" stop-color="#ffd08a" stop-opacity=".8"/><stop offset=".35" stop-color="#ff8a3a" stop-opacity=".25"/><stop offset="1" stop-color="#ff8a3a" stop-opacity="0"/></radialGradient>
-<linearGradient id="dsFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9b0" stop-opacity="0"/><stop offset=".5" stop-color="#ffd9b0" stop-opacity=".22"/><stop offset="1" stop-color="#ffd9b0" stop-opacity="0"/></linearGradient>` + sGrain('dsG', .5);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#dsSky)"/><rect width="${SW}" height="${SH}" fill="url(#dsSun)"/><circle cx="1120" cy="430" r="34" fill="#fff4d6" opacity=".9"/>`;
-  for (let i = 0; i < 9; i++) { const x = R(300, 900), y = R(150, 300), s = R(5, 9); b += `<path d="M${r1(x - s)} ${r1(y)} q${r1(s / 2)} ${r1(-s / 2)} ${r1(s)} 0 q${r1(s / 2)} ${r1(-s / 2)} ${r1(s)} 0" stroke="#141820" stroke-width="1.6" fill="none" opacity=".7"/>`; }
-  layers.forEach(([col, y], li) => {
-    const pts = sRidge(R, y, 90 - li * 8, 7);
-    b += `<path d="${sPolyPath(pts)}" fill="${col}"/>`;
-    const step = 26 - li * 3;
-    for (let x = R(0, step); x < SW; x += step * R(.6, 1.6)) {
-      const i = Math.min(pts.length - 1, Math.round(x / SW * (pts.length - 1))), base = pts[i][1] + 4, h = R(30, 70) * (1 + li * .45);
-      if (R(0, 1) < .85) b += sSpruce(x, base, h, h * .26, col);
-    }
-    a += `<rect x="-200" y="${y - 40}" width="${SW + 400}" height="${120 + li * 10}" fill="url(#dsFog)" class="wr-sc-fog" style="animation-delay:${-li * 3}s"/>`;
-  });
-  b += sSpruce(90, 900, 620, 160, '#07090d') + sSpruce(1520, 900, 540, 140, '#07090d');
-  b += `<rect width="${SW}" height="${SH}" filter="url(#dsG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Timber Camo: vertical bark grain, deep shadows, layered realistic leaves and branches
-function sceneTimber() {
-  const R = sRng(8);
-  let defs = `<filter id="tcBark" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".09 .0035" numOctaves="4" seed="11"/><feColorMatrix values=".62 0 0 0 -.08  .5 0 0 0 -.07  .36 0 0 0 -.05  0 0 0 0 1"/></filter>`
-    + `<filter id="tcSh" color-interpolation-filters="sRGB"><feDropShadow dx="4" dy="7" stdDeviation="5" flood-color="#000" flood-opacity=".65"/></filter>
-<filter id="tcLeafTex" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 -.1" result="d"/><feComposite in="d" in2="SourceGraphic" operator="in" result="t"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="t"/></feMerge></filter>
-<radialGradient id="tcVig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient>` + sGrain('tcG', .5);
-  let b = `<rect width="${SW}" height="${SH}" filter="url(#tcBark)"/>`;
-  // big trunk shadows for depth
-  for (let i = 0; i < 6; i++) { const x = R(0, SW), w = R(60, 180); b += `<rect x="${r1(x)}" y="0" width="${r1(w)}" height="${SH}" fill="#000" opacity="${r1(R(.15, .35))}"/>`; }
-  const branch = (x, y, a, len, w, depth) => {
-    if (depth > 3 || len < 30) return '';
-    const bx = x + Math.cos(a) * len, by = y + Math.sin(a) * len, cx = (x + bx) / 2 + R(-25, 25), cy = (y + by) / 2 + R(-25, 25);
-    let o = `<path d="M${r1(x)} ${r1(y)} Q${r1(cx)} ${r1(cy)} ${r1(bx)} ${r1(by)}" stroke="#15110c" stroke-width="${r1(w)}" fill="none" stroke-linecap="round"/>`;
-    o += `<path d="M${r1(x)} ${r1(y)} Q${r1(cx)} ${r1(cy)} ${r1(bx)} ${r1(by)}" stroke="#4a3d2c" stroke-width="${r1(w * .3)}" fill="none" stroke-linecap="round" opacity=".5" transform="translate(-1 -1)"/>`;
-    for (let k = 0; k < 2; k++) o += branch(bx, by, a + R(-.8, .8), len * R(.5, .75), w * .6, depth + 1);
-    return o;
-  };
-  const leaf = (s) => {                                   // oak leaf with rounded lobes
-    let d = `M0 ${r1(-s)}`; const lobes = 4;
-    for (let k = 0; k < lobes; k++) { const y0 = -s + k * s * .45, y1 = y0 + s * .45; d += ` C${r1(s * .25)} ${r1(y0)} ${r1(s * .62)} ${r1(y0 + s * .12)} ${r1(s * .5)} ${r1(y0 + s * .28)} C${r1(s * .42)} ${r1(y0 + s * .38)} ${r1(s * .2)} ${r1(y1 - s * .05)} ${r1(s * .22)} ${r1(y1)}`; }
-    d += ` L${r1(s * .05)} ${r1(s * 1.0)} L${r1(-s * .05)} ${r1(s * 1.0)}`;
-    for (let k = lobes - 1; k >= 0; k--) { const y0 = -s + k * s * .45, y1 = y0 + s * .45; d += ` L${r1(-s * .22)} ${r1(y1)} C${r1(-s * .2)} ${r1(y1 - s * .05)} ${r1(-s * .42)} ${r1(y0 + s * .38)} ${r1(-s * .5)} ${r1(y0 + s * .28)} C${r1(-s * .62)} ${r1(y0 + s * .12)} ${r1(-s * .25)} ${r1(y0)} 0 ${r1(y0 + (k ? 0 : 0))}`; }
-    return d + ' Z';
-  };
-  const cols = ['#5a4a2a', '#6b5530', '#4a4a26', '#3a4220', '#7a5a30', '#544028', '#33381c'];
-  let g = '';
-  for (let i = 0; i < 9; i++) g += branch(R(-100, SW + 100), R(-100, SH + 100), R(0, 6.28), R(160, 320), R(10, 18), 0);
-  for (let layer = 0; layer < 2; layer++) {
-    for (let i = 0; i < 55; i++) {
-      const x = R(-40, SW + 40), y = R(-40, SH + 40), s = R(34, 70) * (layer ? 1.15 : .85), a = R(0, 360), c = cols[(R(0, cols.length)) | 0];
-      g += `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(a)})" filter="url(#tcSh)"><path d="${leaf(s)}" fill="${c}" opacity="${layer ? 1 : .85}"/>
-<path d="M0 ${r1(-s)} L0 ${r1(s)}" stroke="#1d170c" stroke-width="1.6" opacity=".7"/>${[-.5, -.05, .4].map(t => `<path d="M0 ${r1(s * t)} L${r1(s * .38)} ${r1(s * t - s * .18)} M0 ${r1(s * t)} L${r1(-s * .38)} ${r1(s * t - s * .18)}" stroke="#1d170c" stroke-width="1" opacity=".5"/>`).join('')}</g>`;
-    }
+  function frame(t) {
+    meshFx.raf = requestAnimationFrame(frame);
+    if (document.hidden || t - last < 50) return;         // ~20 fps is plenty for a slow drift
+    last = t; draw(t);
   }
-  b += `<g filter="url(#tcLeafTex)">${g}</g><rect width="${SW}" height="${SH}" fill="url(#tcVig)"/><rect width="${SW}" height="${SH}" filter="url(#tcG)"/>`;
-  return sScene(defs, b, '');
+  meshFx = { sig, cv, raf: 0, resize };
+  window.addEventListener('resize', resize); resize();
+  if (moving) meshFx.raf = requestAnimationFrame(frame);
 }
 
-// Marsh Dusk: sky into water reflection, distant treeline, flock in a V, reed silhouettes
-function sceneMarsh() {
-  const R = sRng(31);
-  let defs = `<linearGradient id="mdSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1530"/><stop offset=".35" stop-color="#4a2e4e"/><stop offset=".55" stop-color="#c0603a"/><stop offset=".62" stop-color="#f2a35a"/></linearGradient>
-<linearGradient id="mdWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e08a4a"/><stop offset=".3" stop-color="#6a3a40"/><stop offset="1" stop-color="#120e18"/></linearGradient>` + sGrain('mdG', .45);
-  let a = '';
-  let b = `<rect width="${SW}" height="560" fill="url(#mdSky)"/><rect y="556" width="${SW}" height="344" fill="url(#mdWater)"/>`;
-  b += `<ellipse cx="1000" cy="560" rx="70" ry="70" fill="#ffd08a" opacity=".85"/><rect x="0" y="556" width="${SW}" height="10" fill="#120e18" opacity=".6"/>`;
-  b += `<path d="${sPolyPath(sRidge(R, 548, 14, 7)).replace(` L${SW} ${SH} L0 ${SH} Z`, ` L${SW} 562 L0 562 Z`)}" fill="#120e18"/>`;
-  for (let i = 0; i < 60; i++) { const y = R(570, 880), x = R(0, SW), w = R(40, 260); a += `<rect class="wr-sc-shim" x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(R(1, 2.5))}" fill="#ffc890" opacity="${r1(R(.08, .3))}" style="animation-delay:${r1(R(-6, 0))}s"/>`; }
-  let flock = '';
-  for (let i = 0; i < 11; i++) { const side = i % 2 ? 1 : -1, k = Math.ceil(i / 2), x = 520 + k * 34, y = 230 + side * k * 22, s = 12 - k * .5; flock += `<path d="M${r1(x - s)} ${r1(y - s * .3)} Q${r1(x - s * .4)} ${r1(y - s * .9)} ${r1(x)} ${r1(y)} Q${r1(x + s * .4)} ${r1(y - s * .9)} ${r1(x + s)} ${r1(y - s * .3)}" stroke="#120e18" stroke-width="2.4" fill="none" stroke-linecap="round"/>`; }
-  a += `<g class="wr-sc-flock">${flock}</g>`;
-  let reeds = '';
-  for (let i = 0; i < 170; i++) {
-    const x = R(-20, SW + 20), base = SH + 10, h = R(160, 420) * (x < 420 || x > 1200 ? 1.2 : .7), lean = R(-60, 60);
-    reeds += `<path d="M${r1(x)} ${base} Q${r1(x + lean * .3)} ${r1(base - h * .5)} ${r1(x + lean)} ${r1(base - h)}" stroke="#0b0910" stroke-width="${r1(R(2, 4.5))}" fill="none" stroke-linecap="round"/>`;
-    if (R(0, 1) < .16) reeds += `<rect x="${r1(x + lean - 6)}" y="${r1(base - h + 14)}" width="12" height="${r1(R(40, 62))}" rx="6" fill="#1a110c"/>`;
-  }
-  a += `<g>${reeds}</g>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#mdG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Deep Water: light shafts, caustics, weeds, big walleye-style fish with glowing eyes
-function sceneDeep() {
-  const R = sRng(44);
-  let defs = `<linearGradient id="dwBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d6a78"/><stop offset=".35" stop-color="#0b3a46"/><stop offset="1" stop-color="#020b10"/></linearGradient>
-<linearGradient id="dwRay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8fbff" stop-opacity=".35"/><stop offset="1" stop-color="#d8fbff" stop-opacity="0"/></linearGradient>
-<linearGradient id="dwFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#000"/></linearGradient><mask id="dwM"><rect width="${SW}" height="${SH}" fill="url(#dwFade)"/></mask>
-<filter id="dwCaus" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".012 .02" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 .85  0 0 0 0 1  0 0 0 0 1  -6 0 0 0 1.4"/></filter>
-<linearGradient id="dwFish" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a14"/><stop offset=".6" stop-color="#2a3a22"/><stop offset="1" stop-color="#6a6a3a"/></linearGradient>` + sGrain('dwG', .4);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#dwBg)"/><rect width="${SW}" height="${SH}" filter="url(#dwCaus)" mask="url(#dwM)" opacity=".55"/>`;
-  let rays = ''; for (let i = 0; i < 9; i++) { const x = R(100, 1500), w = R(40, 140), sk = R(-200, 200); rays += `<path d="M${r1(x)} 0 L${r1(x + w)} 0 L${r1(x + w + sk + 120)} ${SH} L${r1(x + sk - 60)} ${SH} Z" fill="url(#dwRay)"/>`; }
-  a += `<g class="wr-sc-rays">${rays}</g>`;
-  const fish = (x, y, s, flip, op) => {
-    const body = `M${-s} 0 C${-s * .7} ${-s * .32} ${s * .45} ${-s * .34} ${s} ${-s * .05} C${s * 1.05} 0 ${s * 1.05} ${s * .05} ${s} ${s * .07} C${s * .45} ${s * .3} ${-s * .7} ${s * .26} ${-s} 0 Z`;
-    const tail = `M${-s * .92} 0 L${-s * 1.35} ${-s * .32} Q${-s * 1.2} 0 ${-s * 1.35} ${s * .32} Z`;
-    let dorsal = `M${-s * .35} ${-s * .26}`; for (let k = 0; k < 7; k++) dorsal += ` L${r1(-s * .3 + k * s * .1)} ${r1(-s * .46 + (k % 2) * s * .1)}`; dorsal += ` L${r1(s * .4)} ${r1(-s * .27)} Z`;
-    return `<g transform="translate(${x} ${y}) scale(${flip} 1)" opacity="${op}"><path d="${dorsal}" fill="#0d1a14"/><path d="${tail}" fill="#0d1a14"/><path d="${body}" fill="url(#dwFish)"/>
-<path d="M${-s * .6} ${-s * .05} Q0 ${-s * .12} ${s * .6} ${-s * .02}" stroke="#8a8a4a" stroke-width="1.2" fill="none" opacity=".5"/>
-<circle cx="${r1(s * .72)}" cy="${r1(-s * .06)}" r="${r1(s * .07)}" fill="#e8d27a" class="wr-sc-eye"/><circle cx="${r1(s * .73)}" cy="${r1(-s * .06)}" r="${r1(s * .03)}" fill="#1a1a0a"/></g>`;
-  };
-  a += `<g class="wr-sc-swim">${fish(1080, 360, 210, -1, .85)}${fish(480, 520, 140, 1, .6)}${fish(1350, 600, 90, -1, .45)}</g>`;
-  let weeds = ''; for (let i = 0; i < 60; i++) { const x = R(0, SW), h = R(120, 420), c = R(-60, 60); weeds += `<path d="M${r1(x)} ${SH} C${r1(x + c)} ${r1(SH - h * .4)} ${r1(x - c)} ${r1(SH - h * .7)} ${r1(x + c * .5)} ${r1(SH - h)}" stroke="#041810" stroke-width="${r1(R(4, 10))}" fill="none" stroke-linecap="round"/>`; }
-  a += `<g>${weeds}</g>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#dwG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Lakeside Night: moon through layered dead forest, ground mist, lake reflection, blade gashes
-function sceneLakeside() {
-  const R = sRng(66);
-  let defs = `<radialGradient id="lnMoon" cx="800" cy="250" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e6f4ff" stop-opacity=".95"/><stop offset=".06" stop-color="#cfe6f2" stop-opacity=".85"/><stop offset=".25" stop-color="#5f8f9e" stop-opacity=".45"/><stop offset="1" stop-color="#0b1a20" stop-opacity="0"/></radialGradient>
-<linearGradient id="lnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03080a"/><stop offset=".55" stop-color="#0d2329"/><stop offset=".78" stop-color="#183a40"/><stop offset="1" stop-color="#020506"/></linearGradient>
-<linearGradient id="lnMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fc4cc" stop-opacity="0"/><stop offset=".6" stop-color="#9fc4cc" stop-opacity=".35"/><stop offset="1" stop-color="#9fc4cc" stop-opacity="0"/></linearGradient>
-<linearGradient id="lnGash" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a0000"/><stop offset=".5" stop-color="#7a0000"/><stop offset=".56" stop-color="#c01818"/><stop offset="1" stop-color="#2a0000"/></linearGradient>
-<filter id="lnBlur"><feGaussianBlur stdDeviation="3"/></filter><filter id="lnBlur2"><feGaussianBlur stdDeviation="1.2"/></filter>` + sGrain('lnG', .55);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#lnSky)"/><rect width="${SW}" height="${SH}" fill="url(#lnMoon)"/><circle cx="800" cy="250" r="62" fill="#eef8ff" opacity=".92"/>`;
-  const trunk = (x, w, top, col, blur) => {                     // tall bare tree with crooked branches
-    let o = `<path d="M${r1(x - w / 2)} ${SH} L${r1(x - w * .3)} ${r1(top)} L${r1(x + w * .3)} ${r1(top)} L${r1(x + w / 2)} ${SH} Z" fill="${col}"/>`;
-    for (let k = 0; k < 6; k++) {
-      const y = top + R(20, 420), dir = R(0, 1) < .5 ? -1 : 1, l = R(40, 160), ex = x + dir * l, ey = y - R(20, 120);
-      o += `<path d="M${r1(x)} ${r1(y)} Q${r1(x + dir * l * .4)} ${r1(y - 10)} ${r1(ex)} ${r1(ey)} M${r1(x + dir * l * .6)} ${r1(y - 18)} L${r1(x + dir * l * .8)} ${r1(y - R(50, 90))}" stroke="${col}" stroke-width="${r1(Math.max(1.5, w * .14))}" fill="none" stroke-linecap="round"/>`;
-    }
-    return blur ? `<g filter="url(#${blur})">${o}</g>` : o;
-  };
-  [['#2d5258', 9, 'lnBlur', 26], ['#1a353a', 15, 'lnBlur2', 16], ['#0a171a', 24, '', 11], ['#020405', 46, '', 6]].forEach(([col, w, bl, n], li) => {
-    let o = ''; for (let i = 0; i < n; i++) { const x = R(-40, SW + 40); if (li === 3 && x > 520 && x < 1080) continue; o += trunk(x, w * R(.7, 1.4), R(-80, 120), col, ''); }
-    b += bl ? `<g filter="url(#${bl})">${o}</g>` : o;
-    a += `<rect x="-200" y="${560 + li * 40}" width="${SW + 400}" height="200" fill="url(#lnMist)" class="wr-sc-fog" style="animation-delay:${-li * 4}s"/>`;
-  });
-  b += `<rect x="0" y="760" width="${SW}" height="140" fill="#04090b"/><rect x="0" y="760" width="${SW}" height="140" fill="url(#lnMoon)" opacity=".35"/>`;
-  for (let i = 0; i < 40; i++) { const y = R(770, 890), w = R(20, 140) * (1 - (y - 770) / 200); a += `<rect class="wr-sc-shim" x="${r1(800 - w / 2 + R(-30, 30))}" y="${r1(y)}" width="${r1(w)}" height="1.5" fill="#dff2ff" opacity="${r1(R(.15, .5))}" style="animation-delay:${r1(R(-5, 0))}s"/>`; }
-  [[0, 0], [38, 10], [76, 22]].forEach(([dx, dy]) => {          // three blade gashes, upper right
-    const x = 1150 + dx, y = 420 + dy;
-    b += `<path d="M${x} ${y} Q${x + 120} ${y - 150} ${x + 260} ${y - 330} Q${x + 132} ${y - 140} ${x + 6} ${y + 4} Z" fill="url(#lnGash)" opacity=".92"/><path d="M${x + 8} ${y - 6} Q${x + 125} ${y - 150} ${x + 252} ${y - 322}" stroke="#ff4040" stroke-width="1" opacity=".5" fill="none"/>`;
-  });
-  b += `<rect width="${SW}" height="${SH}" filter="url(#lnG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Laboratory: painted teal-green dark lab, twin coil towers, glow halos (arcs are animated on canvas)
-function sceneLab() {
-  const R = sRng(77);
-  let defs = `<filter id="lbPaint" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="2"/><feColorMatrix values=".05 0 0 0 .01  .32 0 0 0 .03  .3 0 0 0 .03  0 0 0 0 1"/></filter>
-<radialGradient id="lbHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8ffff" stop-opacity=".9"/><stop offset=".25" stop-color="#6ff0d8" stop-opacity=".45"/><stop offset="1" stop-color="#6ff0d8" stop-opacity="0"/></radialGradient>
-<radialGradient id="lbVig" cx=".5" cy=".45" r=".75"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient>
-<linearGradient id="lbMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#061210"/><stop offset=".45" stop-color="#3f6e62"/><stop offset=".55" stop-color="#9fd8c4"/><stop offset=".7" stop-color="#2a4a42"/><stop offset="1" stop-color="#050c0a"/></linearGradient>` + sGrain('lbG', .55);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" filter="url(#lbPaint)"/>`;
-  const tower = (x) => {
-    let o = `<rect x="${x - 14}" y="300" width="28" height="600" fill="url(#lbMetal)"/>`;
-    for (let i = 0; i < 9; i++) { const y = 330 + i * 46, w = 120 - i * 6; o += `<ellipse cx="${x}" cy="${y}" rx="${w / 2}" ry="12" fill="url(#lbMetal)" stroke="#020605" stroke-width="2"/>`; }
-    o += `<ellipse cx="${x}" cy="250" rx="70" ry="60" fill="url(#lbMetal)" stroke="#020605" stroke-width="3"/>`; a += `<circle cx="${x}" cy="250" r="190" fill="url(#lbHalo)" class="wr-sc-glow"/>`;
-    o += `<rect x="${x - 90}" y="820" width="180" height="80" fill="#030807" stroke="#2a4a42" stroke-width="2"/>`;
-    return o;
-  };
-  b += tower(260) + tower(1340);
-  for (let i = 0; i < 5; i++) {                                 // hanging cables
-    const x1 = R(300, 700), x2 = R(900, 1300), y = R(80, 200);
-    b += `<path d="M${r1(x1)} -10 Q${r1((x1 + x2) / 2)} ${r1(y + 260)} ${r1(x2)} -10" stroke="#020605" stroke-width="${r1(R(3, 7))}" fill="none"/>`;
-  }
-  b += `<rect y="860" width="${SW}" height="40" fill="#020605"/><rect width="${SW}" height="${SH}" fill="url(#lbVig)"/><rect width="${SW}" height="${SH}" filter="url(#lbG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Monochrome Terror: 1930s film still, gothic window light cast across stone, chiaroscuro
-function sceneMono() {
-  const R = sRng(88);
-  let defs = `<filter id="mtStone" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".02 .05" numOctaves="4" seed="6"/><feColorMatrix values=".35 0 0 0 0  .35 0 0 0 0  .35 0 0 0 0  0 0 0 0 1"/></filter>
-<linearGradient id="mtBeam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<radialGradient id="mtVig" cx=".42" cy=".45" r=".7"><stop offset=".25" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".95"/></radialGradient>
-<filter id="mtSoft"><feGaussianBlur stdDeviation="6"/></filter>` + sGrain('mtG', .7);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" filter="url(#mtStone)"/>`;
-  for (let r = 0; r < 12; r++) for (let c = 0; c < 9; c++) { const w = 190, h = 80, x = c * w + (r % 2) * 95 - 95, y = r * h; b += `<rect x="${x}" y="${y}" width="${w - 4}" height="${h - 4}" fill="none" stroke="#000" stroke-width="3" opacity=".55"/>`; }
-  // gothic window high left, its light cast diagonally across the wall
-  b += `<path d="M180 120 L180 380 L380 380 L380 120 Q280 -10 180 120 Z" fill="#f4f4f4"/><path d="M280 40 L280 380 M180 250 L380 250" stroke="#0a0a0a" stroke-width="12"/><path d="M180 120 Q280 -10 380 120" stroke="#0a0a0a" stroke-width="10" fill="none"/>`;
-  b += `<g filter="url(#mtSoft)"><path d="M180 120 L380 120 L1500 700 L860 900 Z" fill="url(#mtBeam)" opacity=".55"/>
-<path d="M900 560 L1180 560 L1290 860 L950 860 Q900 700 900 560 Z" fill="#fff" opacity=".22"/><path d="M1040 560 L1110 860 M915 700 L1240 700" stroke="#000" stroke-width="16" opacity=".5"/></g>`;
-  b += `<rect width="${SW}" height="${SH}" fill="url(#mtVig)"/>`;
-  for (let i = 0; i < 7; i++) { const x = R(0, SW); a += `<rect class="wr-sc-scratch" x="${r1(x)}" y="0" width="1.2" height="${SH}" fill="#fff" opacity="${r1(R(.08, .25))}" style="animation-delay:${r1(R(-3, 0))}s"/>`; }
-  b += `<rect width="${SW}" height="${SH}" filter="url(#mtG)"/>`;
-  a += `<rect class="wr-sc-flick" width="${SW}" height="${SH}" fill="#fff" opacity="0"/>`;
-  return sScene(defs, b, a);
-}
-
-// metal flake: fine noise lit by a point light = glitter in the paint
-function sFlake(id, col, seed) {
-  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="${seed}" result="n"/>
-<feSpecularLighting in="n" surfaceScale="3" specularConstant="1.1" specularExponent="22" lighting-color="${col}" result="s"><fePointLight x="1000" y="-300" z="600"/></feSpecularLighting>
-<feComposite in="s" in2="SourceGraphic" operator="in"/></filter>`;
-}
-// candy body: deep color with a curved light reflection band (like a car panel)
-function sCandy(id, dark, mid, light) {
-  return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".38" stop-color="${mid}"/><stop offset=".47" stop-color="${light}"/><stop offset=".53" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></linearGradient>`;
-}
-// lace: noise thresholded into thin white web lines
-function sLace(id, seed, freq) {
-  return `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency="${freq}" numOctaves="2" seed="${seed}"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -14 0 0 0 1.6"/></filter>`;
-}
-// mirrored pinstripe scroll design around a vertical axis
-function sPinstripe(R, cx, cy, s, col) {
-  let o = '';
-  const sym = d => `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" transform="translate(${cx * 2} 0) scale(-1 1)"/>`;
-  for (let k = 0; k < 7; k++) {
-    const y0 = cy - s + k * s * .3, sp = R(.5, 1.2) * s;
-    o += sym(`M${cx} ${r1(y0)} C${r1(cx + sp * .6)} ${r1(y0 - s * .25)} ${r1(cx + sp)} ${r1(y0 + s * .2)} ${r1(cx + sp * .45)} ${r1(y0 + s * .35)} C${r1(cx + sp * .2)} ${r1(y0 + s * .42)} ${r1(cx + sp * .3)} ${r1(y0 + s * .15)} ${r1(cx + sp * .5)} ${r1(y0 + s * .2)}`);
-    o += sym(`M${cx} ${r1(y0 + s * .1)} Q${r1(cx + sp * 1.4)} ${r1(y0 + s * .05)} ${r1(cx + sp * 1.9)} ${r1(y0 + s * .55)}`);
-  }
-  o += `<path d="M${cx} ${r1(cy - s * 1.2)} L${r1(cx + s * .12)} ${cy} L${cx} ${r1(cy + s * 1.2)} L${r1(cx - s * .12)} ${cy} Z" fill="none" stroke="${col}" stroke-width="2.2"/>`;
-  return o;
-}
-
-// Candy Teal: teal candy body, white lace fade, gold-leaf panels with orange flake and maze lines
-function sceneLrTeal() {
-  const R = sRng(101);
-  let defs = sCandy('ltBody', '#04302f', '#0e8a86', '#7ff2ea') + sFlake('ltFl', '#e6fffd', 3) + sLace('ltLace', 5, '.015 .03') + sFlake('ltFl2', '#ffe0a0', 9)
-    + `<linearGradient id="ltGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a5a1a"/><stop offset=".45" stop-color="#ffe09a"/><stop offset=".55" stop-color="#c89a3a"/><stop offset="1" stop-color="#6a4a12"/></linearGradient>
-<linearGradient id="ltOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".5" stop-color="#e06a10"/><stop offset="1" stop-color="#8a3a06"/></linearGradient>
-<linearGradient id="ltLaceFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#000"/></linearGradient><mask id="ltLM"><rect width="${SW}" height="${SH}" fill="url(#ltLaceFade)"/></mask>
-<filter id="ltSh"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity=".55"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#ltBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#ltFl)" opacity=".55"/>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#ltLace)" mask="url(#ltLM)" opacity=".7"/>`;
-  const panel = (x, y, w, h, sk) => {
-    const d = `M${x + sk} ${y} L${x + w + sk} ${y} L${x + w} ${y + h} L${x} ${y + h} Z`;
-    let maze = ''; for (let i = 0; i < 14; i++) { let px = x + R(20, w - 40), py = y + R(15, h - 25); let m = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 6; k++) { if (k % 2) px += R(-40, 40); else py += R(-25, 25); m += ` L${r1(Math.min(x + w - 15, Math.max(x + 15, px)))} ${r1(Math.min(y + h - 10, Math.max(y + 10, py)))}`; } maze += `<path d="${m}" stroke="#ffe7b0" stroke-width="1.6" fill="none" stroke-linejoin="round" opacity=".8"/>`; }
-    return `<g filter="url(#ltSh)"><path d="${d}" fill="url(#ltOrange)"/><path d="${d}" fill="#fff" filter="url(#ltFl2)" opacity=".6"/>${maze}<path d="${d}" fill="none" stroke="url(#ltGold)" stroke-width="12"/><path d="${d}" fill="none" stroke="#2a1a04" stroke-width="2" transform="translate(0 0)"/></g>`;
-  };
-  b += panel(880, 120, 300, 180, 40) + panel(1220, 120, 300, 180, 40) + panel(860, 330, 300, 180, 40) + panel(1200, 330, 300, 180, 40);
-  b += `<path d="M0 640 C500 600 1000 700 1600 610" stroke="url(#ltGold)" stroke-width="16" fill="none"/><path d="M0 668 C500 628 1000 728 1600 638" stroke="#ffffff" stroke-width="3" fill="none" opacity=".85"/>`;
-  b += `<path d="M0 0 L1600 0 L1600 50 Q800 120 0 50 Z" fill="#fff" opacity=".07" class="wr-sc-shine"/>`;
-  return sSvg(defs, b);
-}
-
-// Candy Blue & Pink: blue flake with long tapered pattern bars in pink, magenta, purple
-function sceneLrBluePink() {
-  const R = sRng(202);
-  let defs = sCandy('lbBody', '#05103a', '#1a4fc8', '#7fb8ff') + sFlake('lbFl', '#bfe4ff', 7)
-    + `<filter id="lbSh"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity=".5"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#lbBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lbFl)" opacity=".7"/>`;
-  const cols = ['#ff3fa4', '#c2187a', '#6a1fb0', '#ff7ac8'];
-  let g = '';
-  for (let i = 0; i < 26; i++) {
-    const y = 60 + i * 32 + R(-6, 6), x = R(-200, 900), l = R(380, 1100), h = R(10, 22), c = cols[i % cols.length], t = R(30, 70);
-    g += `<path d="M${r1(x)} ${r1(y + h)} L${r1(x + t)} ${r1(y)} L${r1(x + l)} ${r1(y)} L${r1(x + l + t * .6)} ${r1(y + h * .5)} L${r1(x + l)} ${r1(y + h)} Z" fill="${c}" stroke="#9fd8ff" stroke-width="1.5"/>`;
-    if (R(0, 1) < .4) { const cx = x + R(100, l - 100); g += `<path d="M${r1(cx)} ${r1(y)} L${r1(cx + 24)} ${r1(y - 26)} L${r1(cx + 90)} ${r1(y - 26)} L${r1(cx + 66)} ${r1(y)} Z" fill="${cols[(i + 2) % 4]}" stroke="#9fd8ff" stroke-width="1.5"/>`; }
-  }
-  b += `<g filter="url(#lbSh)">${g}</g>`;
-  return sSvg(defs, b);
-}
-
-// Rainbow Flake: purple to blue to teal to gold fade, scalloped gold-leaf edges, patterned panel
-function sceneLrRainbow() {
-  const R = sRng(303);
-  let defs = `<linearGradient id="lrBody" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#3a0f7a"/><stop offset=".28" stop-color="#1f4fd0"/><stop offset=".45" stop-color="#12b8c4"/><stop offset=".55" stop-color="#ffd24a"/><stop offset=".7" stop-color="#e0761a"/><stop offset="1" stop-color="#4a0c6e"/></linearGradient>` + sFlake('lrFl', '#ffffff', 11)
-    + `<pattern id="lrPat" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M0 17 Q8.5 0 17 17 T34 17" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".55"/><circle cx="17" cy="17" r="2" fill="#ffe7a0" opacity=".7"/></pattern>
-<linearGradient id="lrGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#c8902a"/><stop offset="1" stop-color="#ffe09a"/></linearGradient>
-<filter id="lrSh"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".6"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#lrBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lrFl)" opacity=".6"/>`;
-  let sc = `M0 300`; for (let x = 0; x <= SW; x += 100) sc += ` Q${x + 50} ${R(360, 420)} ${x + 100} 300`;
-  b += `<g filter="url(#lrSh)"><path d="${sc} L${SW} 0 L0 0 Z" fill="#2a0a5a" opacity=".55"/><path d="${sc}" fill="none" stroke="url(#lrGold)" stroke-width="10"/></g>`;
-  const pnl = `M820 470 Q1180 410 1540 470 L1500 800 Q1180 760 860 800 Z`;
-  b += `<g filter="url(#lrSh)"><path d="${pnl}" fill="#6a1fb0"/><path d="${pnl}" fill="url(#lrPat)"/><path d="${pnl}" fill="none" stroke="#12d8e0" stroke-width="6"/><path d="${pnl}" fill="none" stroke="url(#lrGold)" stroke-width="3" transform="translate(0 -9)"/></g>`;
-  for (let i = 0; i < 5; i++) { const y = 520 + i * 50; b += `<path d="M60 ${y} C300 ${y - 60} 520 ${y + 40} 760 ${y - 20}" stroke="#ffe7a0" stroke-width="2" fill="none" opacity=".75"/>`; }
-  return sSvg(defs, b);
-}
-
-// Candy Orange Pinstripe: deep candy orange, symmetric white pinstripe scrolls (top and bottom)
-function sceneLrOrange() {
-  const R = sRng(404);
-  let defs = `<radialGradient id="loBody" cx=".5" cy=".5" r=".75"><stop offset="0" stop-color="#ff8a3a"/><stop offset=".45" stop-color="#d0480e"/><stop offset=".8" stop-color="#7a1a04"/><stop offset="1" stop-color="#3a0a02"/></radialGradient>` + sFlake('loFl', '#ffd8b0', 13)
-    + `<filter id="loSh"><feDropShadow dx="1" dy="2" stdDeviation="1.2" flood-opacity=".7"/></filter><filter id="loDeep" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .02" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .08  0 0 0 0 .02  0 0 0 .6 -.15"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#loBody)"/><rect width="${SW}" height="${SH}" filter="url(#loDeep)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#loFl)" opacity=".55"/>`;
-  b += `<g filter="url(#loSh)">${sPinstripe(R, 800, 210, 150, '#fff6ee')}${sPinstripe(R, 800, 690, 150, '#fff6ee')}`;
-  b += `<path d="M120 60 L120 840 M1480 60 L1480 840 M140 70 Q800 20 1460 70 M140 830 Q800 880 1460 830" stroke="#fff6ee" stroke-width="2" fill="none"/></g>`;
-  return sSvg(defs, b);
-}
-
-// teardrop / flame shape: round head at (x,y), sweeping tail to a sharp tip
-function sTear(x, y, len, w, ang, bend) {
-  const ca = Math.cos(ang), sa = Math.sin(ang), P = (u, v) => [x + ca * u - sa * v, y + sa * u + ca * v];
-  const tip = P(len, bend * len), a1 = P(len * .35, -w * .9 + bend * len * .3), a2 = P(len * .8, -w * .2 + bend * len * .8), b1 = P(len * .8, w * .2 + bend * len * .8), b2 = P(len * .35, w * .9 + bend * len * .3);
-  const h1 = P(-w * .9, -w), h2 = P(-w * .9, w);
-  const f = p => r1(p[0]) + ' ' + r1(p[1]);
-  return `M${f(P(0, -w))} C${f(a1)} ${f(a2)} ${f(tip)} C${f(b1)} ${f(b2)} ${f(P(0, w))} C${f(h2)} ${f(h1)} ${f(P(0, -w))} Z`;
-}
-// a bundle of teardrops sweeping from one point, filled + double pinstripe outline
-function sTearBundle(R, x, y, n, len, w, ang, spread, fill, line1, line2) {
-  let o = '';
-  for (let i = 0; i < n; i++) {
-    const a = ang + (i - (n - 1) / 2) * spread, l = len * R(.75, 1.1), ww = w * R(.7, 1), bend = R(-.12, .12);
-    const d = sTear(x + Math.cos(a) * i * 6, y + Math.sin(a) * i * 6, l, ww, a, bend);
-    o += `<path d="${d}" fill="none" stroke="${line2}" stroke-width="7" stroke-linejoin="round" opacity=".9"/><path d="${d}" fill="${fill}" stroke="${line1}" stroke-width="2.5" stroke-linejoin="round"/>`;
-  }
-  return o;
-}
-
-function sceneLrTeal() {
-  const R = sRng(101);
-  let defs = sCandy('ltBody', '#04302f', '#0e8a86', '#7ff2ea') + sFlake('ltFl', '#e6fffd', 3) + sFlake('ltFl2', '#ffe0a0', 9)
-    + `<pattern id="ltLaceP" width="46" height="46" patternUnits="userSpaceOnUse"><g fill="none" stroke="#fff" stroke-width="1.3"><circle cx="23" cy="23" r="9"/><circle cx="23" cy="23" r="3"/>${[0, 60, 120, 180, 240, 300].map(a => `<circle cx="${r1(23 + Math.cos(a / 57.3) * 15)}" cy="${r1(23 + Math.sin(a / 57.3) * 15)}" r="6.5"/>`).join('')}<circle cx="0" cy="0" r="4"/><circle cx="46" cy="0" r="4"/><circle cx="0" cy="46" r="4"/><circle cx="46" cy="46" r="4"/></g></pattern>
-<linearGradient id="ltLaceFade" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="ltLM"><rect width="${SW}" height="${SH}" fill="url(#ltLaceFade)"/></mask>
-<linearGradient id="ltGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a5a1a"/><stop offset=".45" stop-color="#ffe09a"/><stop offset=".55" stop-color="#c89a3a"/><stop offset="1" stop-color="#6a4a12"/></linearGradient>
-<linearGradient id="ltOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".5" stop-color="#e06a10"/><stop offset="1" stop-color="#8a3a06"/></linearGradient>
-<linearGradient id="ltTear" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#bff7f2"/><stop offset="1" stop-color="#2fd6d0"/></linearGradient>
-<filter id="ltSh"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-opacity=".55"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#ltBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#ltFl)" opacity=".55"/>`;
-  b += `<rect width="${SW}" height="${SH}" fill="url(#ltLaceP)" mask="url(#ltLM)"/>`;
-  const panel = (x, y, w, h, sk) => {
-    const d = `M${x + sk} ${y} L${x + w + sk} ${y} L${x + w} ${y + h} L${x} ${y + h} Z`;
-    let maze = ''; for (let i = 0; i < 26; i++) { let px = x + R(20, w - 30), py = y + R(15, h - 20); let m = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 8; k++) { if (k % 2) px += R(-46, 46); else py += R(-28, 28); px = Math.min(x + w - 14, Math.max(x + 14 + sk * (1 - (py - y) / h), px)); py = Math.min(y + h - 10, Math.max(y + 10, py)); m += ` L${r1(px)} ${r1(py)}`; } maze += `<path d="${m}" stroke="#ffe7b0" stroke-width="1.7" fill="none" stroke-linejoin="round" opacity=".85"/>`; }
-    return `<g filter="url(#ltSh)"><path d="${d}" fill="url(#ltOrange)"/><path d="${d}" fill="#fff" filter="url(#ltFl2)" opacity=".6"/>${maze}<path d="${d}" fill="none" stroke="url(#ltGold)" stroke-width="12"/><path d="${d}" fill="none" stroke="#2a1a04" stroke-width="2"/></g>`;
-  };
-  b += panel(900, 110, 290, 170, 40) + panel(1230, 110, 290, 170, 40) + panel(880, 315, 290, 170, 40) + panel(1210, 315, 290, 170, 40);
-  b += `<g filter="url(#ltSh)">${sTearBundle(R, 90, 700, 6, 640, 40, -.08, .09, 'url(#ltTear)', '#0a3a38', '#d8b25a')}</g>`;
-  b += `<path d="M0 560 C500 520 1000 620 1600 530" stroke="url(#ltGold)" stroke-width="14" fill="none"/><path d="M0 586 C500 546 1000 646 1600 556" stroke="#ffffff" stroke-width="3" fill="none" opacity=".85"/>`;
-  return sScene(defs, b, '');
-}
-
-function sceneLrBluePink() {
-  const R = sRng(202);
-  let defs = sCandy('lbBody', '#05103a', '#1a4fc8', '#7fb8ff') + sFlake('lbFl', '#bfe4ff', 7)
-    + `<linearGradient id="lbPink" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7ac8"/><stop offset=".5" stop-color="#ff2f9a"/><stop offset="1" stop-color="#7a0a52"/></linearGradient>
-<linearGradient id="lbPurp" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b48cff"/><stop offset=".6" stop-color="#5a1fb0"/><stop offset="1" stop-color="#22085a"/></linearGradient>
-<filter id="lbSh"><feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-opacity=".55"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#lbBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lbFl)" opacity=".7"/>`;
-  let g = '';
-  [[60, 220, 0, 'url(#lbPurp)'], [120, 330, .04, 'url(#lbPink)'], [40, 520, -.05, 'url(#lbPurp)'], [100, 640, .02, 'url(#lbPink)'], [820, 150, .06, 'url(#lbPink)'], [760, 760, -.06, 'url(#lbPurp)']].forEach(([x, y, a, f]) => {
-    g += sTearBundle(R, x, y, 4, R(700, 900), R(22, 32), a, .05, f, '#a8dcff', '#0a1a4a');
-  });
-  b += `<g filter="url(#lbSh)">${g}</g>`;
-  b += `<path d="M0 452 L${SW} 430" stroke="#ff2f9a" stroke-width="5"/><path d="M0 462 L${SW} 440" stroke="#a8dcff" stroke-width="1.5"/>`;
-  return sScene(defs, b, '');
-}
-
-function sceneLrRainbow() {
-  const R = sRng(303);
-  let defs = `<linearGradient id="lrBody" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#2a0a6a"/><stop offset=".3" stop-color="#1f4fd0"/><stop offset=".46" stop-color="#12b8c4"/><stop offset=".54" stop-color="#ffd24a"/><stop offset=".68" stop-color="#e0761a"/><stop offset="1" stop-color="#3a0a5e"/></linearGradient>` + sFlake('lrFl', '#ffffff', 11)
-    + `<linearGradient id="lrFlame" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8fdff"/><stop offset=".35" stop-color="#5fe6ff"/><stop offset=".8" stop-color="#1f4fd0"/><stop offset="1" stop-color="#2a0a6a"/></linearGradient>
-<linearGradient id="lrGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#c8902a"/><stop offset="1" stop-color="#ffe09a"/></linearGradient>
-<filter id="lrSh"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".6"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#lrBody)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#lrFl)" opacity=".65"/>`;
-  b += `<g filter="url(#lrSh)">${sTearBundle(R, -40, 760, 7, 900, 44, -.02, .06, 'url(#lrFlame)', '#ffe7a0', '#2a0a6a')}${sTearBundle(R, -60, 200, 5, 760, 34, .03, .05, 'url(#lrFlame)', '#ffe7a0', '#2a0a6a')}</g>`;
-  b += `<path d="M0 470 C400 430 1100 520 1600 450" stroke="url(#lrGold)" stroke-width="18" fill="none" filter="url(#lrSh)"/><path d="M0 470 C400 430 1100 520 1600 450" stroke="#2a0a6a" stroke-width="2" fill="none"/>`;
-  return sScene(defs, b, '');
-}
-
-function sceneLrOrange() {
-  const R = sRng(404);
-  let defs = `<radialGradient id="loBody" cx=".5" cy=".5" r=".75"><stop offset="0" stop-color="#ff8a3a"/><stop offset=".45" stop-color="#d0480e"/><stop offset=".8" stop-color="#7a1a04"/><stop offset="1" stop-color="#3a0a02"/></radialGradient>` + sFlake('loFl', '#ffd8b0', 13)
-    + `<filter id="loSh"><feDropShadow dx="2" dy="3" stdDeviation="1.5" flood-opacity=".75"/></filter><filter id="loDeep" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".004 .02" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .08  0 0 0 0 .02  0 0 0 .6 -.15"/></filter>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#loBody)"/><rect width="${SW}" height="${SH}" filter="url(#loDeep)"/><rect width="${SW}" height="${SH}" fill="#fff" filter="url(#loFl)" opacity=".55"/>`;
-  // symmetric pinstripe: outline-only teardrops mirrored around the center line
-  let half = '';
-  const line = d => `<path d="${d}" fill="none" stroke="#fff6ee" stroke-width="2.6" stroke-linejoin="round"/>`;
-  [[800, 140, 330, 34, .5, .18], [800, 200, 420, 24, .32, -.1], [800, 300, 300, 30, .62, .22], [800, 600, 330, 34, -.5, -.18], [800, 540, 420, 24, -.32, .1], [800, 440, 300, 30, -.62, -.22], [800, 370, 520, 16, 0, .04]].forEach(([x, y, l, w, a, bend]) => {
-    half += line(sTear(x + 30, y, l, w, a, bend)) + line(sTear(x + 30, y, l * .82, w * .55, a, bend));
-  });
-  half += line(`M800 60 C860 160 900 280 860 370 C900 460 860 580 800 680`) + line(`M830 370 m-26 0 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0`);
-  b += `<g filter="url(#loSh)">${half}<g transform="translate(1600 0) scale(-1 1)">${half}</g>`;
-  b += `<path d="M800 30 L828 370 L800 740 L772 370 Z" fill="none" stroke="#fff6ee" stroke-width="2.6"/></g>`;
-  b += `<g filter="url(#loSh)">${line('M40 860 C500 800 1100 800 1560 860')}${line('M40 40 C500 100 1100 100 1560 40')}</g>`;
-  return sScene(defs, b, '');
-}
-
-// Hanami: woodblock-print look - paper, big vermilion sun, misty mountain layers, cherry branch, wave pattern
-function sceneHanami() {
-  const R = sRng(505);
-  let defs = sGrain('hnG', .6) + `<filter id="hnPaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".02 .5" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 .07  0 0 0 0 .07  0 0 0 0 .14  0 0 0 .35 -.05"/></filter>
-<linearGradient id="hnSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset=".6" stop-color="#3b4a6e"/><stop offset="1" stop-color="#e8d9c0"/></linearGradient>
-<pattern id="hnWave" width="80" height="40" patternUnits="userSpaceOnUse"><g fill="#1b2a4a" stroke="#e8d9c0" stroke-width="2.5">${[0, 1, 2].map(k => `<circle cx="${k * 40}" cy="40" r="38"/><circle cx="${k * 40}" cy="40" r="28"/><circle cx="${k * 40}" cy="40" r="18"/><circle cx="${k * 40 - 20}" cy="20" r="0"/>`).join('')}</g></pattern>
-<linearGradient id="hnMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8d9c0" stop-opacity="0"/><stop offset="1" stop-color="#e8d9c0" stop-opacity=".55"/></linearGradient>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#hnSky)"/><circle cx="1130" cy="300" r="190" fill="#d9472b"/><circle cx="1130" cy="300" r="190" fill="none" stroke="#1b2a4a" stroke-width="4" opacity=".3"/>`;
-  [['#4a5a80', 520, 120], ['#33406a', 600, 90], ['#232e52', 690, 60]].forEach(([c, y, rough], i) => {
-    const pts = sRidge(R, y, rough, 6); b += `<path d="${sPolyPath(pts)}" fill="${c}"/><rect y="${y - 30}" width="${SW}" height="110" fill="url(#hnMist)"/>`;
-  });
-  b += `<rect y="770" width="${SW}" height="130" fill="url(#hnWave)"/>`;
-  const branch = (x, y, a, len, w, d) => {                      // recursive cherry branch
-    if (d > 5 || len < 18) return '';
-    const bx = x + Math.cos(a) * len, by = y + Math.sin(a) * len;
-    let o = `<path d="M${r1(x)} ${r1(y)} Q${r1((x + bx) / 2 + R(-15, 15))} ${r1((y + by) / 2 + R(-15, 15))} ${r1(bx)} ${r1(by)}" stroke="#1a120e" stroke-width="${r1(w)}" fill="none" stroke-linecap="round"/>`;
-    if (d >= 2) for (let k = 0; k < 3; k++) {
-      const fx = bx + R(-22, 22), fy = by + R(-22, 22), s = R(7, 13), c = R(0, 1) < .5 ? '#f7c8d4' : '#ffffff';
-      o += `<g transform="translate(${r1(fx)} ${r1(fy)}) rotate(${r1(R(0, 72))})">${[0, 72, 144, 216, 288].map(t => `<ellipse cx="0" cy="${r1(-s * .6)}" rx="${r1(s * .45)}" ry="${r1(s * .6)}" fill="${c}" transform="rotate(${t})"/>`).join('')}<circle r="${r1(s * .22)}" fill="#d9472b"/></g>`;
-    }
-    o += branch(bx, by, a + R(-.6, -.1), len * R(.6, .8), w * .65, d + 1) + branch(bx, by, a + R(.1, .7), len * R(.55, .75), w * .6, d + 1);
-    return o;
-  };
-  b += branch(-30, 40, .35, 300, 26, 0) + branch(-20, 260, .1, 220, 18, 1);
-  b += `<rect width="${SW}" height="${SH}" filter="url(#hnPaper)"/><rect width="${SW}" height="${SH}" filter="url(#hnG)"/>`;
-  return sScene(defs, b, '');
-}
-
-// Holographic: iridescent foil - swirled rainbow via displacement, specular sheen
-function sceneHolo() {
-  let defs = `<linearGradient id="hoBase" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset=".2" stop-color="#a99bff"/><stop offset=".4" stop-color="#7fe8ff"/><stop offset=".6" stop-color="#b8ffcf"/><stop offset=".8" stop-color="#ffe3a0"/><stop offset="1" stop-color="#ff9ad5"/></linearGradient>
-<filter id="hoSwirl" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".0035" numOctaves="3" seed="12" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="520" xChannelSelector="R" yChannelSelector="G"/></filter>
-<filter id="hoSheen" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".006" numOctaves="2" seed="3" result="n"/><feSpecularLighting in="n" surfaceScale="6" specularConstant=".9" specularExponent="18" lighting-color="#ffffff"><feDistantLight azimuth="235" elevation="40"/></feSpecularLighting><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .33 .33 .33 0 -.25"/></filter>
-<linearGradient id="hoDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140f2a" stop-opacity=".55"/><stop offset="1" stop-color="#140f2a" stop-opacity=".8"/></linearGradient>` + sGrain('hoG', .35);
-  let b = `<g filter="url(#hoSwirl)"><rect x="-200" y="-200" width="${SW + 400}" height="${SH + 400}" fill="url(#hoBase)"/>${[0, 1, 2, 3].map(i => `<rect x="${-200 + i * 520}" y="-200" width="260" height="${SH + 400}" fill="url(#hoBase)" transform="rotate(25 800 450)" opacity=".6"/>`).join('')}</g>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#hoSheen)"/><rect width="${SW}" height="${SH}" fill="url(#hoDark)"/>`;
-  b += `<rect class="wr-sc-shine2" x="-600" y="0" width="500" height="${SH}" fill="#fff" opacity=".12" transform="skewX(-20)"/><rect width="${SW}" height="${SH}" filter="url(#hoG)"/>`;
-  return sSvg(defs, b);
-}
-
-// Anime Night Sky: dramatic lit clouds, stars, skyline with lit windows, utility pole and wires
-function sceneAnime() {
-  const R = sRng(606);
-  let defs = `<linearGradient id="anSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0f2e"/><stop offset=".45" stop-color="#2a2a6a"/><stop offset=".75" stop-color="#b24a7a"/><stop offset=".9" stop-color="#ff9a6a"/></linearGradient>
-<filter id="anCloud" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="4" seed="8" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="60"/><feGaussianBlur stdDeviation="2"/></filter>
-<linearGradient id="anCl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a80"/><stop offset=".7" stop-color="#c06a9a"/><stop offset="1" stop-color="#ffc09a"/></linearGradient>` + sGrain('anG', .35);
-  let a = '';
-  let b = `<rect width="${SW}" height="${SH}" fill="url(#anSky)"/>`;
-  for (let i = 0; i < 180; i++) { const x = R(0, SW), y = R(0, 380), s = R(.6, 2); (i % 9 ? (v => { b += v; }) : (v => { a += v; }))(`<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(s)}" fill="#fff" opacity="${r1(R(.3, 1))}" ${i % 9 ? '' : 'class="wr-sc-twinkle"'}/>`); }
-  let cl = ''; for (let i = 0; i < 26; i++) { const x = R(-100, SW + 100), y = R(330, 560), rx = R(90, 260), ry = R(40, 90); cl += `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="url(#anCl)"/>`; }
-  b += `<g filter="url(#anCloud)" opacity=".95">${cl}</g>`;
-  a += `<path class="wr-sc-comet" d="M1300 90 L1500 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".9"/>`;
-  let city = ''; let x = 0;
-  while (x < SW) { const w = R(40, 120), h = R(60, 260); city += `<rect x="${r1(x)}" y="${r1(SH - h)}" width="${r1(w)}" height="${r1(h)}" fill="#07081a"/>`;
-    for (let wy = SH - h + 10; wy < SH - 10; wy += 14) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (R(0, 1) < .28) city += `<rect x="${r1(wx)}" y="${r1(wy)}" width="5" height="7" fill="${R(0, 1) < .8 ? '#ffd27a' : '#7fe0ff'}" opacity="${r1(R(.5, 1))}"/>`;
-    x += w + R(0, 8); }
-  b += city;
-  b += `<rect x="1180" y="420" width="16" height="480" fill="#05050f"/><rect x="1120" y="450" width="136" height="10" fill="#05050f"/><rect x="1140" y="500" width="96" height="8" fill="#05050f"/>`;
-  [[-40, 470, 1125, 455], [-40, 520, 1145, 505], [1250, 455, 1700, 400], [1230, 505, 1700, 470]].forEach(([x1, y1, x2, y2]) => { b += `<path d="M${x1} ${y1} Q${(x1 + x2) / 2} ${Math.max(y1, y2) + 70} ${x2} ${y2}" stroke="#05050f" stroke-width="2.2" fill="none"/>`; });
-  b += `<rect width="${SW}" height="${SH}" filter="url(#anG)"/>`;
-  return sScene(defs, b, a);
-}
-
-// Street Wall: concrete, soft spray clouds with drips, stencil shapes, torn halftone poster
-function sceneStreet() {
-  const R = sRng(707);
-  let defs = `<filter id="swCon" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".5" numOctaves="3" seed="3" result="f"/><feTurbulence type="fractalNoise" baseFrequency=".008" numOctaves="3" seed="9" result="c"/><feBlend in="f" in2="c" mode="multiply"/><feColorMatrix values=".55 0 0 0 0  .55 0 0 0 0  .57 0 0 0 0  0 0 0 0 1"/></filter>
-<filter id="swSpray" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="1" seed="5" result="n"/><feGaussianBlur in="SourceGraphic" stdDeviation="28" result="b"/><feComposite in="b" in2="n" operator="arithmetic" k1="1.6" k2=".2" k3="0" k4="0"/></filter>
-<pattern id="swHt" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(20)"><circle cx="4.5" cy="4.5" r="2.6" fill="#111"/></pattern>
-<filter id="swSh"><feDropShadow dx="3" dy="4" stdDeviation="3" flood-opacity=".6"/></filter>` + sGrain('swG', .45);
-  let b = `<rect width="${SW}" height="${SH}" filter="url(#swCon)"/>`;
-  for (let i = 0; i < 6; i++) b += `<rect x="0" y="${i * 150 + 148}" width="${SW}" height="3" fill="#1a1a1a" opacity=".35"/>`;
-  const spray = (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" filter="url(#swSpray)"/>` + Array.from({ length: 5 }, () => { const dx = R(-r * .6, r * .6), l = R(60, 220); return `<path d="M${r1(x + dx)} ${r1(y + r * .45)} L${r1(x + dx)} ${r1(y + r * .45 + l)}" stroke="${c}" stroke-width="${r1(R(2, 5))}" stroke-linecap="round" opacity=".85"/>`; }).join('');
-  b += spray(380, 300, 170, '#ff2fa0') + spray(620, 360, 140, '#00d4ff') + spray(1180, 260, 190, '#b6ff2a') + spray(1320, 520, 120, '#ff7a1a');
-  b += `<g filter="url(#swSh)"><path d="M880 180 L1080 160 L1100 470 L1070 480 L1090 520 L900 540 L870 500 L885 470 Z" fill="#e8e2d4"/><path d="M900 200 L1065 185 L1080 450 L905 470 Z" fill="url(#swHt)"/><path d="M905 470 L1080 450 L1070 480 L910 500 Z" fill="#d9472b"/></g>`;
-  b += `<g fill="#111" opacity=".85"><path d="M140 640 L320 640 L320 600 L420 680 L320 760 L320 720 L140 720 Z"/><path d="M1380 720 m-70 0 a70 70 0 1 0 140 0 a70 70 0 1 0 -140 0 M1380 720 m-40 0 a40 40 0 1 1 80 0 a40 40 0 1 1 -80 0" fill-rule="evenodd"/></g>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#swG)"/>`;
-  return sSvg(defs, b);
-}
-
-function sceneHolo() {
-  const R = sRng(808);
-  let defs = `<linearGradient id="hoBands" x1="0" y1="0" x2=".18" y2=".1" spreadMethod="repeat"><stop offset="0" stop-color="#ff7ac8"/><stop offset=".2" stop-color="#b48cff"/><stop offset=".4" stop-color="#6fd8ff"/><stop offset=".6" stop-color="#7affc8"/><stop offset=".8" stop-color="#fff08a"/><stop offset="1" stop-color="#ff7ac8"/></linearGradient>
-<filter id="hoSwirl" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".003" numOctaves="2" seed="12" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="380" xChannelSelector="R" yChannelSelector="B"/><feGaussianBlur stdDeviation="2"/></filter>
-<radialGradient id="hoVig" cx=".5" cy=".5" r=".8"><stop offset=".2" stop-color="#0c0820" stop-opacity=".35"/><stop offset="1" stop-color="#0c0820" stop-opacity=".9"/></radialGradient>` + sGrain('hoG', .3);
-  let b = `<g filter="url(#hoSwirl)"><rect x="-300" y="-300" width="${SW + 600}" height="${SH + 600}" fill="url(#hoBands)"/></g>`;
-  b += `<rect width="${SW}" height="${SH}" fill="url(#hoVig)"/><rect width="${SW}" height="${SH}" filter="url(#hoG)"/>`;
-  return sScene(defs, b, `<rect class="wr-sc-shine2" x="-600" y="0" width="420" height="${SH}" fill="#fff" opacity=".14" transform="skewX(-20)"/>`);
-}
-
-function sceneStreet() {
-  const R = sRng(919);
-  let defs = `<filter id="swCon" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".6" numOctaves="3" seed="3" result="f"/><feTurbulence type="fractalNoise" baseFrequency=".005" numOctaves="4" seed="9" result="c"/><feBlend in="f" in2="c" mode="multiply"/><feColorMatrix values=".42 0 0 0 0  .41 0 0 0 0  .42 0 0 0 0  0 0 0 0 1"/></filter>
-<filter id="swRough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="14"/></filter>
-<filter id="swOver" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
-<pattern id="swFence" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="60" height="60" fill="none" stroke="#000" stroke-width="5"/></pattern>
-<filter id="swFenceBlur"><feGaussianBlur stdDeviation="2.5"/></filter>
-<linearGradient id="swFenceFade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity=".5"/></linearGradient><mask id="swFM"><rect width="${SW}" height="${SH}" fill="url(#swFenceFade)"/></mask>
-<radialGradient id="swLamp" cx="1350" cy="-60" r="900" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffb04a" stop-opacity=".6"/><stop offset=".5" stop-color="#ff8a2a" stop-opacity=".18"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/></radialGradient>` + sGrain('swG', .5);
-  let b = `<rect width="${SW}" height="${SH}" filter="url(#swCon)"/>`;
-  // old colorful pieces, mostly buffed over with flat gray rollers
-  b += `<g filter="url(#swOver)" opacity=".7"><ellipse cx="420" cy="420" rx="360" ry="200" fill="#c2187a"/><ellipse cx="1040" cy="380" rx="380" ry="190" fill="#0a8ab0"/><ellipse cx="760" cy="640" rx="300" ry="130" fill="#b8d82a"/></g>`;
-  const grays = ['#4a4a4c', '#56555a', '#3e3f42', '#5e5c58', '#47484e'];
-  for (let i = 0; i < 7; i++) { const x = R(60, 1300), y = R(120, 640), w = R(220, 520), h = R(120, 300); b += `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="${grays[i % 5]}" filter="url(#swRough)" opacity=".95"/>`; }
-  // drips under the buffs
-  for (let i = 0; i < 30; i++) { const dx = R(80, 1520), y0 = R(380, 720), l = R(40, 200), c = ['#c2187a', '#0a8ab0', '#b8d82a', '#e8e8e8'][(R(0, 4)) | 0]; b += `<path d="M${r1(dx)} ${r1(y0)} L${r1(dx)} ${r1(y0 + l)}" stroke="${c}" stroke-width="${r1(R(2, 5))}" stroke-linecap="round" opacity=".8"/>`; }
-  // tag scribbles: chrome and black, layered over everything (abstract, no words)
-  const tag = (px, py, sc, col, out) => { let d = `M${r1(px)} ${r1(py)}`; for (let k = 0; k < 12; k++) { const nx = px + R(18, 46) * sc, ny = py + R(-40, 40) * sc; d += ` C${r1(px + R(-10, 40) * sc)} ${r1(py - R(20, 70) * sc)} ${r1(nx - R(-10, 30) * sc)} ${r1(ny + R(20, 70) * sc)} ${r1(nx)} ${r1(ny)}`; px = nx; py = ny; } d += ` M${r1(px - 300 * sc)} ${r1(py + 50 * sc)} L${r1(px + 20 * sc)} ${r1(py + 30 * sc)}`; return `<path d="${d}" stroke="${out}" stroke-width="${r1(10 * sc)}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${r1(4.5 * sc)}" fill="none" stroke-linecap="round"/>`; };
-  b += tag(160, 230, 1.3, '#d8dde2', '#0a0a0a') + tag(820, 180, 1.1, '#0a0a0a', '#0a0a0a') + tag(1000, 640, 1.4, '#e8e2d4', '#1a1a1a') + tag(260, 700, .9, '#ff3fa4', '#0a0a0a');
-  b += `<rect width="${SW}" height="${SH}" fill="url(#swLamp)"/>`;
-  b += `<g mask="url(#swFM)"><rect width="${SW}" height="${SH}" fill="url(#swFence)" filter="url(#swFenceBlur)" opacity=".55"/></g>`;
-  b += `<rect width="${SW}" height="${SH}" filter="url(#swG)"/>`;
-  return sScene(defs, b, '');
-}
-
-const ART_DRAW = {
-  timber: sceneTimber, dawn: sceneDawn, marsh: sceneMarsh, deep: sceneDeep,
-  lakeside: sceneLakeside, lab: sceneLab, mono: sceneMono,
-  hanami: sceneHanami, holo: sceneHolo, animesky: sceneAnime, street: sceneStreet,
-  lrteal: sceneLrTeal, lrbluepink: sceneLrBluePink, lrrainbow: sceneLrRainbow, lrorange: sceneLrOrange,
-};
-let artEl = null, artSig = '';
-function startArt() {
-  const want = T && T.art && ART_DRAW[T.art] && window.top === window;
-  if (!want) { if (artEl) { artEl.remove(); artEl = null; artSig = ''; } return; }
-  const sig = T.art + '|' + JSON.stringify(T.artRamp || '') + '|' + (T.artOpacity || .6);
-  if (!artEl) { artEl = document.createElement('div'); artEl.id = OUR + '-art'; }
-  if (!artEl.isConnected) document.documentElement.appendChild(artEl);
-  if (sig === artSig) return;
-  artSig = sig;
-  artEl.style.cssText = `position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:${T.artOpacity || .6}`;
-  const out = ART_DRAW[T.art](T), base = typeof out === 'string' ? out : out.base, anim = typeof out === 'string' ? '' : out.anim;
-  // two separate layers: the textured still picture is drawn once, only the light moving layer repaints
-  artEl.innerHTML = safeHTML(`<div style="position:absolute;inset:0;will-change:transform">${base}</div>` + (anim ? `<div style="position:absolute;inset:0;will-change:transform">${anim}</div>` : ''));
-  flattenArt(base, sig);
-}
-// Turn the still picture into a flat image once (cheap to repaint behind moving things).
-// If the site blocks this kind of image, the picture simply stays as it is.
-let flatTimer = 0;
-function flattenArt(base, sig) {
-  const holder = artEl && artEl.firstChild; if (!holder) return;
-  const W = innerWidth, H = innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
-  const svg = base.replace('width="100%" height="100%"', `width="${W}" height="${H}"`);
-  const img = new Image();
-  img.onload = () => {
-    if (artSig !== sig || !artEl) return;
-    try {
-      const cv = document.createElement('canvas'); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-      cv.style.cssText = 'width:100%;height:100%;display:block';
-      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-      holder.textContent = ''; holder.appendChild(cv);
-    } catch (e) { /* keep the live picture */ }
-  };
-  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
-window.addEventListener('resize', () => {
-  clearTimeout(flatTimer);
-  flatTimer = setTimeout(() => { if (artEl && T && T.art) { artSig = ''; startArt(); } }, 400);
-});
 // ---------- laser line that travels around a button while you hover it ----------
 // A separate see-through layer is drawn over the button; the button itself is not changed.
 const BTN_SEL = 'button,[role="button"],input[type="button"],input[type="submit"],a.btn,[data-wr-bg="accent"]';
@@ -1490,7 +901,7 @@ function refresh(rescan) {
   T = allThemes()[activeThemeId()] || null;
   applyStyle();
   if (!document.body) return;
-  startFx(); startArt();
+  startFx(); startMesh();
   if (!T) { stopObserver(); unscanAll(); return; }
   if (rescan) { unscanAll(); scan([document.documentElement], false); }
   startObserver();
@@ -1498,7 +909,7 @@ function refresh(rescan) {
 
 // ---------- start ----------
 applyStyle();                                   // early: avoids a white flash
-function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); startArt(); } }
+function onReady() { if (T) { scan([document.documentElement], false); startObserver(); startFx(); startMesh(); } }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady, { once: true });
 else onReady();
 
@@ -1601,8 +1012,8 @@ function render(root) {
   const themes = allThemes(), custom = customThemes();
   const curId = activeThemeId(), cur = themes[curId] || null;
   const opts = ['<option value="">Off (site\'s normal look)</option>',
-    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k] && !EXTRA[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
-    '<optgroup label="Signature scenes (illustrated + animated)">', ...Object.keys(EXTRA).map(k => `<option value="${k}" title="${esc(EXTRA[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k] && !LAB[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Color Lab (animated mesh)">', ...Object.keys(LAB).map(k => `<option value="${k}" title="${esc(LAB[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Themed: cyberpunk, space, cars, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
