@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      4.4
+// @version      4.5
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -1027,7 +1027,7 @@ function startHudInfo() {
   if (hudEl && hudEl.isConnected) return;
   const c = T.fxColor || '#f2a900';
   hudEl = document.createElement('div'); hudEl.id = OUR + '-hudinfo';
-  hudEl.style.cssText = `position:fixed;right:16px;bottom:16px;z-index:2147483640;pointer-events:none;font:12px/1.55 Consolas,monospace;color:${c};`
+  hudEl.style.cssText = `position:fixed;right:16px;top:140px;z-index:2147483640;pointer-events:none;font:12px/1.55 Consolas,monospace;color:${c};`
     + `background:rgba(0,0,0,.45);border-left:3px solid ${c};padding:8px 12px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 0 6px ${rgba(c, .6)}`;
   document.documentElement.appendChild(hudEl);
   const site = /tekion/.test(HOST) ? 'TEKION' : /reconvision/.test(HOST) ? 'RECONVISION' : /partstech/.test(HOST) ? 'PARTSTECH' : /teams/.test(HOST) ? 'TEAMS' : HOST.split('.')[0].toUpperCase();
