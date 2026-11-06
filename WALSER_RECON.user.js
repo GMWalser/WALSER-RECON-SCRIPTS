@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1312
+// @version      2026.1106.1322
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v3.3  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '3.3', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v3.4  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '3.4', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -914,7 +914,10 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else onReady();
 
 if (window.top !== window) return;              // menu + panel only in the main window
-GM_registerMenuCommand('🎨 Themes & colors…', openPanel);
+GM_registerMenuCommand('🎨 Themes & colors…', () => {
+  try { openPanel(); }
+  catch (e) { console.error('[Page Themes] could not open the panel:', e); alert('Page Themes could not open on this page.\n\nError: ' + (e && e.message ? e.message : e) + '\n\nPlease send a screenshot of this message.'); }
+});
 if (dailyState().on) GM_registerMenuCommand('⏭ Skip today\'s theme', () => { skipDaily(); if (host) openPanel(); });
 
 // ---------- settings panel (shadow DOM so page styles can't touch it) ----------
