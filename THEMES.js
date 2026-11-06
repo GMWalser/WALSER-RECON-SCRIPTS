@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      4.3
+// @version      4.4
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -663,7 +663,7 @@ function startFx() {
     return p.pts[p.pts.length - 1];
   }
   function init() {
-    if (mode === 'code') P = Array.from({ length: Math.ceil(W / 16) }, () => ({ y: rand(-H / 16, 0), s: rand(.35, .6) }));   // each column falls at its own gentle speed
+    if (mode === 'code') P = Array.from({ length: Math.ceil(W / 16) }, () => ({ y: rand(-H / 16, 0), s: rand(.18, .32) }));   // each column falls at its own gentle speed
     if (mode === 'rain') P = Array.from({ length: Math.round(W / 9) }, () => ({ x: rand(0, W), y: rand(-H, H), l: rand(10, 28), s: rand(9, 16) }));
     if (mode === 'snow') P = Array.from({ length: Math.round(W * H / 9000) }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(.8, 2.6), s: rand(.3, 1.1), d: rand(-.3, .3) }));
     if (mode === 'stars') P = Array.from({ length: 260 }, () => ({ x: rand(-1, 1), y: rand(-1, 1), z: rand(.1, 1) }));
@@ -714,7 +714,7 @@ function startFx() {
     if (document.hidden || t - last < 33) return;
     last = t;
     if (mode === 'code') {                                   // falling code with fading trails
-      ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.05)'; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.032)'; ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over'; ctx.font = '15px monospace'; ctx.globalAlpha = .8;
       P.forEach(col => {
         const before = Math.floor(col.y); col.y += col.s;
@@ -722,7 +722,7 @@ function startFx() {
           ctx.fillStyle = Math.random() < .05 ? '#ffffff' : color;
           ctx.fillText(CH[(Math.random() * CH.length) | 0], P.indexOf(col) * 16, Math.floor(col.y) * 16);
         }
-        if (col.y * 16 > H && Math.random() > .975) { col.y = 0; col.s = rand(.35, .6); }
+        if (col.y * 16 > H && Math.random() > .975) { col.y = 0; col.s = rand(.18, .32); }
       });
       ctx.globalAlpha = 1; return;
     }
