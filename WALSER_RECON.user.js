@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1336
+// @version      2026.1106.1341
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v3.8  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '3.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v3.9  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '3.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -304,6 +304,9 @@ const FIELDS = [
 ];
 const WORK_SITES = ['app.reconvision.com', 'app.tekioncloud.com', 'app.partstech.com', 'shop.usautoforce.com', 'repairlinkshop.com'];
 const HOST = location.hostname;
+const IS_TEAMS = /(^|\.)teams\.(microsoft\.com|cloud\.microsoft|live\.com)$/.test(HOST);
+// Teams panels cover nearly the whole screen, so let more of the theme show through there.
+function seeThrough() { const v = T.wpSee == null ? 25 : T.wpSee; return IS_TEAMS ? Math.min(80, v + 30) : v; }
 const OUR = 'wr-theme';            // id prefix of our own elements (never themed)
 
 // Teams (and some other Microsoft sites) only allow HTML that goes through a "Trusted Types" policy.
@@ -422,7 +425,7 @@ function cssText() {
   if (T) {
     const s2 = mix(T.surface, T.text, 0.07);
     // With a wallpaper, panels can be see-through (wpSee %) so the picture shows.
-    const a = T.wp ? 1 - (T.wpSee == null ? 25 : T.wpSee) / 100 : 1;
+    const a = T.wp ? 1 - seeThrough() / 100 : 1;
     css += `
 :root{--wr-bg:${T.bg};--wr-surface:${rgba(T.surface, a)};--wr-surface2:${rgba(s2, a)};--wr-alpha:${a};--wr-text:${T.text};--wr-accent:${T.accent};
 --wr-accentText:${T.accentText};--wr-link:${T.link};--wr-border:${T.border};--wr-input:${T.input};color-scheme:dark !important}
@@ -459,8 +462,8 @@ body,[data-wr-bg=page]{background-color:transparent !important}
     if (T.mesh) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
     if (animOn()) css += animCss();
   }
-  if (T && /(^|\.)teams\.(microsoft\.com|cloud\.microsoft|live\.com)$/.test(HOST)) {
-    const a = 1 - (T.wpSee == null ? 25 : T.wpSee) / 100 * (T.wp || T.mesh ? 1 : 0);
+  if (T && IS_TEAMS) {
+    const a = 1 - seeThrough() / 100 * (T.wp || T.mesh ? 1 : 0);
     const s1 = rgba(T.surface, a), s2 = rgba(mix(T.surface, T.text, .05), a), s3 = rgba(T.bg, a), sh = rgba(mix(T.surface, T.text, .1), a), sp = rgba(mix(T.surface, T.text, .15), a);
     css += `
 :root,.fui-FluentProvider,[class*="fui-FluentProvider"]{
@@ -474,7 +477,7 @@ body,[data-wr-bg=page]{background-color:transparent !important}
 --colorBrandBackground:${T.accent} !important;--colorBrandBackgroundHover:${mix(T.accent, '#ffffff', .12)} !important;--colorBrandBackgroundPressed:${mix(T.accent, '#000000', .15)} !important;--colorBrandBackgroundSelected:${T.accent} !important;
 --colorCompoundBrandBackground:${T.accent} !important;--colorCompoundBrandStroke:${T.accent} !important;--colorBrandStroke1:${T.accent} !important;
 --colorNeutralForegroundOnBrand:${T.accentText} !important;--colorBrandForeground1:${T.link} !important;--colorBrandForeground2:${T.link} !important;--colorBrandForegroundLink:${T.link} !important;--colorCompoundBrandForeground1:${T.link} !important}
-html,body,#app{background:transparent !important}`;
+body,#app{background-color:transparent !important}`;
   }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
@@ -515,7 +518,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v3.8: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v3.9: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -545,6 +548,7 @@ function decide(el, cs, picked) {
     else if (H.s < 0.3) {
       if (L >= 0.85) d.bg = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'input' : 'surface';
       else if (L >= 0.45) d.bg = 'surface2';
+      else if (IS_TEAMS && L < 0.08 && H.s < 0.2) d.bg = 'surface';   // Teams' own fixed dark grays
     } else if (L >= 0.6) { d.bg = 'tint'; d.tint = `hsla(${Math.round(H.h)}, ${Math.round(Math.min(H.s, 0.6) * 100)}%, 20%, var(--wr-alpha, 1))`; }
   }
   const c = parseColor(cs.color);
