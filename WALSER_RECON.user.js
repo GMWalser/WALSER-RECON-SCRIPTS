@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1714
+// @version      2026.1106.1729
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10154,8 +10154,8 @@ log('v1.5 loaded on', location.hostname);
 
 });
 
-// ===== Tekion to RV Parts Transfer v1.1  (PARTS_TRANSFER.js) =====
-WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.1', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
+// ===== Tekion to RV Parts Transfer v1.2  (PARTS_TRANSFER.js) =====
+WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.2', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -10351,7 +10351,10 @@ function initRvParts() {
   box.appendChild(el('div', 'opacity:.75;margin-bottom:6px', `${cap.parts.length} parts captured ${new Date(cap.ts).toLocaleTimeString()} · lines: ${mechOnly.length ? 'Mechanical Repairs only' : 'all services (open the main RV page once to limit to Mechanical Repairs)'}`));
 
   const tbl = el('table', 'width:100%;border-collapse:collapse');
-  const hdr = el('tr'); ['✓', 'Part #', 'Description', 'Qty', 'Price', 'From Tekion job', 'Put on RV line'].forEach(h => hdr.appendChild(el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155;font-size:12px;opacity:.8', h)));
+  const hdr = el('tr');
+  const allChk = el('input'); allChk.type = 'checkbox'; allChk.checked = true; allChk.title = 'Select / deselect all';
+  const th0 = el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155'); th0.appendChild(allChk); hdr.appendChild(th0);
+  ['Part #', 'Description', 'Qty', 'Price', 'From Tekion job', 'Put on RV line'].forEach(h => hdr.appendChild(el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155;font-size:12px;opacity:.8', h)));
   tbl.appendChild(hdr);
   const rows = cap.parts.map(part => {
     const tr = el('tr');
@@ -10372,6 +10375,10 @@ function initRvParts() {
     return { chk, pn, desc, qty, price, sel };
   });
   box.appendChild(tbl);
+  // header box: select / deselect all; it follows the row boxes (partly checked = dash)
+  const syncAll = () => { const n = rows.filter(r => r.chk.checked).length; allChk.checked = n === rows.length; allChk.indeterminate = n > 0 && n < rows.length; };
+  allChk.addEventListener('change', () => { rows.forEach(r => { r.chk.checked = allChk.checked; }); syncAll(); });
+  rows.forEach(r => r.chk.addEventListener('change', syncAll));
 
   const foot = el('div', 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px');
   const status = el('select', 'background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:4px');
@@ -10387,6 +10394,7 @@ function initRvParts() {
       msg.textContent = `Filling ${ok + bad.length + 1} of ${jobs.length}…`;
       const res = await fillOne(svc, { pn: r.pn.value.trim(), desc: r.desc.value.trim(), qty: r.qty.value.trim(), price: r.price.value.trim() }, status.value);
       if (res.startsWith('ok')) { ok++; r.chk.checked = false; } else bad.push(r.pn.value + ': ' + res);
+      syncAll();
     }
     go.disabled = false;
     msg.textContent = `✓ Filled ${ok}. ${bad.length ? '⚠ ' + bad.join(' · ') : ''}  Review, then click Save (or Alt+S).`;
@@ -10401,7 +10409,7 @@ function initRvParts() {
 if (IS_TEKION) initTekion();
 else if (/\/work_orders\/\d+\/parts_overview/.test(location.pathname)) setTimeout(initRvParts, 1200);
 else if (/\/work_orders\/\d+/.test(location.pathname)) { setTimeout(rememberWorkOrder, 1500); setInterval(rememberWorkOrder, 5000); }
-log('v1.1 loaded on', location.hostname);
+log('v1.2 loaded on', location.hostname);
 })();
 
 });
