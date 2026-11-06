@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      3.5
+// @version      3.7
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -388,6 +388,23 @@ body,[data-wr-bg=page]{background-color:transparent !important}
     if (T.mesh) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
     if (animOn()) css += animCss();
   }
+  if (T && /(^|\.)teams\.(microsoft\.com|cloud\.microsoft|live\.com)$/.test(HOST)) {
+    const a = 1 - (T.wpSee == null ? 25 : T.wpSee) / 100 * (T.wp || T.mesh ? 1 : 0);
+    const s1 = rgba(T.surface, a), s2 = rgba(mix(T.surface, T.text, .05), a), s3 = rgba(T.bg, a), sh = rgba(mix(T.surface, T.text, .1), a), sp = rgba(mix(T.surface, T.text, .15), a);
+    css += `
+:root,.fui-FluentProvider,[class*="fui-FluentProvider"]{
+--colorNeutralBackground1:${s1} !important;--colorNeutralBackground1Hover:${sh} !important;--colorNeutralBackground1Pressed:${sp} !important;--colorNeutralBackground1Selected:${sh} !important;
+--colorNeutralBackground2:${s2} !important;--colorNeutralBackground2Hover:${sh} !important;--colorNeutralBackground2Pressed:${sp} !important;--colorNeutralBackground2Selected:${sh} !important;
+--colorNeutralBackground3:${s3} !important;--colorNeutralBackground3Hover:${sh} !important;--colorNeutralBackground3Selected:${sh} !important;
+--colorNeutralBackground4:${s3} !important;--colorNeutralBackground5:${s3} !important;--colorNeutralBackground6:${s2} !important;
+--colorNeutralBackgroundInverted:${T.text} !important;--colorSubtleBackgroundHover:${sh} !important;--colorSubtleBackgroundPressed:${sp} !important;--colorSubtleBackgroundSelected:${sh} !important;
+--colorNeutralForeground1:${T.text} !important;--colorNeutralForeground2:${mix(T.text, T.bg, .12)} !important;--colorNeutralForeground3:${mix(T.text, T.bg, .3)} !important;--colorNeutralForeground4:${mix(T.text, T.bg, .45)} !important;
+--colorNeutralStroke1:${T.border} !important;--colorNeutralStroke2:${T.border} !important;--colorNeutralStroke3:${T.border} !important;--colorNeutralStrokeAccessible:${T.border} !important;
+--colorBrandBackground:${T.accent} !important;--colorBrandBackgroundHover:${mix(T.accent, '#ffffff', .12)} !important;--colorBrandBackgroundPressed:${mix(T.accent, '#000000', .15)} !important;--colorBrandBackgroundSelected:${T.accent} !important;
+--colorCompoundBrandBackground:${T.accent} !important;--colorCompoundBrandStroke:${T.accent} !important;--colorBrandStroke1:${T.accent} !important;
+--colorNeutralForegroundOnBrand:${T.accentText} !important;--colorBrandForeground1:${T.link} !important;--colorBrandForeground2:${T.link} !important;--colorBrandForegroundLink:${T.link} !important;--colorCompoundBrandForeground1:${T.link} !important}
+html,body,#app{background:transparent !important}`;
+  }
   (cfg.rules || []).forEach(r => {
     const decl = (r.bg ? `background-color:${r.bg} !important;` : '') + (r.color ? `color:${r.color} !important;` : '');
     if (decl) css += `\n${r.sel}{${decl}}`;
@@ -395,13 +412,32 @@ body,[data-wr-bg=page]{background-color:transparent !important}
   if (cfg.css) css += '\n' + cfg.css;
   return css;
 }
+// If the site blocks our <style> tag (Content Security Policy), fall back to a style sheet
+// built in script ("constructed" sheet), which those rules do not block.
+let cssSheet = null, styleBlocked = false;
+function pushCss(css) {
+  styleEl.textContent = css;
+  if (cssSheet) { try { cssSheet.replaceSync(css); } catch (e) {} }
+}
+function checkStyleBlocked() {
+  if (styleBlocked || !styleEl.isConnected || !styleEl.textContent.trim()) return;
+  let n = -1; try { n = styleEl.sheet ? styleEl.sheet.cssRules.length : 0; } catch (e) { n = 0; }
+  if (n > 0) return;
+  styleBlocked = true;
+  try {
+    cssSheet = new CSSStyleSheet(); cssSheet.replaceSync(styleEl.textContent);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, cssSheet];
+    console.log('[Page Themes] this site blocks style tags, using a constructed style sheet instead');
+  } catch (e) { console.warn('[Page Themes] could not add styles on this site:', e); }
+}
 function applyStyle() {
-  styleEl.textContent = cssText();
-  if (styleEl.isConnected) return;
+  pushCss(cssText());
+  if (styleEl.isConnected) { checkStyleBlocked(); return; }
   const target = document.head || document.documentElement;
-  if (target) target.appendChild(styleEl);
+  if (target) { target.appendChild(styleEl); setTimeout(checkStyleBlocked, 0); }
   else setTimeout(applyStyle, 5);               // page not created yet at document-start
 }
+function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
 
 // ---------- scanner ----------
 const ATTRS = ['data-wr-bg', 'data-wr-fg', 'data-wr-bd'];
@@ -1067,8 +1103,11 @@ function render(root) {
   <div class="row"><button id="copy">Copy my theme code</button><button id="loadcode">Load code</button></div>
   <div class="note">Saved in this browser only. Each person picks their own look.
   If Chrome's "Auto Dark Mode" flag is on, a theme here tells Chrome this page is already dark.</div>
+  <div class="note">Status: styles ${esc(styleStatus())} · Fluent UI ${document.querySelector('.fui-FluentProvider,[class*="fui-FluentProvider"]') ? 'found' : 'not found'}</div>
   </div>
 </div>`);
+  const pst = root.querySelector('style');          // the panel's own styles: use the backup method if blocked
+  if (pst) { let ok = 0; try { ok = pst.sheet ? pst.sheet.cssRules.length : 0; } catch (e) {} if (!ok) { try { const sh = new CSSStyleSheet(); sh.replaceSync(pst.textContent); root.adoptedStyleSheets = [sh]; } catch (e) {} } }
   const $ = s => root.querySelector(s);
   $('#theme').value = curId;
   makeDraggable(root);
@@ -1112,7 +1151,7 @@ function render(root) {
       $(label).textContent = e.target.value + '%';
       if (!T) return;
       T = Object.assign({}, T, { [key]: Number(e.target.value) });
-      styleEl.textContent = cssText();
+      pushCss(cssText());
     };
     $(id).onchange = e => { if (updateTheme({ [key]: Number(e.target.value) })) render(root); };
   };
@@ -1141,7 +1180,7 @@ function render(root) {
     inp.oninput = () => {                       // live preview
       if (!T) return;
       T = Object.assign({}, T, { [inp.dataset.k]: inp.value });
-      styleEl.textContent = cssText();
+      pushCss(cssText());
     };
     inp.onchange = () => { if (updateTheme({ [inp.dataset.k]: inp.value })) render(root); };
   });
