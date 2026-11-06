@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tekion to RV Parts Transfer
 // @namespace    reconclipboard
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @description  Tekion RO: one click captures every part (part#, description, qty, price, job). RV Parts page: shows them matched to the Mechanical Repairs lines (change any match), then fills them all in. You review and click Save.
 // @match        https://app.tekioncloud.com/parts/*
@@ -72,7 +72,8 @@ function capturePartsTekion() {
       const pc = row.querySelector('[data-test-id*="sellingPrice"]');
       const pInp = pc && pc.querySelector('input');
       const price = money(pInp && pInp.value ? pInp.value : pc ? pc.innerText : '');
-      const qc = row.querySelector('[data-test-id*="uantity"],[data-test-id*="Qty"],[data-test-id*="qty"]');
+      const qc = row.querySelector('[data-test-id*="requiredQuantity"]')        // Tekion's "Qty" column (confirmed)
+        || row.querySelector('[data-test-id*="uantity"]:not([data-test-id*="onHand"]):not([data-test-id*="hold"]):not([data-test-id*="delivered"])');
       const qInp = qc && qc.querySelector('input');
       const qty = money(qInp && qInp.value ? qInp.value : qc ? qc.innerText : '') || '1';
       parts.push({ pn, desc, qty, price, job: title });
@@ -253,5 +254,5 @@ function initRvParts() {
 if (IS_TEKION) initTekion();
 else if (/\/work_orders\/\d+\/parts_overview/.test(location.pathname)) setTimeout(initRvParts, 1200);
 else if (/\/work_orders\/\d+/.test(location.pathname)) { setTimeout(rememberWorkOrder, 1500); setInterval(rememberWorkOrder, 5000); }
-log('v1.0 loaded on', location.hostname);
+log('v1.1 loaded on', location.hostname);
 })();

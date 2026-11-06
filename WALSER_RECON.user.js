@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1709
+// @version      2026.1106.1714
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10154,8 +10154,8 @@ log('v1.5 loaded on', location.hostname);
 
 });
 
-// ===== Tekion to RV Parts Transfer v1.0  (PARTS_TRANSFER.js) =====
-WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.0', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
+// ===== Tekion to RV Parts Transfer v1.1  (PARTS_TRANSFER.js) =====
+WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.1', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -10219,7 +10219,8 @@ function capturePartsTekion() {
       const pc = row.querySelector('[data-test-id*="sellingPrice"]');
       const pInp = pc && pc.querySelector('input');
       const price = money(pInp && pInp.value ? pInp.value : pc ? pc.innerText : '');
-      const qc = row.querySelector('[data-test-id*="uantity"],[data-test-id*="Qty"],[data-test-id*="qty"]');
+      const qc = row.querySelector('[data-test-id*="requiredQuantity"]')        // Tekion's "Qty" column (confirmed)
+        || row.querySelector('[data-test-id*="uantity"]:not([data-test-id*="onHand"]):not([data-test-id*="hold"]):not([data-test-id*="delivered"])');
       const qInp = qc && qc.querySelector('input');
       const qty = money(qInp && qInp.value ? qInp.value : qc ? qc.innerText : '') || '1';
       parts.push({ pn, desc, qty, price, job: title });
@@ -10400,7 +10401,7 @@ function initRvParts() {
 if (IS_TEKION) initTekion();
 else if (/\/work_orders\/\d+\/parts_overview/.test(location.pathname)) setTimeout(initRvParts, 1200);
 else if (/\/work_orders\/\d+/.test(location.pathname)) { setTimeout(rememberWorkOrder, 1500); setInterval(rememberWorkOrder, 5000); }
-log('v1.0 loaded on', location.hostname);
+log('v1.1 loaded on', location.hostname);
 })();
 
 });
