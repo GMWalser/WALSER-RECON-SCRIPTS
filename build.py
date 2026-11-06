@@ -43,6 +43,7 @@ SCRIPTS = [
     ('vendor_quickadd',  'VENDOR_QUICKADD.js'),
     ('po_to_partstech',  'PO_TO_PARTSTECH.js'),
     ('filter_quickadd',  'FILTER_QUICKADD.js'),
+    ('parts_transfer',   'PARTS_TRANSFER.js'),
     ('oem_vin_bridge',   'OEM_VIN_BRIDGE.js'),
     ('teams_ro_opener',  'TEAMS_RO_OPENER.js'),
     ('parts_database',   'VEHICLE_PARTS_DATABASE.js'),
