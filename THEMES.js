@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      3.0
+// @version      3.1
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -136,11 +136,6 @@ const WALLPAPERS = {
   x_lr_bluepink: { name: "Candy Blue & Pink", css: "repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,63,164,.45) 26px 30px,transparent 30px 44px,rgba(120,60,200,.45) 44px 50px,transparent 50px 70px,rgba(102,200,255,.30) 70px 72px,transparent 72px 110px),linear-gradient(100deg,transparent 0 30%,rgba(255,63,164,.25) 30% 34%,transparent 34% 64%,rgba(120,60,200,.3) 64% 69%,transparent 69%),linear-gradient(180deg,#123a9c,#0a1d4f 60%,#04102e)" },
   x_lr_rainbow: { name: "Rainbow Flake", css: "repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 14px),linear-gradient(120deg,#3a137a 0%,#2050c8 30%,#13b5c0 48%,#ffc83d 52%,#e07a1a 62%,#6a1fb0 85%,#2a0a50 100%)" },
   x_lr_orange: { name: "Candy Orange Pinstripe", css: "repeating-radial-gradient(ellipse 120% 60% at 0% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),repeating-radial-gradient(ellipse 120% 60% at 100% 50%,transparent 0 28px,rgba(255,255,255,.35) 28px 30px,transparent 30px 58px),linear-gradient(90deg,transparent 0 47%,rgba(255,255,255,.4) 47% 47.4%,transparent 47.4% 52.6%,rgba(255,255,255,.4) 52.6% 53%,transparent 53%),linear-gradient(180deg,#c2410c,#7a1f06 55%,#3a0c03)" },
-  ar_tw_temple: { name: "Temple Skull Mask", css: "radial-gradient(ellipse at 75% 50%,rgba(240,138,42,.18),transparent 60%),linear-gradient(#120d14,#120d14)" },
-  ar_vd_eye: { name: "Inked Eye", css: "linear-gradient(#080808,#080808)" },
-  ar_mg_cruiser: { name: "Speed Tunnel Cruiser", css: "linear-gradient(#1a1a1a,#1a1a1a)" },
-  ar_mg_cruisergreen: { name: "Speed Tunnel Cruiser Green", css: "linear-gradient(#0f1a05,#0f1a05)" },
-  ar_mg_cruiserblue: { name: "Speed Tunnel Cruiser Blue", css: "linear-gradient(#071433,#071433)" },
 };
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
@@ -229,11 +224,6 @@ const ART = {
   mg_blue: { name: "Atomic Blue", about: "art: navy-to-sky ramp with a bright sunburst (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_blue.css, wpDim: 20, wpSee: 30, glow: false, fx: 'spin', fxColor: '#ffffff' },
   mg_flames: { name: "Hot Rod Flames", about: "art: gray ramp, orange-yellow flames, green hot rod (Grundy-inspired)", bg: '#141414', surface: '#222222', text: '#f5f0e6', accent: '#ff8a1f', accentText: '#1a0a00', link: '#8fd19e', border: '#3a3a3a', input: '#101010', wp: WALLPAPERS.ar_mg_flames.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff8a1f', hover: 'shine' },
   mg_saucer: { name: "Saucer Attack", about: "art: green, cream and gray 50s sci-fi print (Grundy-inspired)", bg: '#101410', surface: '#1c221c', text: '#f3f5e6', accent: '#7ddc4a', accentText: '#0a1a02', link: '#f1ecb5', border: '#384238', input: '#0c100c', wp: WALLPAPERS.ar_mg_saucer.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan', fxColor: '#7ddc4a' },
-  tw_temple: { name: "Temple Skull Mask", about: "art: original ornate skull-mask illustration, screen-print inks (Tidwell-inspired)", bg: '#120d14', surface: '#221a28', text: '#efe8d6', accent: '#f08a2a', accentText: '#1a0a00', link: '#e3c06a', border: '#4a3a55', input: '#0e0a10', wp: WALLPAPERS.ar_tw_temple.css, wpDim: 0, wpSee: 35, art: 'temple', artOpacity: .75, hover: 'sparkle', hoverColor: '#d9a521' },
-  vd_eye: { name: "Inked Eye", about: "art: original giant eye in dense pen-and-ink crosshatching (Van Dyke-inspired)", bg: '#080808', surface: '#141414', text: '#f2f2f2', accent: '#e8e8e8', accentText: '#0a0a0a', link: '#c8c8c8', border: '#3a3a3a', input: '#060606', wp: WALLPAPERS.ar_vd_eye.css, wpDim: 0, wpSee: 35, art: 'inkeye', artOpacity: .5, hover: 'drip', hoverColor: '#b3001b' },
-  mg_cruiser: { name: "Speed Tunnel Cruiser", about: "art: original flat-vector coupe in a speed tunnel, gray ramp (Grundy-inspired)", bg: '#1a1a1a', surface: '#262626', text: '#f2f2f2', accent: '#e6e6e6', accentText: '#111111', link: '#cfcfcf', border: '#444444', input: '#141414', wp: WALLPAPERS.ar_mg_cruiser.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#111111','#2a2a2a','#4a4a4a','#9a9a9a','#f2f2f2'], hover: 'shine' },
-  mg_cruisergreen: { name: "Speed Tunnel Cruiser Green", about: "art: original coupe illustration on a green ramp (Grundy-inspired)", bg: '#0f1a05', surface: '#1a2a0a', text: '#f2ffd6', accent: '#c6f432', accentText: '#142000', link: '#e8ff8a', border: '#3a5a12', input: '#0b1404', wp: WALLPAPERS.ar_mg_cruisergreen.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#0b1404','#1f3a0a','#3f6a12','#9fd02a','#efffb0'], hover: 'shine' },
-  mg_cruiserblue: { name: "Speed Tunnel Cruiser Blue", about: "art: original coupe illustration on a blue ramp (Grundy-inspired)", bg: '#071433', surface: '#0d2150', text: '#eaf2ff', accent: '#9cc8ff', accentText: '#071433', link: '#d6e8ff', border: '#23407a', input: '#050f27', wp: WALLPAPERS.ar_mg_cruiserblue.css, wpDim: 0, wpSee: 35, art: 'cruiser', artOpacity: .55, artRamp: ['#050f27','#0d2a6a','#2050a8','#7fb2ff','#eaf4ff'], hover: 'shine' },
 };
 Object.assign(PRESETS, ART);
 // Animated theme packs (each has its own background effect and hover effect).
@@ -266,6 +256,12 @@ const FIELDS = [
 const WORK_SITES = ['app.reconvision.com', 'app.tekioncloud.com', 'app.partstech.com', 'shop.usautoforce.com', 'repairlinkshop.com'];
 const HOST = location.hostname;
 const OUR = 'wr-theme';            // id prefix of our own elements (never themed)
+
+// Teams (and some other Microsoft sites) only allow HTML that goes through a "Trusted Types" policy.
+let ttPolicy = null;
+try { if (window.trustedTypes && trustedTypes.createPolicy) ttPolicy = trustedTypes.createPolicy('walserThemes', { createHTML: x => x }); }
+catch (e) { console.warn('[Page Themes] this site blocks our HTML policy:', e.message); }
+function safeHTML(html) { return ttPolicy ? ttPolicy.createHTML(html) : html; }
 
 // ---------- storage ----------
 function load(k, d) { try { const v = GM_getValue(k); return v === undefined ? d : JSON.parse(v); } catch (e) { return d; } }
@@ -805,36 +801,6 @@ const f1 = n => Math.round(n * 10) / 10;
 function svgPath(d, fill, stroke, sw, extra) { return `<path d="${d}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" stroke-linejoin="round" stroke-linecap="round" ${extra || ''}/>`; }
 function svgCircle(x, y, r, fill, stroke, sw, extra) { return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${fill}" stroke="${stroke || 'none'}" stroke-width="${sw || 0}" ${extra || ''}/>`; }
 
-// Van Dyke-inspired: giant eye in dense pen-and-ink contours and crosshatching (original design)
-function artInkEye() {
-  const R = artRng(5), ln = '#efe9dc', cx = 400, cy = 300;
-  let o = '';
-  const ring = (k) => { const pts = []; for (let i = 0; i <= 48; i++) { const a = i / 48 * Math.PI * 2, rx = 150 + k * 19 + R(-4, 4) * (1 + k * .25), ry = 72 + k * 14 + R(-4, 4) * (1 + k * .2); pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]); } return pts; };
-  for (let k = 0; k < 24; k++) {
-    const p = ring(k); let d = `M${f1(p[0][0])} ${f1(p[0][1])}`;
-    for (let i = 1; i < p.length; i++) { const m = [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2]; d += ` Q${f1(p[i - 1][0])} ${f1(p[i - 1][1])} ${f1(m[0])} ${f1(m[1])}`; }
-    o += svgPath(d, 'none', ln, R(1, 2.2), 'opacity=".8"');
-    for (let n = 0; n < 70; n++) {                              // hatch strokes between contours
-      const a = R(0, 6.28), rr = k + R(.2, .8), rx = 150 + rr * 19, ry = 72 + rr * 14;
-      const x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry, t = a + 1.57 + R(.6, 1.1), l = R(5, 12);
-      o += `<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x + Math.cos(t) * l)}" y2="${f1(y + Math.sin(t) * l)}" stroke="${ln}" stroke-width=".8" opacity="${f1(R(.35, .7))}"/>`;
-      if (n % 3 === 0) { const t2 = t + 1.2; o += `<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x + Math.cos(t2) * l)}" y2="${f1(y + Math.sin(t2) * l)}" stroke="${ln}" stroke-width=".7" opacity=".4"/>`; }
-    }
-  }
-  // the eye
-  o += svgPath('M225 300 Q400 160 575 300 Q400 410 225 300 Z', '#e9e4d6', '#000', 6);
-  for (let i = 0; i < 26; i++) { const x = 250 + i * 12; o += `<line x1="${x}" y1="${f1(330 + Math.sin(i) * 6)}" x2="${x + 8}" y2="${f1(345 + Math.sin(i) * 6)}" stroke="#000" stroke-width=".8" opacity=".35"/>`; }
-  o += svgCircle(cx, cy, 72, '#16130f', '#000', 4);
-  for (let i = 0; i < 72; i++) { const a = i / 72 * 6.28, r1 = R(30, 40), r2 = R(58, 70); o += `<line x1="${f1(cx + Math.cos(a) * r1)}" y1="${f1(cy + Math.sin(a) * r1)}" x2="${f1(cx + Math.cos(a) * r2)}" y2="${f1(cy + Math.sin(a) * r2)}" stroke="${ln}" stroke-width="1" opacity=".65"/>`; }
-  o += svgCircle(cx, cy, 28, '#000', 'none', 0, 'class="wr-art-pupil" style="transform-origin:400px 300px"') + svgCircle(cx + 24, cy - 24, 10, '#fff', 'none', 0, 'opacity=".9"');
-  for (let i = 0; i < 22; i++) {                                // lashes
-    const t = i / 21, x = 240 + t * 320, y = 300 - Math.sin(t * Math.PI) * 112, a = -1.57 + (t - .5) * 1.6;
-    o += svgPath(`M${f1(x)} ${f1(y)} q${f1(Math.cos(a) * 20)} ${f1(Math.sin(a) * 30)} ${f1(Math.cos(a) * 34 + (t - .5) * 20)} ${f1(Math.sin(a) * 40)}`, 'none', ln, 2.2);
-  }
-  o += svgPath('M225 300 Q400 160 575 300', 'none', ln, 3) + svgPath('M225 300 Q400 410 575 300', 'none', ln, 2);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">${o}</svg>`;
-}
-
 // ---------- illustrated scenes (original, drawn in code; still layer + light moving layer) ----------
 // ---- shared helpers for illustrated scenes (all original, drawn in code) ----
 function sRng(seed) { return (a, b) => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a); }; }
@@ -1359,82 +1325,7 @@ function sceneStreet() {
   return sScene(defs, b, '');
 }
 
-// Temple Skull Mask v2 (Tidwell-inspired, original): fine-line hair bundles, paper, misregistered ink
-function sceneTemple() {
-  const R = sRng(13), ink = '#0d0b0c', vio = '#5b4a6e', vio2 = '#3b2e4b', rust = '#a8382b', org = '#f08a2a', gold = '#d9a521', bone = '#cdc9a6', leafc = '#9a95a8', paper = '#8f8c86';
-  let defs = `<filter id="tpPaper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="2"/><feColorMatrix values="0 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .09  0 0 0 .5 -.12"/></filter>
-<pattern id="tpHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="1.4" height="6" fill="${ink}"/></pattern>
-<pattern id="tpDots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.2" fill="${ink}" opacity=".55"/></pattern>`;
-  let col = '', lines = '';                                    // col = ink colors layer, lines = black key layer
-  let colA = '', linA = '';
-  // hair: bundles of thin parallel strokes sweeping down from the crown
-  for (let i = 0; i < 46; i++) {
-    const side = i % 2 ? -1 : 1, a = -Math.PI + R(.1, Math.PI - .1);
-    const sx = 300 + Math.cos(a) * 140, sy = 260 + Math.sin(a) * 100, ex = 300 + side * R(40, 340), ey = R(650, 900);
-    const c1x = sx + side * R(60, 220), c1y = sy + R(-70, 30), c2x = ex + side * R(-90, 60), c2y = ey - R(180, 330), cc = [rust, vio, vio2][i % 3], width = R(18, 34);
-    const d0 = `M${r1(sx)} ${r1(sy)} C${r1(c1x)} ${r1(c1y)} ${r1(c2x)} ${r1(c2y)} ${r1(ex)} ${r1(ey)}`;
-    col += `<path d="${d0}" stroke="${cc}" stroke-width="${r1(width)}" fill="none" stroke-linecap="round"/>`;
-    for (let k = 0; k < 7; k++) { const o = (k - 3) * width / 7; lines += `<path d="M${r1(sx + o * .3)} ${r1(sy)} C${r1(c1x + o)} ${r1(c1y)} ${r1(c2x + o)} ${r1(c2y)} ${r1(ex + o)} ${r1(ey)}" stroke="${ink}" stroke-width="${k === 0 || k === 6 ? 2.6 : 1}" fill="none" opacity="${k === 0 || k === 6 ? 1 : .55}"/>`; }
-  }
-  // bone curls
-  for (let i = 0; i < 14; i++) { const x = R(50, 550), y = R(480, 760), r = R(16, 28), s = R(0, 6.28); const d = `M${r1(x + Math.cos(s) * r)} ${r1(y + Math.sin(s) * r)} A${r1(r)} ${r1(r)} 0 1 1 ${r1(x + Math.cos(s + 4.2) * r)} ${r1(y + Math.sin(s + 4.2) * r)}`; col += `<path d="${d}" stroke="${bone}" stroke-width="12" fill="none" stroke-linecap="round"/>`; lines += `<path d="${d}" stroke="${ink}" stroke-width="15" fill="none" stroke-linecap="round" opacity="0"/><path d="${d}" stroke="${ink}" stroke-width="2.5" fill="none" transform="translate(0 6)"/>`; }
-  const leaf = (cx, cy, ang, len, wid) => { const tx = cx + Math.cos(ang) * len, ty = cy + Math.sin(ang) * len, nx = Math.cos(ang + 1.57) * wid, ny = Math.sin(ang + 1.57) * wid, mx = cx + Math.cos(ang) * len * .5, my = cy + Math.sin(ang) * len * .5; return `M${r1(cx)} ${r1(cy)} Q${r1(mx + nx)} ${r1(my + ny)} ${r1(tx)} ${r1(ty)} Q${r1(mx - nx)} ${r1(my - ny)} ${r1(cx)} ${r1(cy)} Z`; };
-  for (let i = 0; i < 11; i++) { const a = -Math.PI + .25 + i * (Math.PI - .5) / 10, d = leaf(300 + Math.cos(a) * 120, 250 + Math.sin(a) * 90, a, 125, 26); col += `<path d="${d}" fill="${leafc}"/>`; lines += `<path d="${d}" fill="url(#tpHatch)" opacity=".35"/><path d="${d}" fill="none" stroke="${ink}" stroke-width="3.5"/>`; }
-  for (let i = 0; i < 9; i++) { const a = -Math.PI + .35 + i * (Math.PI - .7) / 8, bx = 300 + Math.cos(a) * 95, by = 235 + Math.sin(a) * 70, d = leaf(bx, by, a, 78, 18); col += `<path d="${d}" fill="${gold}"/>`; lines += `<path d="${d}" fill="none" stroke="${ink}" stroke-width="3.5"/>`; const ox = bx + Math.cos(a) * 54, oy = by + Math.sin(a) * 54; lines += `<circle cx="${r1(ox)}" cy="${r1(oy)}" r="10" fill="${ink}"/>`; col += `<circle cx="${r1(ox - 3)}" cy="${r1(oy - 3)}" r="3.5" fill="${org}"/>`; }
-  [[175, 300, -1], [425, 300, 1]].forEach(([sx, sy, dir]) => { for (let k = 0; k < 20; k++) { const t = k / 19, x = sx + dir * (40 * t + 70 * t * t), y = sy + t * 360; col += `<circle cx="${r1(x)}" cy="${r1(y)}" r="7" fill="${k % 3 ? org : gold}"/>`; lines += `<circle cx="${r1(x)}" cy="${r1(y)}" r="7" fill="none" stroke="${ink}" stroke-width="2.5"/>`; } });
-  colA = col; linA = lines; col = ''; lines = '';          // back layer done: hair, curls, crown, beads
-  const mask = 'M165 305 Q160 195 300 182 Q440 195 435 305 Q400 338 300 338 Q200 338 165 305 Z';
-  col += `<path d="${mask}" fill="${org}"/>`; lines += `<path d="${mask}" fill="url(#tpDots)"/><path d="${mask}" fill="none" stroke="${ink}" stroke-width="5"/>`;
-  for (let i = 0; i < 7; i++) { const x = 185 + i * 38, y = i % 2 ? 302 : 214; lines += `<path d="M${x} ${y} q11 -15 22 0 q-4 11 -11 4 q-3 -4 2 -6" fill="none" stroke="${ink}" stroke-width="2.4"/>`; }
-  const ring = (x, y, r) => { col += `<circle cx="${x}" cy="${y}" r="${r}" fill="${rust}"/><circle cx="${x}" cy="${y}" r="${r1(r * .66)}" fill="${org}"/>`; lines += `<circle cx="${x}" cy="${y}" r="${r + 6}" fill="none" stroke="${ink}" stroke-width="7"/><circle cx="${x}" cy="${y}" r="${r1(r * .66)}" fill="none" stroke="${ink}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${r1(r * .34)}" fill="${ink}"/><circle cx="${r1(x - r * .25)}" cy="${r1(y - r * .25)}" r="${r1(r * .12)}" fill="#fff"/>`; };
-  ring(232, 252, 32); ring(368, 252, 32); ring(300, 168, 24);
-  ['M206 318 Q166 405 186 488 Q206 412 234 334 Z', 'M394 318 Q434 405 414 488 Q394 412 366 334 Z'].forEach(d => { col += `<path d="${d}" fill="${gold}"/>`; lines += `<path d="${d}" fill="url(#tpHatch)" opacity=".3"/><path d="${d}" fill="none" stroke="${ink}" stroke-width="4"/>`; });
-  const skull = 'M214 332 Q206 425 240 472 Q252 535 300 548 Q348 535 360 472 Q394 425 386 332 Z';
-  col += `<path d="${skull}" fill="${bone}"/>`;
-  lines += `<path d="M214 332 Q206 425 240 472 L262 470 Q236 420 240 340 Z" fill="url(#tpHatch)" opacity=".55"/><path d="M386 332 Q394 425 360 472 L338 470 Q364 420 360 340 Z" fill="url(#tpHatch)" opacity=".55"/><path d="${skull}" fill="none" stroke="${ink}" stroke-width="5.5"/>`;
-  lines += `<circle cx="300" cy="356" r="10" fill="${ink}"/>`;
-  [[262, 402], [338, 402]].forEach(([x, y]) => { lines += `<ellipse cx="${x}" cy="${y}" rx="32" ry="27" fill="${ink}"/>`; col += ''; });
-  let glow = [[262, 402], [338, 402]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="17" fill="${org}" class="wr-art-glow"/><circle cx="${x}" cy="${y}" r="7" fill="#ffd27a" class="wr-art-glow"/>`).join('');
-  lines += `<path d="M300 432 L287 462 Q300 472 313 462 Z" fill="${ink}"/><path d="M232 360 l12 10 l-6 9 l10 8 M368 365 l-10 12 l8 6 l-9 10 M300 372 l-4 14 l6 8" fill="none" stroke="${ink}" stroke-width="2.4"/>`;
-  for (let i = 0; i < 8; i++) { const x = 254 + i * 11.5, g = i === 2 || i === 5; col += `<rect x="${r1(x)}" y="480" width="11" height="24" rx="3" fill="${g ? gold : bone}"/>`; lines += `<rect x="${r1(x)}" y="480" width="11" height="24" rx="3" fill="none" stroke="${ink}" stroke-width="2.4"/>`; }
-  lines += `<path d="M250 506 Q300 524 350 506" fill="none" stroke="${ink}" stroke-width="4"/>`;
-  // screen print: color layer slightly off-register from the black key layer
-  const body = `<rect x="-200" y="-100" width="1000" height="1100" fill="${paper}" opacity=".0"/><g transform="translate(4 -3)">${colA}</g><g>${linA}</g><g transform="translate(4 -3)">${col}</g><g>${lines}</g><rect x="-200" y="-100" width="1000" height="1100" filter="url(#tpPaper)"/>`;
-  const wrap = x => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 30 560 720" preserveAspectRatio="xMaxYMid meet" width="100%" height="100%"><defs>${defs}</defs>${x}</svg>`;
-  return { base: wrap(body), anim: wrap(glow) };
-}
-
-// Speed Tunnel Cruiser v2 (Grundy-inspired, original): long side-profile coupe, flat highlight bands
-function sceneCruiser(p) {
-  p = p || ['#111111', '#2a2a2a', '#4a4a4a', '#9a9a9a', '#f2f2f2'];
-  const vx = 1500, vy = 380;
-  let defs = `<clipPath id="crBody"><path d="M170 560 L215 500 L470 470 L600 395 L900 385 L1030 455 L1330 470 L1380 520 L1375 585 L180 600 Z"/></clipPath>`;
-  let b = `<rect width="${SW}" height="${SH}" fill="${p[1]}"/>`;
-  for (let i = 0; i < 40; i++) { const a1 = i / 40 * 6.283, a2 = a1 + 6.283 / 80, L = 2400; b += `<path d="M${vx} ${vy} L${r1(vx + Math.cos(a1) * L)} ${r1(vy + Math.sin(a1) * L)} L${r1(vx + Math.cos(a2) * L)} ${r1(vy + Math.sin(a2) * L)} Z" fill="${i % 2 ? p[2] : p[1]}"/>`; }
-  for (let i = 0; i < 12; i++) b += `<circle cx="${vx}" cy="${vy}" r="${80 + i * 110}" fill="none" stroke="${p[3]}" stroke-width="4" opacity=".18"/>`;
-  b += `<path d="M0 640 L${SW} 610 L${SW} ${SH} L0 ${SH} Z" fill="${p[0]}"/>`;
-  b += `<path class="wr-art-dash" d="M-100 760 L${SW + 100} 700" stroke="${p[4]}" stroke-width="12" stroke-dasharray="90 70" fill="none"/>`;
-  for (let i = 0; i < 14; i++) { const y = 400 + i * 16; b += `<path class="wr-art-dash" d="M1380 ${y} L${SW} ${y + 4}" stroke="${p[4]}" stroke-width="${2 + i % 3}" stroke-dasharray="${60 + i * 9} 40" opacity=".55" fill="none"/>`; }
-  // body
-  const body = 'M170 560 L215 500 L470 470 L600 395 L900 385 L1030 455 L1330 470 L1380 520 L1375 585 L180 600 Z';
-  b += `<path d="M150 610 L1395 600 L1390 625 L160 640 Z" fill="${p[0]}" opacity=".7"/>`;
-  b += `<path d="${body}" fill="${p[3]}" stroke="${p[0]}" stroke-width="6" stroke-linejoin="round"/>`;
-  b += `<g clip-path="url(#crBody)"><path d="M150 500 L1400 470 L1400 505 L150 535 Z" fill="${p[4]}" opacity=".85"/><path d="M150 548 L1400 528 L1400 540 L150 560 Z" fill="${p[4]}" opacity=".5"/><path d="M150 570 L1400 560 L1400 610 L150 620 Z" fill="${p[2]}"/></g>`;
-  b += `<path d="M620 403 L890 395 L1000 455 L560 463 Z" fill="${p[0]}"/><path d="M790 398 L800 459" stroke="${p[3]}" stroke-width="10"/><path d="M640 412 L700 410 L640 452 L600 455 Z" fill="${p[4]}" opacity=".35"/>`;
-  b += `<path d="M175 545 L1375 525" stroke="${p[4]}" stroke-width="5"/><path d="M150 585 Q300 575 420 585 L420 602 L150 606 Z" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/><path d="M1240 574 L1390 568 L1392 590 L1240 596 Z" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
-  b += `<rect x="180" y="512" width="44" height="22" rx="6" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
-  [[380, 600, 78], [1135, 595, 78]].forEach(([x, y, r]) => {
-    b += `<path d="M${x - r - 18} ${y - 4} A${r + 18} ${r + 18} 0 0 1 ${x + r + 18} ${y - 4}" fill="${p[0]}"/>`;
-    b += `<circle cx="${x}" cy="${y}" r="${r}" fill="${p[0]}"/><circle cx="${x}" cy="${y}" r="${r * .7}" fill="${p[4]}"/><circle cx="${x}" cy="${y}" r="${r * .52}" fill="${p[2]}" stroke="${p[0]}" stroke-width="4"/>`;
-    for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283; b += `<line x1="${x}" y1="${y}" x2="${r1(x + Math.cos(a) * r * .5)}" y2="${r1(y + Math.sin(a) * r * .5)}" stroke="${p[0]}" stroke-width="3"/>`; }
-    b += `<circle cx="${x}" cy="${y}" r="${r * .14}" fill="${p[4]}" stroke="${p[0]}" stroke-width="3"/>`;
-  });
-  for (let i = 0; i < 7; i++) b += `<circle cx="${1240 + i * 40}" cy="${640 - i * 6}" r="${26 + i * 9}" fill="${p[3]}" opacity="${r1(.5 - i * .06)}"/>`;
-  return sScene(defs, b, '');
-}
-
 const ART_DRAW = {
-  temple: () => sceneTemple(), inkeye: artInkEye, cruiser: t => sceneCruiser(t.artRamp),
   timber: sceneTimber, dawn: sceneDawn, marsh: sceneMarsh, deep: sceneDeep,
   lakeside: sceneLakeside, lab: sceneLab, mono: sceneMono,
   hanami: sceneHanami, holo: sceneHolo, animesky: sceneAnime, street: sceneStreet,
@@ -1452,7 +1343,7 @@ function startArt() {
   artEl.style.cssText = `position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:${T.artOpacity || .6}`;
   const out = ART_DRAW[T.art](T), base = typeof out === 'string' ? out : out.base, anim = typeof out === 'string' ? '' : out.anim;
   // two separate layers: the textured still picture is drawn once, only the light moving layer repaints
-  artEl.innerHTML = `<div style="position:absolute;inset:0;will-change:transform">${base}</div>` + (anim ? `<div style="position:absolute;inset:0;will-change:transform">${anim}</div>` : '');
+  artEl.innerHTML = safeHTML(`<div style="position:absolute;inset:0;will-change:transform">${base}</div>` + (anim ? `<div style="position:absolute;inset:0;will-change:transform">${anim}</div>` : ''));
   flattenArt(base, sig);
 }
 // Turn the still picture into a flat image once (cheap to repaint behind moving things).
@@ -1469,7 +1360,7 @@ function flattenArt(base, sig) {
       const cv = document.createElement('canvas'); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       cv.style.cssText = 'width:100%;height:100%;display:block';
       cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-      holder.innerHTML = ''; holder.appendChild(cv);
+      holder.textContent = ''; holder.appendChild(cv);
     } catch (e) { /* keep the live picture */ }
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -1647,7 +1538,7 @@ function render(root) {
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
   ].join('');
   const base = cur || PRESETS.midnight;
-  root.innerHTML = `
+  root.innerHTML = safeHTML(`
 <style>
   *{box-sizing:border-box;font:13px "Segoe UI",Arial,sans-serif}
   .p{width:330px;max-height:92vh;overflow:auto;background:#1b1f27;color:#e5e7eb;border:1px solid #3b4252;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
@@ -1726,7 +1617,7 @@ function render(root) {
   <div class="note">Saved in this browser only. Each person picks their own look.
   If Chrome's "Auto Dark Mode" flag is on, a theme here tells Chrome this page is already dark.</div>
   </div>
-</div>`;
+</div>`);
   const $ = s => root.querySelector(s);
   $('#theme').value = curId;
   makeDraggable(root);
@@ -1897,7 +1788,7 @@ function ruleForm(root, el) {
   const cs = getComputedStyle(el);
   const sel = selectorFor(el);
   const f = root.querySelector('#ruleform');
-  f.innerHTML = `
+  f.innerHTML = safeHTML(`
   <div style="background:#0f1218;border:1px solid #3b4252;border-radius:6px;padding:8px;margin-top:6px">
     <div class="row" style="margin-bottom:4px"><button id="rup">⬆ Bigger area</button><button id="rdown">⬇ Smaller</button></div>
     <div class="note" style="margin:0 0 4px">Which elements (advanced users can edit):</div>
@@ -1906,7 +1797,7 @@ function ruleForm(root, el) {
     <label class="c"><input type="checkbox" id="rbgon" checked><input type="color" id="rbg" value="${toHex(cs.backgroundColor, '#334155')}"> Background</label>
     <label class="c"><input type="checkbox" id="rfgon" checked><input type="color" id="rfg" value="${toHex(cs.color, '#ffffff')}"> Text</label>
     <div class="row" style="margin-top:6px"><button class="pri" id="rsave">Save</button><button id="rcancel">Cancel</button></div>
-  </div>`;
+  </div>`);
   const $ = s => root.querySelector(s);
   const flash = () => {                           // briefly outline what the selector matches
     let n = 0; try { document.querySelectorAll($('#rsel').value).forEach(x => { n++; const o = x.style.outline; x.style.outline = '3px dashed #f59e0b'; setTimeout(() => { x.style.outline = o; }, 900); }); } catch (e) {}
@@ -1924,12 +1815,12 @@ function ruleForm(root, el) {
   $('#rdown').disabled = !el.__wrChild;
   $('#rdown').onclick = () => { if (el.__wrChild) ruleForm(root, el.__wrChild); };
   if (p) p.__wrChild = el;
-  $('#rcancel').onclick = () => { f.innerHTML = ''; };
+  $('#rcancel').onclick = () => { f.textContent = ''; };
   $('#rsave').onclick = () => {
     const s = $('#rsel').value.trim();
     try { document.querySelector(s); } catch (e) { alert('Not a valid selector.'); return; }
     const rule = { sel: s, bg: $('#rbgon').checked ? $('#rbg').value : '', color: $('#rfgon').checked ? $('#rfg').value : '' };
-    if (!rule.bg && !rule.color) { f.innerHTML = ''; return; }
+    if (!rule.bg && !rule.color) { f.textContent = ''; return; }
     snapshot();
     cfg = siteCfg();
     cfg.rules = (cfg.rules || []).filter(r => r.sel !== s).concat([rule]);
