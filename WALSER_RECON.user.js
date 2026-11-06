@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1222
+// @version      2026.1106.1229
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -84,8 +84,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v2.1  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '2.1', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v2.2  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '2.2', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -1083,8 +1083,22 @@ function makeDraggable(root) {
     window.addEventListener('pointermove', move, true); window.addEventListener('pointerup', up, true);
   };
 }
+// ---------- undo (steps back one change at a time, until the page is reloaded) ----------
+const undoStack = [];
+function snapshot() {
+  undoStack.push(JSON.stringify({ site: getSites()[HOST] || null, custom: customThemes(), daily: dailyState() }));
+  if (undoStack.length > 40) undoStack.shift();
+}
+function undoLast() {
+  const raw = undoStack.pop(); if (!raw) return false;
+  const st = JSON.parse(raw), sites = getSites();
+  if (st.site) sites[HOST] = st.site; else delete sites[HOST];
+  save('sites', sites); save('custom_themes', st.custom); save('daily', st.daily);
+  refresh(true); return true;
+}
 // Save a change to the current theme. Editing a suggested theme makes a "My ..." copy.
 function updateTheme(changes) {
+  snapshot();
   const c = customThemes();
   const cur = activeThemeId();
   let id = cur;
@@ -1163,7 +1177,7 @@ function render(root) {
   input[type=range]{width:100%}
 </style>
 <div class="p ${load('panel_min', false) ? 'min' : ''}">
-  <h3 id="drag" title="Drag to move">🎨 Themes & colors <span><button class="x" id="minbtn" title="Shrink / expand">▁</button><button class="x" id="close" title="Close">✕</button></span></h3>
+  <h3 id="drag" title="Drag to move">🎨 Themes & colors <span><button class="x" id="undo" title="Undo last change" ${undoStack.length ? '' : 'disabled style="opacity:.35"'}>↶</button><button class="x" id="minbtn" title="Shrink / expand">▁</button><button class="x" id="close" title="Close">✕</button></span></h3>
   <div class="body">
   <div class="note" style="margin:0 0 8px">Site: <b>${esc(HOST)}</b> · drag the title bar to move this box</div>
   <h4>Theme</h4>
@@ -1224,6 +1238,7 @@ function render(root) {
   makeDraggable(root);
   $('#minbtn').onclick = () => { const p = $('.p'); p.classList.toggle('min'); save('panel_min', p.classList.contains('min')); };
   $('#close').onclick = () => { host.remove(); host = null; };
+  $('#undo').onclick = () => { if (undoLast()) render(root); };
   // ---- wallpaper ----
   const wpKey = Object.keys(WALLPAPERS).find(k => WALLPAPERS[k].css === base.wp);
   $('#wpsel').value = !base.wp ? '' : wpKey ? 'b:' + wpKey : 'mine';
@@ -1269,18 +1284,20 @@ function render(root) {
   slider('#wpsee', 'wpSee', '#seev');
   $('#wpfit').onchange = e => { if (updateTheme({ wpFit: e.target.value })) render(root); };
   $('#theme').onchange = e => {
+    snapshot();
     const v = e.target.value;
     if (!v && dailyState().on) save('daily', Object.assign(dailyState(), { on: false }));   // Off also stops theme of the day
     setActiveTheme(v); refresh(true); render(root);
   };
-  $('#daily').onchange = e => { const d = dailyState(); d.on = e.target.checked; if (d.on) d.date = ''; save('daily', d); refresh(true); render(root); };
-  if ($('#skip')) $('#skip').onclick = () => { skipDaily(); render(root); };
+  $('#daily').onchange = e => { snapshot(); const d = dailyState(); d.on = e.target.checked; if (d.on) d.date = ''; save('daily', d); refresh(true); render(root); };
+  if ($('#skip')) $('#skip').onclick = () => { snapshot(); skipDaily(); render(root); };
   $('#allsites').onclick = () => {
     WORK_SITES.forEach(h => { const c = siteCfg(h); c.theme = curId; saveSiteCfg(c, h); });
     alert('This theme is now set for: ' + WORK_SITES.join(', ') + '\nOther tabs change after a reload.');
   };
   if ($('#del')) $('#del').onclick = () => {
     if (!confirm('Delete this theme?')) return;
+    snapshot();
     const c = customThemes(); delete c[curId]; save('custom_themes', c);
     setActiveTheme(''); refresh(true); render(root);
   };
@@ -1292,17 +1309,18 @@ function render(root) {
     };
     inp.onchange = () => { if (updateTheme({ [inp.dataset.k]: inp.value })) render(root); };
   });
-  $('#buttons').onchange = e => { cfg.buttons = e.target.checked; saveSiteCfg(cfg); refresh(true); };
-  $('#anim').onchange = e => { cfg.anim = e.target.checked; saveSiteCfg(cfg); refresh(false); };
+  $('#buttons').onchange = e => { snapshot(); cfg.buttons = e.target.checked; saveSiteCfg(cfg); refresh(true); };
+  $('#anim').onchange = e => { snapshot(); cfg.anim = e.target.checked; saveSiteCfg(cfg); refresh(false); };
   $('#pick').onclick = () => startPicker(root);
-  $('#clearpicks').onclick = () => { cfg.rules = []; saveSiteCfg(cfg); refresh(true); render(root); };
-  $('#savecss').onclick = () => { cfg.css = $('#css').value; saveSiteCfg(cfg); refresh(false); };
+  $('#clearpicks').onclick = () => { snapshot(); cfg.rules = []; saveSiteCfg(cfg); refresh(true); render(root); };
+  $('#savecss').onclick = () => { snapshot(); cfg.css = $('#css').value; saveSiteCfg(cfg); refresh(false); };
   $('#copy').onclick = () => {
     const code = JSON.stringify({ wrTheme: 1, theme: themes[curId] || null, rules: cfg.rules || [], css: cfg.css || '', site: HOST });
     $('#share').value = code; $('#share').select();
     try { navigator.clipboard.writeText(code).catch(() => {}); } catch (e) {}
   };
   $('#loadcode').onclick = () => {
+    snapshot();
     let o; try { o = JSON.parse($('#share').value); } catch (e) { alert('That code is not valid.'); return; }
     if (!o || o.wrTheme !== 1) { alert('That is not a theme code.'); return; }
     if (o.theme) {
@@ -1341,28 +1359,41 @@ function startPicker(root) {
   box.style.cssText = 'position:fixed;pointer-events:none;z-index:2147483646;outline:3px dashed #f59e0b;background:rgba(245,158,11,.12);transition:all .05s';
   const tip = document.createElement('div');
   tip.id = OUR + '-picktip';
-  tip.textContent = '🎯 Click the thing you want to recolor   ·   Esc = cancel';
+  tip.textContent = '🎯 Click to pick  ·  Scroll wheel or ↑ ↓ = bigger / smaller box  ·  Esc = cancel';
   tip.style.cssText = 'all:initial;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#f59e0b;color:#000;font:bold 13px Segoe UI,sans-serif;padding:6px 12px;border-radius:6px';
   document.documentElement.append(box, tip);
-  let target = null;
-  const move = e => {
-    const el = e.target;
-    if (!el || isOurs(el)) return;
-    target = el;
-    const r = el.getBoundingClientRect();
+  let base = null, target = null;                 // base = what the mouse is on; target = base or a parent of it
+  const draw = () => {
+    if (!target) return;
+    const r = target.getBoundingClientRect();
     Object.assign(box.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
   };
+  const bigger = () => { if (target && target.parentElement && target.parentElement !== document.body && target.parentElement !== document.documentElement) { target = target.parentElement; draw(); } };
+  const smaller = () => { if (!target || target === base) return; let el = base; while (el.parentElement && el.parentElement !== target) el = el.parentElement; target = el; draw(); };
+  const move = e => {
+    const el = e.target;
+    if (!el || isOurs(el) || el === base) return;
+    if (target && target !== base && target.contains(el)) { base = el; return; }   // keep the bigger box while moving inside it
+    base = target = el; draw();
+  };
+  const wheel = e => { e.preventDefault(); e.stopPropagation(); if (e.deltaY < 0) bigger(); else smaller(); };
   const block = e => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); };
   const done = () => {
     document.removeEventListener('mousemove', move, true);
+    document.removeEventListener('wheel', wheel, { capture: true });
     ['mousedown', 'mouseup', 'pointerdown', 'pointerup'].forEach(t => document.removeEventListener(t, block, true));
     document.removeEventListener('click', click, true);
     document.removeEventListener('keydown', key, true);
     box.remove(); tip.remove(); host.style.display = '';
   };
   const click = e => { block(e); const el = target; done(); if (el) ruleForm(root, el); };
-  const key = e => { if (e.key === 'Escape') { block(e); done(); } };
+  const key = e => {
+    if (e.key === 'Escape') { block(e); done(); }
+    else if (e.key === 'ArrowUp') { block(e); bigger(); }
+    else if (e.key === 'ArrowDown') { block(e); smaller(); }
+  };
   document.addEventListener('mousemove', move, true);
+  document.addEventListener('wheel', wheel, { capture: true, passive: false });
   ['mousedown', 'mouseup', 'pointerdown', 'pointerup'].forEach(t => document.addEventListener(t, block, true));
   document.addEventListener('click', click, true);
   document.addEventListener('keydown', key, true);
@@ -1374,6 +1405,7 @@ function ruleForm(root, el) {
   const f = root.querySelector('#ruleform');
   f.innerHTML = `
   <div style="background:#0f1218;border:1px solid #3b4252;border-radius:6px;padding:8px;margin-top:6px">
+    <div class="row" style="margin-bottom:4px"><button id="rup">⬆ Bigger area</button><button id="rdown">⬇ Smaller</button></div>
     <div class="note" style="margin:0 0 4px">Which elements (advanced users can edit):</div>
     <input type="text" id="rsel" value="${esc(sel)}">
     <div class="note" id="rcount" style="margin:2px 0 6px"></div>
@@ -1382,18 +1414,29 @@ function ruleForm(root, el) {
     <div class="row" style="margin-top:6px"><button class="pri" id="rsave">Save</button><button id="rcancel">Cancel</button></div>
   </div>`;
   const $ = s => root.querySelector(s);
+  const flash = () => {                           // briefly outline what the selector matches
+    let n = 0; try { document.querySelectorAll($('#rsel').value).forEach(x => { n++; const o = x.style.outline; x.style.outline = '3px dashed #f59e0b'; setTimeout(() => { x.style.outline = o; }, 900); }); } catch (e) {}
+    return n;
+  };
   const count = () => {
     try { const n = document.querySelectorAll($('#rsel').value).length; $('#rcount').textContent = `Matches ${n} element${n === 1 ? '' : 's'} on this page.`; }
     catch (e) { $('#rcount').textContent = 'Not a valid selector.'; }
   };
-  count();
+  count(); flash();
   $('#rsel').oninput = count;
+  const p = el.parentElement;
+  $('#rup').disabled = !p || p === document.body || p === document.documentElement;
+  $('#rup').onclick = () => { if (!$('#rup').disabled) ruleForm(root, p); };
+  $('#rdown').disabled = !el.__wrChild;
+  $('#rdown').onclick = () => { if (el.__wrChild) ruleForm(root, el.__wrChild); };
+  if (p) p.__wrChild = el;
   $('#rcancel').onclick = () => { f.innerHTML = ''; };
   $('#rsave').onclick = () => {
     const s = $('#rsel').value.trim();
     try { document.querySelector(s); } catch (e) { alert('Not a valid selector.'); return; }
     const rule = { sel: s, bg: $('#rbgon').checked ? $('#rbg').value : '', color: $('#rfgon').checked ? $('#rfg').value : '' };
     if (!rule.bg && !rule.color) { f.innerHTML = ''; return; }
+    snapshot();
     cfg = siteCfg();
     cfg.rules = (cfg.rules || []).filter(r => r.sel !== s).concat([rule]);
     saveSiteCfg(cfg); refresh(true); render(root);
