@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PartsTech Queue Navigator
 // @namespace    reconclipboard
-// @version      17.1
+// @version      17.2
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/NAVIGATOR.js
@@ -170,13 +170,17 @@ function injectBadges() {
       }
     }
     const badge = document.createElement('span');
-    badge.className = 'prob-badge ' + prob.conf;
-    const icon = prob.conf === 'H' ? '★' : prob.conf === 'M' ? '◆' : '▼';
-    const label = prob.conf === 'H' ? 'HIGH' : prob.conf === 'M' ? 'MOD' : 'LOW';
-    badge.textContent = icon + ' ' + label + ' ' + prob.pct + '%';
-    badge.title = prob.conf === 'H' ? 'HIGH confidence — frequently sold for this engine type'
-                : prob.conf === 'M' ? 'MODERATE confidence — sometimes sold for this engine type'
-                : 'LOW confidence — rarely sold for this engine type';
+    // Color by how often it was sold (the percent). The letter (H/M) from the history file is
+    // shown small: in the data H runs 0-100% and M 5-146%, so it is not "how likely".
+    const band = prob.pct >= 70 ? 'H' : prob.pct >= 30 ? 'M' : 'L';
+    badge.className = 'prob-badge ' + band;
+    const icon = band === 'H' ? '★' : band === 'M' ? '◆' : '▼';
+    badge.textContent = icon + ' ' + prob.pct + '% sold';
+    const grade = document.createElement('span'); grade.textContent = ' ' + prob.conf;
+    grade.style.cssText = 'opacity:.6;font-size:.85em;margin-left:3px';
+    badge.appendChild(grade);
+    badge.title = 'Sold on ' + prob.pct + '% of matching vehicles in the parts history (over 100% = more than one per vehicle).'
+                + ' Data grade from the history file: ' + prob.conf + '.';
     if (stockRow) {
       stockRow.appendChild(badge);
     } else {

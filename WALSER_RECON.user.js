@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1830
+// @version      2026.1109.1846
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -4605,8 +4605,8 @@ if (IS_RECONVISION) {
 
 });
 
-// ===== PartsTech Queue Navigator v17.1  (NAVIGATOR.js) =====
-WR.add('navigator', 'PartsTech Queue Navigator', '17.1', ['https://app.partstech.com/*'], 'document-idle',
+// ===== PartsTech Queue Navigator v17.2  (NAVIGATOR.js) =====
+WR.add('navigator', 'PartsTech Queue Navigator', '17.2', ['https://app.partstech.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -4767,13 +4767,17 @@ function injectBadges() {
       }
     }
     const badge = document.createElement('span');
-    badge.className = 'prob-badge ' + prob.conf;
-    const icon = prob.conf === 'H' ? '★' : prob.conf === 'M' ? '◆' : '▼';
-    const label = prob.conf === 'H' ? 'HIGH' : prob.conf === 'M' ? 'MOD' : 'LOW';
-    badge.textContent = icon + ' ' + label + ' ' + prob.pct + '%';
-    badge.title = prob.conf === 'H' ? 'HIGH confidence — frequently sold for this engine type'
-                : prob.conf === 'M' ? 'MODERATE confidence — sometimes sold for this engine type'
-                : 'LOW confidence — rarely sold for this engine type';
+    // Color by how often it was sold (the percent). The letter (H/M) from the history file is
+    // shown small: in the data H runs 0-100% and M 5-146%, so it is not "how likely".
+    const band = prob.pct >= 70 ? 'H' : prob.pct >= 30 ? 'M' : 'L';
+    badge.className = 'prob-badge ' + band;
+    const icon = band === 'H' ? '★' : band === 'M' ? '◆' : '▼';
+    badge.textContent = icon + ' ' + prob.pct + '% sold';
+    const grade = document.createElement('span'); grade.textContent = ' ' + prob.conf;
+    grade.style.cssText = 'opacity:.6;font-size:.85em;margin-left:3px';
+    badge.appendChild(grade);
+    badge.title = 'Sold on ' + prob.pct + '% of matching vehicles in the parts history (over 100% = more than one per vehicle).'
+                + ' Data grade from the history file: ' + prob.conf + '.';
     if (stockRow) {
       stockRow.appendChild(badge);
     } else {
