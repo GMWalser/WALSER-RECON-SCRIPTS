@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Filter Quick Add
 // @namespace    reconclipboard
-// @version      1.6
+// @version      1.7
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
@@ -187,10 +187,17 @@ function vehicleMake() {
 // and matches the number OR "DRAIN PLUG" because Tekion may swap in its own in-stock number.
 // Part number without dashes/spaces, for matching Tekion's replaced numbers (EAP9043012031 ~ 90430-12031)
 function pnKey(t) { return (t || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+// Part names on the RO lines, read the same way as the (confirmed working) Parts Transfer tool:
+// any cell whose test id contains "itemName-cell", from its input box first, else its text.
+function lineTexts(sec) {
+  return [...sec.querySelectorAll('[data-test-id*="itemName-cell"]')].map(c => {
+    const inp = c.querySelector('input');
+    return ((inp && inp.value) || c.textContent || '').trim().replace(/\s+/g, ' ');
+  }).filter(t => t && !/^select$/i.test(t));
+}
 function gasketLine(sec, pn) {
-  const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')];
   const key = pnKey(pn);
-  const hit = cells.map(c => (c.textContent || '').trim().replace(/\s+/g, ' '))
+  const hit = lineTexts(sec)
     .find(t => pnKey(t.split(' - ')[0]).indexOf(key) !== -1 || /drain\s*plug/i.test(t));   // EAP9043012031 = 90430-12031
   return hit || null;
 }
@@ -292,7 +299,7 @@ async function autoGasketCheck() {
   const secs = [...document.querySelectorAll('[data-id^="Job"]')];
   if (!secs.length) return;
   for (const sec of secs) {
-    const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')].map(c => (c.textContent || '').trim().replace(/\s+/g, ' '));
+    const cells = lineTexts(sec);
     const filt = cells.find(t => OIL_FILTER_RE.test(t) && !NOT_FILTER_RE.test(t));
     if (!filt) continue;
     const key = location.pathname + '|' + pageVin() + '|' + filt;
@@ -325,5 +332,5 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.6 loaded on', location.hostname);
+log('v1.7 loaded on', location.hostname);
 })();

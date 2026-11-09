@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1537
+// @version      2026.1109.1829
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -9913,8 +9913,8 @@ log('v1.3 loaded on', location.hostname);
 })();
 });
 
-// ===== Filter Quick Add v1.6  (FILTER_QUICKADD.js) =====
-WR.add('filter_quickadd', 'Filter Quick Add', '1.6', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
+// ===== Filter Quick Add v1.7  (FILTER_QUICKADD.js) =====
+WR.add('filter_quickadd', 'Filter Quick Add', '1.7', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10090,10 +10090,17 @@ function vehicleMake() {
 // and matches the number OR "DRAIN PLUG" because Tekion may swap in its own in-stock number.
 // Part number without dashes/spaces, for matching Tekion's replaced numbers (EAP9043012031 ~ 90430-12031)
 function pnKey(t) { return (t || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+// Part names on the RO lines, read the same way as the (confirmed working) Parts Transfer tool:
+// any cell whose test id contains "itemName-cell", from its input box first, else its text.
+function lineTexts(sec) {
+  return [...sec.querySelectorAll('[data-test-id*="itemName-cell"]')].map(c => {
+    const inp = c.querySelector('input');
+    return ((inp && inp.value) || c.textContent || '').trim().replace(/\s+/g, ' ');
+  }).filter(t => t && !/^select$/i.test(t));
+}
 function gasketLine(sec, pn) {
-  const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')];
   const key = pnKey(pn);
-  const hit = cells.map(c => (c.textContent || '').trim().replace(/\s+/g, ' '))
+  const hit = lineTexts(sec)
     .find(t => pnKey(t.split(' - ')[0]).indexOf(key) !== -1 || /drain\s*plug/i.test(t));   // EAP9043012031 = 90430-12031
   return hit || null;
 }
@@ -10195,7 +10202,7 @@ async function autoGasketCheck() {
   const secs = [...document.querySelectorAll('[data-id^="Job"]')];
   if (!secs.length) return;
   for (const sec of secs) {
-    const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')].map(c => (c.textContent || '').trim().replace(/\s+/g, ' '));
+    const cells = lineTexts(sec);
     const filt = cells.find(t => OIL_FILTER_RE.test(t) && !NOT_FILTER_RE.test(t));
     if (!filt) continue;
     const key = location.pathname + '|' + pageVin() + '|' + filt;
@@ -10228,7 +10235,7 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.6 loaded on', location.hostname);
+log('v1.7 loaded on', location.hostname);
 })();
 
 });
