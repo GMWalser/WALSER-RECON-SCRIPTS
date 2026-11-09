@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tekion to RV Parts Transfer
 // @namespace    reconclipboard
-// @version      1.2
+// @version      1.3
 // @author       Gabe
 // @description  Tekion RO: one click captures every part (part#, description, qty, price, job). RV Parts page: shows them matched to the Mechanical Repairs lines (change any match), then fills them all in. You review and click Save.
 // @match        https://app.tekioncloud.com/parts/*
@@ -108,19 +108,20 @@ function initTekion() {
 // RV: remember the RO# and the Mechanical Repairs lines (edit page)
 // =====================================================================
 const woId = () => (location.pathname.match(/work_orders\/(\d+)/) || [])[1] || '';
+// Fast: uses textContent (no page re-measuring) and runs only on load / when the work order
+// changes. The old version re-measured big parts of the page every 5 s and froze RV for seconds.
 function rememberWorkOrder() {
   const id = woId(); if (!id) return;
-  const txt = document.body.innerText || '';
-  const ro = (txt.match(/RO#\s*(7\d{6})/) || [])[1] || '';
+  const ro = ((document.body.textContent || '').match(/RO#\s*(7\d{6})/) || [])[1] || '';
   const mech = [];
-  document.querySelectorAll('[data-service-id]').forEach(row => {     // which department card is this line in?
-    let card = row.parentElement;
-    while (card && card !== document.body && !/DEPT\.?\s*TOTAL/i.test((card.innerText || '').slice(0, 600))) card = card.parentElement;
-    if (!card || card === document.body) return;
-    if (/^\W*mechanical repairs/i.test(clean(card.innerText).slice(0, 80))) {
-      const sid = row.getAttribute('data-service-id'); if (sid && !mech.includes(sid)) mech.push(sid);
-    }
-  });
+  for (const h of document.querySelectorAll('h1,h2,h3,h4,h5,h6,span,div,a,b,strong,p')) {
+    if (h.childElementCount || !/^\s*mechanical repairs/i.test(h.textContent || '')) continue;
+    let card = h.parentElement, hops = 0;
+    while (card && card !== document.body && hops++ < 12 && !card.querySelector('[data-service-id]')) card = card.parentElement;
+    if (!card || card === document.body) continue;
+    if (((card.textContent || '').match(/DEPT\.?\s*TOTAL/gi) || []).length > 1) continue;   // went too far up (several departments)
+    card.querySelectorAll('[data-service-id]').forEach(r => { const sid = r.getAttribute('data-service-id'); if (sid && !mech.includes(sid)) mech.push(sid); });
+  }
   if (!ro && !mech.length) return;
   const all = load('workorders', {}); const prev = all[id] || {};
   all[id] = { ro: ro || prev.ro || '', mech: mech.length ? mech : (prev.mech || []), ts: Date.now() };
@@ -261,6 +262,10 @@ function initRvParts() {
 // ---------- start ----------
 if (IS_TEKION) initTekion();
 else if (/\/work_orders\/\d+\/parts_overview/.test(location.pathname)) setTimeout(initRvParts, 1200);
-else if (/\/work_orders\/\d+/.test(location.pathname)) { setTimeout(rememberWorkOrder, 1500); setInterval(rememberWorkOrder, 5000); }
-log('v1.2 loaded on', location.hostname);
+else if (/\/work_orders\/\d+/.test(location.pathname)) {
+  setTimeout(rememberWorkOrder, 1500); setTimeout(rememberWorkOrder, 6000);          // on load (lines can load a bit late)
+  let lastPath = location.pathname;                                                  // and when you move to another work order
+  setInterval(() => { if (location.pathname !== lastPath) { lastPath = location.pathname; setTimeout(rememberWorkOrder, 1500); } }, 2000);
+}
+log('v1.3 loaded on', location.hostname);
 })();
