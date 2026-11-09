@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      4.8
+// @version      4.9
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -369,6 +369,7 @@ html,body{background-color:var(--wr-bg) !important}
 [data-wr-bg=surface]{background-color:var(--wr-surface) !important}
 [data-wr-bg=surface2]{background-color:var(--wr-surface2) !important}
 [data-wr-bg=input]{background-color:var(--wr-input) !important}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=button]):not([type=submit]):not([type=image]),textarea,select{background-color:var(--wr-input);color:var(--wr-text)}
 [data-wr-bg=solid]{background-color:var(--wr-solid) !important}
 [data-wr-bg=solid2]{background-color:var(--wr-solid2) !important}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface],${p} [data-wr-bg=surface],${p}[data-wr-bg=input],${p} [data-wr-bg=input]`).join(',')}{background-color:var(--wr-solid) !important}
@@ -467,8 +468,8 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v4.8: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
-    + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
+  return 'Status v4.9: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+    + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
 
@@ -521,29 +522,43 @@ function clearEl(el) {
   ATTRS.forEach(a => el.removeAttribute(a));
   el.style.removeProperty('--wr-tint'); el.style.removeProperty('--wr-fgtint');
 }
+// Work is done in small time slices (about 8 ms per animation frame) so a huge page
+// (big Tekion tables) never freezes while it is being recolored.
+let work = [], pumping = false, scanStats = { els: 0, ms: 0, since: Date.now() };
+const seen = new WeakSet();                       // elements already handled (Tekion re-adds moved rows)
 function scan(roots, redo) {
   if (!T) return;
-  const els = [];
   roots.forEach(r => {
     if (!r.isConnected || r.nodeType !== 1) return;
     if (r.closest && r.closest('[id^="' + OUR + '"]')) return;
-    if (!skip(r)) els.push(r);
+    const take = el => { if (skip(el)) return; if (!redo && seen.has(el)) return; work.push(redo ? { el, redo: true } : el); };
+    take(r);
     const all = r.getElementsByTagName('*');
-    if (redo && all.length > 3000) return;       // big container class change: element itself only
-    for (const el of all) if (!skip(el)) els.push(el);
+    if (redo && all.length > 3000) return;       // style change on a huge container: the element itself only
+    for (const el of all) take(el);
   });
-  if (redo) els.forEach(clearEl);                // 1. clear (so we read the page's own colors)
-  const picked = ruleSelector();
-  const ds = els.map(el => decide(el, getComputedStyle(el), picked));   // 2. read
-  els.forEach((el, i) => {                        // 3. write
-    const d = ds[i];
-    if (!redo) clearEl(el);
-    if (d.bg) el.setAttribute('data-wr-bg', d.bg);
-    if (d.fg) el.setAttribute('data-wr-fg', d.fg);
-    if (d.bd) el.setAttribute('data-wr-bd', d.bd);
-    if (d.tint) el.style.setProperty('--wr-tint', d.tint);
-    if (d.fgtint) el.style.setProperty('--wr-fgtint', d.fgtint);
-  });
+  if (!pumping && work.length) { pumping = true; requestAnimationFrame(pump); }
+}
+function pump() {
+  const t0 = performance.now(), picked = ruleSelector();
+  while (work.length && performance.now() - t0 < 8) {
+    const batch = work.splice(0, 250).map(x => x.el ? x : { el: x, redo: false }).filter(x => x.el.isConnected);
+    batch.forEach(x => { if (x.redo) clearEl(x.el); });                         // 1. clear (read the page's own colors)
+    const ds = batch.map(x => decide(x.el, getComputedStyle(x.el), picked));   // 2. read
+    batch.forEach((x, i) => {                                                  // 3. write
+      const el = x.el, d = ds[i];
+      if (!x.redo) clearEl(el);
+      if (d.bg) el.setAttribute('data-wr-bg', d.bg);
+      if (d.fg) el.setAttribute('data-wr-fg', d.fg);
+      if (d.bd) el.setAttribute('data-wr-bd', d.bd);
+      if (d.tint) el.style.setProperty('--wr-tint', d.tint);
+      if (d.fgtint) el.style.setProperty('--wr-fgtint', d.fgtint);
+      seen.add(el);
+    });
+    scanStats.els += batch.length;
+  }
+  scanStats.ms += performance.now() - t0;
+  if (work.length && T) requestAnimationFrame(pump); else { pumping = false; if (!T) work = []; }
 }
 function unscanAll() {
   document.querySelectorAll('[data-wr-bg],[data-wr-fg],[data-wr-bd]').forEach(clearEl);
@@ -1113,7 +1128,7 @@ function refresh(rescan) {
   if (!document.body) return;
   startFx(); startMesh(); startHudInfo();
   if (!T) { stopObserver(); unscanAll(); return; }
-  if (rescan) { unscanAll(); scan([document.documentElement], false); }
+  if (rescan) { unscanAll(); work = []; scan([document.documentElement], true); }
   startObserver();
 }
 
