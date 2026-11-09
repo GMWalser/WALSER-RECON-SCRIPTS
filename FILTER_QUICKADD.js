@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Filter Quick Add
 // @namespace    reconclipboard
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
@@ -185,10 +185,13 @@ function vehicleMake() {
 
 // Is there already a drain plug gasket LINE in this job? Looks only at the part-name cells (not all text),
 // and matches the number OR "DRAIN PLUG" because Tekion may swap in its own in-stock number.
+// Part number without dashes/spaces, for matching Tekion's replaced numbers (EAP9043012031 ~ 90430-12031)
+function pnKey(t) { return (t || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 function gasketLine(sec, pn) {
   const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')];
+  const key = pnKey(pn);
   const hit = cells.map(c => (c.textContent || '').trim().replace(/\s+/g, ' '))
-    .find(t => t.toUpperCase().indexOf(pn.toUpperCase()) === 0 || /drain\s*plug/i.test(t));
+    .find(t => pnKey(t.split(' - ')[0]).indexOf(key) !== -1 || /drain\s*plug/i.test(t));   // EAP9043012031 = 90430-12031
   return hit || null;
 }
 
@@ -203,11 +206,11 @@ async function addOne(partNumber) {
 
   // Pick the dropdown option whose text STARTS with the typed part number (never "Create ..."),
   // and only once the list has updated for what was typed.
-  const want = partNumber.toUpperCase();
+  const want = partNumber.toUpperCase(), wantKey = pnKey(partNumber);
   const optionsNow = () => [...document.querySelectorAll('li[role="option"]')].filter(li => li.isConnected);
   const pickNow = () => optionsNow().find(li => {
     const t = (li.textContent || '').trim().toUpperCase();
-    return t.indexOf('CREATE') !== 0 && t.indexOf(want) === 0;
+    return t.indexOf('CREATE') !== 0 && (t.indexOf(want) === 0 || pnKey(t.split(' - ')[0]).indexOf(wantKey) !== -1);   // also Tekion's replaced numbers
   });
   let item = await waitFor(pickNow, 6000);
   if (item) { await sleep(300); item = pickNow(); }   // let the list settle, then re-pick
@@ -322,5 +325,5 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.5 loaded on', location.hostname);
+log('v1.6 loaded on', location.hostname);
 })();

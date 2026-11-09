@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1412
+// @version      2026.1109.1427
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.1  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.1', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.4  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.4', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -444,6 +444,8 @@ html,body{background-color:var(--wr-bg) !important}
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=button]):not([type=submit]):not([type=image]),textarea,select{background-color:var(--wr-input);color:var(--wr-text)}
 [data-wr-bg=solid]{background-color:var(--wr-solid) !important}
 [data-wr-bg=solid2]{background-color:var(--wr-solid2) !important}
+html [role="grid"],html [role="table"],html [role="rowgroup"],html [role="row"],html [role="cell"],html [role="gridcell"],html [role="columnheader"]{background-color:var(--wr-surface)}
+html [role="cell"][data-sticky-td],html [role="columnheader"][data-sticky-td]{background-color:var(--wr-solid)}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface],${p} [data-wr-bg=surface],${p}[data-wr-bg=input],${p} [data-wr-bg=input]`).join(',')}{background-color:var(--wr-solid) !important}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface2],${p} [data-wr-bg=surface2]`).join(',')}{background-color:var(--wr-solid2) !important}
 input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readonly],
@@ -540,7 +542,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.1: theme ' + (T ? (liteMode ? 'on (LITE: page too heavy)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.4: theme ' + (T ? (liteMode ? 'on (LITE: effects off, slower updates)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -609,7 +611,8 @@ function isHiddenBox(el) {
   return !!(st && /display\s*:\s*none/i.test(st));
 }
 function collect(root, redo) {
-  const take = el => { if (!redo && seen.has(el)) return; work.push(redo ? { el, redo: true } : el); };
+  // An element that already carries our colors must be cleared before reading (else we read our own colors).
+  const take = el => { const mine = el.hasAttribute('data-wr-bg') || el.hasAttribute('data-wr-fg') || el.hasAttribute('data-wr-bd'); work.push(redo || mine ? { el, redo: true } : el); };
   if (isHiddenBox(root)) { deferred.add(root); return; }
   if (!skip(root)) take(root);
   const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
@@ -669,14 +672,14 @@ function unscanAll() {
 
 let observer = null, queue = new Set(), added = new Set(), timer = null;
 function startObserver() {
-  if (observer || liteMode) return;
+  if (observer) return;
   observer = new MutationObserver(muts => {
     const tm = performance.now();
     for (const m of muts) {
       if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) added.add(n); });
       else queue.add(m.target);
     }
-    if (!timer) timer = setTimeout(flush, 150);
+    if (!timer) timer = setTimeout(flush, liteMode ? 1000 : 150);
     busy(performance.now() - tm);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled', 'readonly', 'aria-disabled'] });
@@ -776,8 +779,9 @@ background:radial-gradient(circle at 30% 6%,${hc} 0 2px,transparent 3.5px),radia
 let fx = null;
 // ---------- safety brake ----------
 // After the first 10 s on a page, if the theme keeps the page busy more than 5% of the time
-// in any 10 s stretch, stop watching the page and stop the moving effects (colors already
-// applied stay). Protects slow PCs and very heavy pages like RV work orders.
+// in any 10 s stretch, go LITE: stop the moving effects and check page changes once a second
+// instead of every 0.15 s. Recoloring never stops (apps like Tekion rebuild rows constantly,
+// and stopping would leave them white).
 const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, PAGE_T0 = performance.now();
 let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0;
 function busy(ms) {
@@ -793,8 +797,8 @@ function busy(ms) {
 }
 function goLite(share) {
   liteMode = true;
-  stopObserver(); work = []; writeDecisions(); stopFx(); stopMesh();
-  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time, live updates and effects paused');
+  stopFx(); stopMesh();
+  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - effects off, page changes checked once a second');
 }
 function stopFx() {
   if (!fx) return;
@@ -9909,8 +9913,8 @@ log('v1.3 loaded on', location.hostname);
 })();
 });
 
-// ===== Filter Quick Add v1.5  (FILTER_QUICKADD.js) =====
-WR.add('filter_quickadd', 'Filter Quick Add', '1.5', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
+// ===== Filter Quick Add v1.6  (FILTER_QUICKADD.js) =====
+WR.add('filter_quickadd', 'Filter Quick Add', '1.6', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10084,10 +10088,13 @@ function vehicleMake() {
 
 // Is there already a drain plug gasket LINE in this job? Looks only at the part-name cells (not all text),
 // and matches the number OR "DRAIN PLUG" because Tekion may swap in its own in-stock number.
+// Part number without dashes/spaces, for matching Tekion's replaced numbers (EAP9043012031 ~ 90430-12031)
+function pnKey(t) { return (t || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 function gasketLine(sec, pn) {
   const cells = [...sec.querySelectorAll('[data-test-id*="requestTable-itemName-cell-"]')];
+  const key = pnKey(pn);
   const hit = cells.map(c => (c.textContent || '').trim().replace(/\s+/g, ' '))
-    .find(t => t.toUpperCase().indexOf(pn.toUpperCase()) === 0 || /drain\s*plug/i.test(t));
+    .find(t => pnKey(t.split(' - ')[0]).indexOf(key) !== -1 || /drain\s*plug/i.test(t));   // EAP9043012031 = 90430-12031
   return hit || null;
 }
 
@@ -10102,11 +10109,11 @@ async function addOne(partNumber) {
 
   // Pick the dropdown option whose text STARTS with the typed part number (never "Create ..."),
   // and only once the list has updated for what was typed.
-  const want = partNumber.toUpperCase();
+  const want = partNumber.toUpperCase(), wantKey = pnKey(partNumber);
   const optionsNow = () => [...document.querySelectorAll('li[role="option"]')].filter(li => li.isConnected);
   const pickNow = () => optionsNow().find(li => {
     const t = (li.textContent || '').trim().toUpperCase();
-    return t.indexOf('CREATE') !== 0 && t.indexOf(want) === 0;
+    return t.indexOf('CREATE') !== 0 && (t.indexOf(want) === 0 || pnKey(t.split(' - ')[0]).indexOf(wantKey) !== -1);   // also Tekion's replaced numbers
   });
   let item = await waitFor(pickNow, 6000);
   if (item) { await sleep(300); item = pickNow(); }   // let the list settle, then re-pick
@@ -10221,7 +10228,7 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.5 loaded on', location.hostname);
+log('v1.6 loaded on', location.hostname);
 })();
 
 });

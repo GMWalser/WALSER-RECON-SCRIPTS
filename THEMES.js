@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      5.1
+// @version      5.4
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -372,6 +372,8 @@ html,body{background-color:var(--wr-bg) !important}
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=button]):not([type=submit]):not([type=image]),textarea,select{background-color:var(--wr-input);color:var(--wr-text)}
 [data-wr-bg=solid]{background-color:var(--wr-solid) !important}
 [data-wr-bg=solid2]{background-color:var(--wr-solid2) !important}
+html [role="grid"],html [role="table"],html [role="rowgroup"],html [role="row"],html [role="cell"],html [role="gridcell"],html [role="columnheader"]{background-color:var(--wr-surface)}
+html [role="cell"][data-sticky-td],html [role="columnheader"][data-sticky-td]{background-color:var(--wr-solid)}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface],${p} [data-wr-bg=surface],${p}[data-wr-bg=input],${p} [data-wr-bg=input]`).join(',')}{background-color:var(--wr-solid) !important}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface2],${p} [data-wr-bg=surface2]`).join(',')}{background-color:var(--wr-solid2) !important}
 input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readonly],
@@ -468,7 +470,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.1: theme ' + (T ? (liteMode ? 'on (LITE: page too heavy)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.4: theme ' + (T ? (liteMode ? 'on (LITE: effects off, slower updates)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -537,7 +539,8 @@ function isHiddenBox(el) {
   return !!(st && /display\s*:\s*none/i.test(st));
 }
 function collect(root, redo) {
-  const take = el => { if (!redo && seen.has(el)) return; work.push(redo ? { el, redo: true } : el); };
+  // An element that already carries our colors must be cleared before reading (else we read our own colors).
+  const take = el => { const mine = el.hasAttribute('data-wr-bg') || el.hasAttribute('data-wr-fg') || el.hasAttribute('data-wr-bd'); work.push(redo || mine ? { el, redo: true } : el); };
   if (isHiddenBox(root)) { deferred.add(root); return; }
   if (!skip(root)) take(root);
   const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
@@ -597,14 +600,14 @@ function unscanAll() {
 
 let observer = null, queue = new Set(), added = new Set(), timer = null;
 function startObserver() {
-  if (observer || liteMode) return;
+  if (observer) return;
   observer = new MutationObserver(muts => {
     const tm = performance.now();
     for (const m of muts) {
       if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) added.add(n); });
       else queue.add(m.target);
     }
-    if (!timer) timer = setTimeout(flush, 150);
+    if (!timer) timer = setTimeout(flush, liteMode ? 1000 : 150);
     busy(performance.now() - tm);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled', 'readonly', 'aria-disabled'] });
@@ -704,8 +707,9 @@ background:radial-gradient(circle at 30% 6%,${hc} 0 2px,transparent 3.5px),radia
 let fx = null;
 // ---------- safety brake ----------
 // After the first 10 s on a page, if the theme keeps the page busy more than 5% of the time
-// in any 10 s stretch, stop watching the page and stop the moving effects (colors already
-// applied stay). Protects slow PCs and very heavy pages like RV work orders.
+// in any 10 s stretch, go LITE: stop the moving effects and check page changes once a second
+// instead of every 0.15 s. Recoloring never stops (apps like Tekion rebuild rows constantly,
+// and stopping would leave them white).
 const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, PAGE_T0 = performance.now();
 let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0;
 function busy(ms) {
@@ -721,8 +725,8 @@ function busy(ms) {
 }
 function goLite(share) {
   liteMode = true;
-  stopObserver(); work = []; writeDecisions(); stopFx(); stopMesh();
-  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time, live updates and effects paused');
+  stopFx(); stopMesh();
+  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - effects off, page changes checked once a second');
 }
 function stopFx() {
   if (!fx) return;
