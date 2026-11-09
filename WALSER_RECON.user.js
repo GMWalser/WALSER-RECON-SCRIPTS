@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1252
+// @version      2026.1109.1410
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v4.9  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '4.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.1  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.1', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -540,7 +540,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v4.9: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.1: theme ' + (T ? (liteMode ? 'on (LITE: page too heavy)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -594,43 +594,74 @@ function clearEl(el) {
   ATTRS.forEach(a => el.removeAttribute(a));
   el.style.removeProperty('--wr-tint'); el.style.removeProperty('--wr-fgtint');
 }
-// Work is done in small time slices (about 8 ms per animation frame) so a huge page
-// (big Tekion tables) never freezes while it is being recolored.
+// Recoloring is split into: READ slices (about 8 ms each; reading styles is cheap while
+// nothing on the page has changed) and ONE WRITE at the end. Writing between reads made the
+// browser recalculate the whole page for every slice, which froze big RV pages.
+// Hidden parts (RV keeps hundreds of hidden service lists) are skipped until they are shown.
 let work = [], pumping = false, scanStats = { els: 0, ms: 0, since: Date.now() };
-const seen = new WeakSet();                       // elements already handled (Tekion re-adds moved rows)
+let pendingDecisions = [], cycleStart = 0;
+const seen = new WeakSet(), deferred = new WeakSet();
+function isHiddenBox(el) {
+  if (el.hidden) return true;
+  const c = el.classList;
+  if (c && (c.contains('hidden') || c.contains('mfp-hide') || c.contains('d-none'))) return true;
+  const st = el.getAttribute && el.getAttribute('style');
+  return !!(st && /display\s*:\s*none/i.test(st));
+}
+function collect(root, redo) {
+  const take = el => { if (!redo && seen.has(el)) return; work.push(redo ? { el, redo: true } : el); };
+  if (isHiddenBox(root)) { deferred.add(root); return; }
+  if (!skip(root)) take(root);
+  const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+    acceptNode: el => {
+      if (isHiddenBox(el)) { deferred.add(el); return NodeFilter.FILTER_REJECT; }   // skip the whole hidden part
+      if (el.id && el.id.startsWith(OUR)) return NodeFilter.FILTER_REJECT;
+      return skip(el) ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let n = 0;
+  while (tw.nextNode()) { take(tw.currentNode); if (redo && ++n > 3000) break; }   // style change on a huge container: cap it
+}
 function scan(roots, redo) {
   if (!T) return;
   roots.forEach(r => {
     if (!r.isConnected || r.nodeType !== 1) return;
     if (r.closest && r.closest('[id^="' + OUR + '"]')) return;
-    const take = el => { if (skip(el)) return; if (!redo && seen.has(el)) return; work.push(redo ? { el, redo: true } : el); };
-    take(r);
-    const all = r.getElementsByTagName('*');
-    if (redo && all.length > 3000) return;       // style change on a huge container: the element itself only
-    for (const el of all) take(el);
+    if (deferred.has(r) && !isHiddenBox(r)) { deferred.delete(r); collect(r, false); return; }   // a hidden part was just shown
+    collect(r, redo);
   });
-  if (!pumping && work.length) { pumping = true; requestAnimationFrame(pump); }
+  if (!pumping && work.length) { pumping = true; cycleStart = performance.now(); clearRedo(); requestAnimationFrame(pump); }
+}
+function clearRedo() { work.forEach(x => { if (x.redo && x.el.isConnected) clearEl(x.el); }); }   // one change, before reading
+function writeDecisions() {
+  pendingDecisions.forEach(([el, d, redo]) => {
+    if (!el.isConnected) return;
+    if (!redo) clearEl(el);
+    if (d.bg) el.setAttribute('data-wr-bg', d.bg);
+    if (d.fg) el.setAttribute('data-wr-fg', d.fg);
+    if (d.bd) el.setAttribute('data-wr-bd', d.bd);
+    if (d.tint) el.style.setProperty('--wr-tint', d.tint);
+    if (d.fgtint) el.style.setProperty('--wr-fgtint', d.fgtint);
+    seen.add(el);
+  });
+  pendingDecisions = [];
 }
 function pump() {
   const t0 = performance.now(), picked = ruleSelector();
-  while (work.length && performance.now() - t0 < 8) {
-    const batch = work.splice(0, 250).map(x => x.el ? x : { el: x, redo: false }).filter(x => x.el.isConnected);
-    batch.forEach(x => { if (x.redo) clearEl(x.el); });                         // 1. clear (read the page's own colors)
-    const ds = batch.map(x => decide(x.el, getComputedStyle(x.el), picked));   // 2. read
-    batch.forEach((x, i) => {                                                  // 3. write
-      const el = x.el, d = ds[i];
-      if (!x.redo) clearEl(el);
-      if (d.bg) el.setAttribute('data-wr-bg', d.bg);
-      if (d.fg) el.setAttribute('data-wr-fg', d.fg);
-      if (d.bd) el.setAttribute('data-wr-bd', d.bd);
-      if (d.tint) el.style.setProperty('--wr-tint', d.tint);
-      if (d.fgtint) el.style.setProperty('--wr-fgtint', d.fgtint);
-      seen.add(el);
-    });
+  while (work.length && performance.now() - t0 < 8) {                 // READ only
+    const batch = work.splice(0, 200);
+    for (const x of batch) {
+      const el = x.el || x; if (!el.isConnected) continue;
+      const d = decide(el, getComputedStyle(el), picked);
+      if (d.bg || d.fg || d.bd || x.redo) pendingDecisions.push([el, d, !!x.redo]); else seen.add(el);
+    }
     scanStats.els += batch.length;
   }
+  // WRITE once: when finished, or every ~300 ms on very big pages so it visibly progresses
+  if (!work.length || performance.now() - cycleStart > 300) { writeDecisions(); cycleStart = performance.now(); }
   scanStats.ms += performance.now() - t0;
-  if (work.length && T) requestAnimationFrame(pump); else { pumping = false; if (!T) work = []; }
+  busy(performance.now() - t0);
+  if (work.length && T) requestAnimationFrame(pump); else { pumping = false; if (!T) { work = []; pendingDecisions = []; } }
 }
 function unscanAll() {
   document.querySelectorAll('[data-wr-bg],[data-wr-fg],[data-wr-bd]').forEach(clearEl);
@@ -638,18 +669,21 @@ function unscanAll() {
 
 let observer = null, queue = new Set(), added = new Set(), timer = null;
 function startObserver() {
-  if (observer) return;
+  if (observer || liteMode) return;
   observer = new MutationObserver(muts => {
+    const tm = performance.now();
     for (const m of muts) {
       if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) added.add(n); });
       else queue.add(m.target);
     }
     if (!timer) timer = setTimeout(flush, 150);
+    busy(performance.now() - tm);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled', 'readonly', 'aria-disabled'] });
 }
 function stopObserver() { if (observer) observer.disconnect(); observer = null; queue.clear(); added.clear(); }
 function flush() {
+  const tf = performance.now();
   timer = null;
   if (!styleEl.isConnected) applyStyle();
   const items = [...queue], fresh = [...added]; queue.clear(); added.clear();
@@ -657,6 +691,7 @@ function flush() {
     if (fresh.length) scan(fresh, false);              // new content: always the whole subtree (big Tekion tables too)
     if (items.length) scan(items, true);               // style/state changes: re-read just what changed
   } catch (e) { console.warn('[Page Themes]', e); }
+  busy(performance.now() - tf);
 }
 
 // ---------- animations: glowing buttons + moving wallpaper effects ----------
@@ -739,13 +774,35 @@ background:radial-gradient(circle at 30% 6%,${hc} 0 2px,transparent 3.5px),radia
   return css;
 }
 let fx = null;
+// ---------- safety brake ----------
+// After the first 10 s on a page, if the theme keeps the page busy more than 5% of the time
+// in any 10 s stretch, stop watching the page and stop the moving effects (colors already
+// applied stay). Protects slow PCs and very heavy pages like RV work orders.
+const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, PAGE_T0 = performance.now();
+let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0;
+function busy(ms) {
+  busyMs += ms;
+  const now = performance.now();
+  if (now - PAGE_T0 < LITE_WINDOW_MS) { winStart = now; winBusy = 0; return; }   // first 10 s: page is loading, not judged
+  winBusy += ms;
+  if (now - winStart >= LITE_WINDOW_MS) {
+    const share = winBusy / (now - winStart);
+    if (!liteMode && share > LITE_MAX_SHARE) goLite(share);
+    winStart = now; winBusy = 0;
+  }
+}
+function goLite(share) {
+  liteMode = true;
+  stopObserver(); work = []; writeDecisions(); stopFx(); stopMesh();
+  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time, live updates and effects paused');
+}
 function stopFx() {
   if (!fx) return;
   cancelAnimationFrame(fx.raf); window.removeEventListener('resize', fx.resize); fx.cv.remove(); fx = null;
 }
 const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach', 'flir'];
 function startFx() {
-  const mode = T && animOn() ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
+  const mode = T && animOn() && !liteMode ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
   const sig = mode + '|' + T.fxColor + '|' + JSON.stringify(T.fxColors || '');
   if (fx && fx.sig === sig) return;
@@ -815,8 +872,10 @@ function startFx() {
   function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; ctx.clearRect(0, 0, W, H); init(); }
   function frame(t) {
     fx.raf = requestAnimationFrame(frame);
-    if (document.hidden || t - last < 33) return;
-    last = t;
+    if (document.hidden || t - last < 50) return;          // ~20 fps
+    last = t; const tfx = performance.now(); try { drawFrame(t); } finally { busy(performance.now() - tfx); }
+  }
+  function drawFrame(t) {
     if (mode === 'code') {                                   // falling code with fading trails
       ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.032)'; ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over'; ctx.font = '15px monospace'; ctx.globalAlpha = .8;
@@ -1073,7 +1132,7 @@ function startFx() {
 let meshFx = null;
 function stopMesh() { if (meshFx) { cancelAnimationFrame(meshFx.raf); window.removeEventListener('resize', meshFx.resize); meshFx.cv.remove(); meshFx = null; } }
 function startMesh() {
-  if (!T || !T.mesh || window.top !== window) { stopMesh(); return; }
+  if (!T || !T.mesh || window.top !== window || liteMode) { stopMesh(); return; }
   const sig = JSON.stringify(T.mesh) + T.bg + animOn();
   if (meshFx && meshFx.sig === sig) return;
   stopMesh();
@@ -1200,7 +1259,7 @@ function refresh(rescan) {
   if (!document.body) return;
   startFx(); startMesh(); startHudInfo();
   if (!T) { stopObserver(); unscanAll(); return; }
-  if (rescan) { unscanAll(); work = []; scan([document.documentElement], true); }
+  if (rescan) { unscanAll(); work = []; pendingDecisions = []; scan([document.documentElement], true); }
   startObserver();
 }
 
