@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1202
+// @version      2026.1109.1217
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v4.7  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '4.7', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v4.8  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '4.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -442,6 +442,7 @@ html,body{background-color:var(--wr-bg) !important}
 [data-wr-bg=surface2]{background-color:var(--wr-surface2) !important}
 [data-wr-bg=input]{background-color:var(--wr-input) !important}
 [data-wr-bg=solid]{background-color:var(--wr-solid) !important}
+[data-wr-bg=solid2]{background-color:var(--wr-solid2) !important}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface],${p} [data-wr-bg=surface],${p}[data-wr-bg=input],${p} [data-wr-bg=input]`).join(',')}{background-color:var(--wr-solid) !important}
 ${POPUP_SEL.map(p => `${p}[data-wr-bg=surface2],${p} [data-wr-bg=surface2]`).join(',')}{background-color:var(--wr-solid2) !important}
 input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readonly],
@@ -538,7 +539,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v4.7: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v4.8: theme ' + (T ? 'on' : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner');
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -566,9 +567,9 @@ function decide(el, cs, picked) {
     if (el === document.documentElement || el === document.body) { if (L > 0.4) d.bg = 'page'; }
     else if (cfg.buttons && isButtonLike(el) && H.s > 0.35 && isBlue(H) && L < 0.75) { d.bg = 'accent'; d.fg = 'accentText'; return d; }
     else if (H.s < 0.3) {
-      const floating = cs.position === 'fixed' || (cs.position === 'absolute' && (parseInt(cs.zIndex, 10) || 0) >= 10);
+      const floating = cs.position === 'fixed' || cs.position === 'sticky' || (cs.position === 'absolute' && (parseInt(cs.zIndex, 10) || 0) >= 10);
       if (L >= 0.85) d.bg = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'input' : floating ? 'solid' : 'surface';
-      else if (L >= 0.45) d.bg = 'surface2';
+      else if (L >= 0.45) d.bg = floating ? 'solid2' : 'surface2';
       else if (IS_TEAMS && L < 0.08 && H.s < 0.2) d.bg = 'surface';   // Teams' own fixed dark grays
     } else if (L >= 0.6) { d.bg = 'tint'; d.tint = `hsla(${Math.round(H.h)}, ${Math.round(Math.min(H.s, 0.6) * 100)}%, 20%, var(--wr-alpha, 1))`; }
   }
@@ -620,24 +621,27 @@ function unscanAll() {
   document.querySelectorAll('[data-wr-bg],[data-wr-fg],[data-wr-bd]').forEach(clearEl);
 }
 
-let observer = null, queue = new Set(), timer = null;
+let observer = null, queue = new Set(), added = new Set(), timer = null;
 function startObserver() {
   if (observer) return;
   observer = new MutationObserver(muts => {
     for (const m of muts) {
-      if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) queue.add(n); });
+      if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) added.add(n); });
       else queue.add(m.target);
     }
     if (!timer) timer = setTimeout(flush, 150);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled', 'readonly', 'aria-disabled'] });
 }
-function stopObserver() { if (observer) observer.disconnect(); observer = null; queue.clear(); }
+function stopObserver() { if (observer) observer.disconnect(); observer = null; queue.clear(); added.clear(); }
 function flush() {
   timer = null;
   if (!styleEl.isConnected) applyStyle();
-  const items = [...queue]; queue.clear();
-  try { scan(items, true); } catch (e) { console.warn('[Page Themes]', e); }
+  const items = [...queue], fresh = [...added]; queue.clear(); added.clear();
+  try {
+    if (fresh.length) scan(fresh, false);              // new content: always the whole subtree (big Tekion tables too)
+    if (items.length) scan(items, true);               // style/state changes: re-read just what changed
+  } catch (e) { console.warn('[Page Themes]', e); }
 }
 
 // ---------- animations: glowing buttons + moving wallpaper effects ----------
