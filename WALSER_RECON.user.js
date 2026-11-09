@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1236
+// @version      2026.1109.1251
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -87,7 +87,7 @@ function gmFor(id) {
 
 // ===== Page Themes v4.9  (THEMES.js) =====
 WR.add('themes', 'Page Themes', '4.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -1618,7 +1618,7 @@ function ruleForm(root, el) {
 
 // ===== Recon Clipboard v5.97  (CLIPBOARD.js) =====
 WR.add('clipboard', 'Recon Clipboard', '5.97', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -4544,7 +4544,7 @@ if (IS_RECONVISION) {
 
 // ===== PartsTech Queue Navigator v17.1  (NAVIGATOR.js) =====
 WR.add('navigator', 'PartsTech Queue Navigator', '17.1', ['https://app.partstech.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -4984,7 +4984,7 @@ if(window.location.pathname==='/catalog'){
 
 // ===== ReconVision → PartsTech Pre-Loader v9.18  (PRELOADER.js) =====
 WR.add('preloader', 'ReconVision → PartsTech Pre-Loader', '9.18', ['https://app.reconvision.com/work_orders/*/edit', 'https://app.partstech.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
 // They are only needed for a moment, but were never removed, so they piled up.
@@ -5718,7 +5718,7 @@ if (location.hostname === 'app.partstech.com') {
 
 // ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.20  (BUCKET MOVER.js) =====
 WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.20', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
 // They are only needed for a moment, but were never removed, so they piled up.
@@ -6652,7 +6652,7 @@ if (location.hostname === 'app.tekioncloud.com') {
 
 // ===== Safety Inspection Parts Scanner v1.3  (SAFETY_INSPECTION_SCANNER.js) =====
 WR.add('safety_scanner', 'Safety Inspection Parts Scanner', '1.3', ['https://app.reconvision.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -7141,7 +7141,7 @@ setTimeout(init, 1000);
 
 // ===== Parts Order Quote Scanner v1.0  (PARTS_ORDER_SCANNER.js) =====
 WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.0', ['https://app.reconvision.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -7624,7 +7624,7 @@ log('v1.0 loaded');
 
 // ===== RV Quick Assign v1.3  (RV_QUICK_ASSIGN.js) =====
 WR.add('quick_assign', 'RV Quick Assign', '1.3', ['https://app.reconvision.com/departments/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -7813,7 +7813,7 @@ log('v1.3 loaded');
 
 // ===== RV Recon Budget Tracker v1.1  (BUDGET_TRACKER.js) =====
 WR.add('budget_tracker', 'RV Recon Budget Tracker', '1.1', ['https://app.reconvision.com/work_orders/*/edit'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -7963,7 +7963,7 @@ waitForReady(init);
 
 // ===== Picked Up Filter Order v1.1  (PICKED_UP_FILTER_ORDER.js) =====
 WR.add('picked_up_filter', 'Picked Up Filter Order', '1.1', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -8114,7 +8114,7 @@ log('v1.1 loaded');
 
 // ===== RV Euro Filter Order v1.4  (EURO_FILTER_ORDER.js) =====
 WR.add('euro_filter', 'RV Euro Filter Order', '1.4', ['https://app.reconvision.com/departments/28149*', 'https://app.tekioncloud.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -8554,7 +8554,7 @@ if (location.hostname === 'app.reconvision.com') {
 
 // ===== Parts Check-In Helper v3.10  (PARTS_CHECKIN.js) =====
 WR.add('parts_checkin', 'Parts Check-In Helper', '3.10', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
 // They are only needed for a moment, but were never removed, so they piled up.
@@ -8937,7 +8937,7 @@ try {
 
 // ===== Tekion RO Fulfillment Opener v1.1  (TEKION LOADER.js) =====
 WR.add('fulfillment_open', 'Tekion RO Fulfillment Opener', '1.1', ['https://app.tekioncloud.com/parts/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
   'use strict';
@@ -9044,7 +9044,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
 
 // ===== Tekion Order/Fill Checkboxes v1.0  (ORDER_FILL_CHECKBOXES.js) =====
 WR.add('order_fill', 'Tekion Order/Fill Checkboxes', '1.0', ['https://app.tekioncloud.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -9168,7 +9168,7 @@ log('v1.0 loaded');
 
 // ===== Tekion Quick Remove Part v1.3  (QUICK_REMOVE_PART.js) =====
 WR.add('quick_remove', 'Tekion Quick Remove Part', '1.3', ['https://app.tekioncloud.com/parts/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -9309,7 +9309,7 @@ log('v1.3 loaded');
 
 // ===== PO Vendor Quick-Add v3.3  (VENDOR_QUICKADD.js) =====
 WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.3', ['https://app.tekioncloud.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
   'use strict';
@@ -9690,7 +9690,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
 
 // ===== PO Part to PartsTech v1.3  (PO_TO_PARTSTECH.js) =====
 WR.add('po_to_partstech', 'PO Part to PartsTech', '1.3', ['https://app.tekioncloud.com/*', 'https://app.partstech.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -9852,7 +9852,7 @@ log('v1.3 loaded on', location.hostname);
 
 // ===== Filter Quick Add v1.5  (FILTER_QUICKADD.js) =====
 WR.add('filter_quickadd', 'Filter Quick Add', '1.5', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -10169,7 +10169,7 @@ log('v1.5 loaded on', location.hostname);
 
 // ===== Tekion to RV Parts Transfer v1.2  (PARTS_TRANSFER.js) =====
 WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.2', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -10429,7 +10429,7 @@ log('v1.2 loaded on', location.hostname);
 
 // ===== OEM VIN Bridge v1.1  (OEM_VIN_BRIDGE.js) =====
 WR.add('oem_vin_bridge', 'OEM VIN Bridge', '1.1', ['https://app.tekioncloud.com/parts/*', 'https://repairlinkshop.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function() {
     'use strict';
@@ -10589,7 +10589,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
 
 // ===== Teams RO Opener v1.5  (TEAMS_RO_OPENER.js) =====
 WR.add('teams_ro_opener', 'Teams RO Opener', '1.5', ['https://teams.cloud.microsoft/*', 'https://teams.microsoft.com/*', 'https://app.reconvision.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -10857,7 +10857,7 @@ log('v1.5 loaded on', location.hostname);
 
 // ===== Vehicle Parts Database Logger v2.9  (VEHICLE_PARTS_DATABASE.js) =====
 WR.add('parts_database', 'Vehicle Parts Database Logger', '2.9', ['https://app.reconvision.com/departments/3127*', 'https://app.reconvision.com/departments/3139*', 'https://app.tekioncloud.com/*'], 'document-idle',
-function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
+function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
 'use strict';
@@ -11807,8 +11807,33 @@ if (IS_TK) {
 
 // ---- Start the scripts that belong on this page ----
 const allOff = _get(ALL_OFF_KEY, false);
+// ---- Speed report: time spent in each script's timers / observers (this page) ----
+const COST = {}, COST_T0 = performance.now();
+function timedFns(id) {
+  const c = COST[id] = COST[id] || { ms: 0, n: 0, max: 0 };
+  const wrap = fn => typeof fn !== 'function' ? fn : function () {
+    const t = performance.now();
+    try { return fn.apply(this, arguments); }
+    finally { const d = performance.now() - t; c.ms += d; c.n++; if (d > c.max) c.max = d; }
+  };
+  const W = window;
+  return [
+    (fn, ms, ...a) => W.setInterval(wrap(fn), ms, ...a),
+    (fn, ms, ...a) => W.setTimeout(wrap(fn), ms, ...a),
+    fn => W.requestAnimationFrame(wrap(fn)),
+    class extends W.MutationObserver { constructor(cb) { super(wrap(cb)); } },
+  ];
+}
+function speedReport() {
+  const secs = Math.max(1, (performance.now() - COST_T0) / 1000);
+  const rows = Object.keys(COST).map(id => ({ id, name: (WR.list.find(s => s.id === id) || {}).name || id, ...COST[id] }))
+    .filter(r => r.n).sort((a, b) => b.ms - a.ms);
+  const lines = rows.map(r => `${(r.ms / secs * 60 / 1000).toFixed(2)} s/min   ${r.name}   (${r.n} runs, longest ${Math.round(r.max)} ms)`);
+  alert('Script speed report for this page\n(time each script kept the page busy, per minute; over ' + Math.round(secs) + ' s)\n\n' + (lines.join('\n') || 'no script work recorded yet') + '\n\nPlease send a screenshot of this.');
+}
+
 function start(s) {
-  try { s.fn.apply(window, gmFor(s.id)); console.log(LOG, 'started', s.name, 'v' + s.version); }
+  try { s.fn.apply(window, gmFor(s.id).concat(timedFns(s.id))); console.log(LOG, 'started', s.name, 'v' + s.version); }
   catch (e) { console.error(LOG, s.name + ' crashed:', e); }
 }
 function whenReady(cb) {
@@ -11843,6 +11868,7 @@ WR.list.forEach(s => {
     askReload(s.name + ' is now ' + (off ? 'ON' : 'OFF') + '.');
   });
 });
+GM_registerMenuCommand('📊 Script speed report (this page)', speedReport);
 GM_registerMenuCommand('📥 Import saved data from an old script…', showImport);
 
 // ---- One-time import of an old script's saved data ----

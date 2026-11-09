@@ -46,8 +46,33 @@ function gmFor(id) {
 
 // ---- Start the scripts that belong on this page ----
 const allOff = _get(ALL_OFF_KEY, false);
+// ---- Speed report: time spent in each script's timers / observers (this page) ----
+const COST = {}, COST_T0 = performance.now();
+function timedFns(id) {
+  const c = COST[id] = COST[id] || { ms: 0, n: 0, max: 0 };
+  const wrap = fn => typeof fn !== 'function' ? fn : function () {
+    const t = performance.now();
+    try { return fn.apply(this, arguments); }
+    finally { const d = performance.now() - t; c.ms += d; c.n++; if (d > c.max) c.max = d; }
+  };
+  const W = window;
+  return [
+    (fn, ms, ...a) => W.setInterval(wrap(fn), ms, ...a),
+    (fn, ms, ...a) => W.setTimeout(wrap(fn), ms, ...a),
+    fn => W.requestAnimationFrame(wrap(fn)),
+    class extends W.MutationObserver { constructor(cb) { super(wrap(cb)); } },
+  ];
+}
+function speedReport() {
+  const secs = Math.max(1, (performance.now() - COST_T0) / 1000);
+  const rows = Object.keys(COST).map(id => ({ id, name: (WR.list.find(s => s.id === id) || {}).name || id, ...COST[id] }))
+    .filter(r => r.n).sort((a, b) => b.ms - a.ms);
+  const lines = rows.map(r => `${(r.ms / secs * 60 / 1000).toFixed(2)} s/min   ${r.name}   (${r.n} runs, longest ${Math.round(r.max)} ms)`);
+  alert('Script speed report for this page\n(time each script kept the page busy, per minute; over ' + Math.round(secs) + ' s)\n\n' + (lines.join('\n') || 'no script work recorded yet') + '\n\nPlease send a screenshot of this.');
+}
+
 function start(s) {
-  try { s.fn.apply(window, gmFor(s.id)); console.log(LOG, 'started', s.name, 'v' + s.version); }
+  try { s.fn.apply(window, gmFor(s.id).concat(timedFns(s.id))); console.log(LOG, 'started', s.name, 'v' + s.version); }
   catch (e) { console.error(LOG, s.name + ' crashed:', e); }
 }
 function whenReady(cb) {
@@ -82,6 +107,7 @@ WR.list.forEach(s => {
     askReload(s.name + ' is now ' + (off ? 'ON' : 'OFF') + '.');
   });
 });
+GM_registerMenuCommand('📊 Script speed report (this page)', speedReport);
 GM_registerMenuCommand('📥 Import saved data from an old script…', showImport);
 
 // ---- One-time import of an old script's saved data ----

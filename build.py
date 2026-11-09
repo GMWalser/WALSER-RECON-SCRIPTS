@@ -99,7 +99,8 @@ def main():
             f"WR.add({js_str(sid)}, {js_str(name)}, {js_str(ver)}, "
             f"[{', '.join(js_str(x) for x in matches)}], {js_str(run_at)},\n"
             f"function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, "
-            f"GM_addValueChangeListener, GM_removeValueChangeListener) {{\n"
+            f"GM_addValueChangeListener, GM_removeValueChangeListener, "
+            f"setInterval, setTimeout, requestAnimationFrame, MutationObserver) {{\n"
             f"{body}\n}});\n")
 
     version = datetime.datetime.now(datetime.timezone.utc).strftime('%Y.%m%d.%H%M')
