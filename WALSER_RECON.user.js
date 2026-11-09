@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1106.1729
+// @version      2026.1109.1201
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1597,8 +1597,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v5.96  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '5.96', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v5.97  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '5.97', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener) {
 
 (function () {
@@ -3577,14 +3577,8 @@ if (IS_RECONVISION) {
         const btn24 = document.createElement('button');
         btn24.id = 'rv-btn-24';
         btn24.className = 'rv-bucket-btn';
-        btn24.textContent = '24 HR';
+        btn24.textContent = 'ORDERED';     // RV replaced "24 Hours" + "Over 24 Hours" with one "Parts Ordered" bucket (11/2026)
         pillContainer.appendChild(btn24);
-
-        const btnOver24 = document.createElement('button');
-        btnOver24.id = 'rv-btn-over24';
-        btnOver24.className = 'rv-bucket-btn';
-        btnOver24.textContent = 'OVER 24';
-        pillContainer.appendChild(btnOver24);
 
         const btnQuote = document.createElement('button');
         btnQuote.id = 'rv-btn-quote';
@@ -3676,7 +3670,8 @@ if (IS_RECONVISION) {
             for (const el of allEls) {
                 if (el.children.length === 0 || (el.children.length === 1 && el.children[0].tagName === 'I')) {
                     const txt = el.innerText ? el.innerText.trim() : '';
-                    if (txt === sectionText) { sectionHeader = el; break; }
+                    const norm = t => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (txt && norm(txt) === norm(sectionText)) { sectionHeader = el; break; }
                 }
             }
 
@@ -3809,8 +3804,7 @@ if (IS_RECONVISION) {
             }
         }
 
-        btn24.addEventListener('click', () => addServiceToBucket('Parts - 24 Hours', btn24));
-        btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
+        btn24.addEventListener('click', () => addServiceToBucket('Parts Ordered', btn24));
         btnQuote.addEventListener('click', () => {
             const vin = getPageVin();
             const subject = 'PART QUOTE - ' + vin;

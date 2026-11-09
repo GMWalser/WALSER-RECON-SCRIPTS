@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.96
+// @version      5.97
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1994,14 +1994,8 @@ if (IS_RECONVISION) {
         const btn24 = document.createElement('button');
         btn24.id = 'rv-btn-24';
         btn24.className = 'rv-bucket-btn';
-        btn24.textContent = '24 HR';
+        btn24.textContent = 'ORDERED';     // RV replaced "24 Hours" + "Over 24 Hours" with one "Parts Ordered" bucket (11/2026)
         pillContainer.appendChild(btn24);
-
-        const btnOver24 = document.createElement('button');
-        btnOver24.id = 'rv-btn-over24';
-        btnOver24.className = 'rv-bucket-btn';
-        btnOver24.textContent = 'OVER 24';
-        pillContainer.appendChild(btnOver24);
 
         const btnQuote = document.createElement('button');
         btnQuote.id = 'rv-btn-quote';
@@ -2093,7 +2087,8 @@ if (IS_RECONVISION) {
             for (const el of allEls) {
                 if (el.children.length === 0 || (el.children.length === 1 && el.children[0].tagName === 'I')) {
                     const txt = el.innerText ? el.innerText.trim() : '';
-                    if (txt === sectionText) { sectionHeader = el; break; }
+                    const norm = t => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (txt && norm(txt) === norm(sectionText)) { sectionHeader = el; break; }
                 }
             }
 
@@ -2226,8 +2221,7 @@ if (IS_RECONVISION) {
             }
         }
 
-        btn24.addEventListener('click', () => addServiceToBucket('Parts - 24 Hours', btn24));
-        btnOver24.addEventListener('click', () => addServiceToBucket('Parts - Over 24 Hours', btnOver24));
+        btn24.addEventListener('click', () => addServiceToBucket('Parts Ordered', btn24));
         btnQuote.addEventListener('click', () => {
             const vin = getPageVin();
             const subject = 'PART QUOTE - ' + vin;
