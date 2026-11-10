@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1822
+// @version      2026.1110.1835
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.6  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.6', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.7  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.7', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -542,7 +542,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.4: theme ' + (T ? (liteMode ? 'on (LITE: effects off, slower updates)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.7: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -784,6 +784,10 @@ let fx = null;
 // and stopping would leave them white).
 // v5.5: lite mode is no longer for good -- after 30 s quiet (under 2%) the effects come back.
 // The first 25 s of a page are not judged (RV work orders alone take ~10 s to load).
+// v5.7: the brake measures RE-COLORING work, not the animation. So at 5% it only slows the
+// re-coloring checks (effects stay on); effects go off only when the page is really struggling (20%).
+const FX_OFF_SHARE = .20;
+let fxOff = false;
 const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, LITE_BACK_SHARE = .02, LITE_GRACE_MS = 25000, PAGE_T0 = performance.now();
 let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0, quietWins = 0;
 function busy(ms) {
@@ -794,6 +798,7 @@ function busy(ms) {
   if (now - winStart >= LITE_WINDOW_MS) {
     const share = winBusy / (now - winStart);
     if (!liteMode && share > LITE_MAX_SHARE) { goLite(share); quietWins = 0; }
+    else if (liteMode && !fxOff && share > FX_OFF_SHARE) { goLite(share); quietWins = 0; }
     else if (liteMode) { quietWins = share < LITE_BACK_SHARE ? quietWins + 1 : 0; if (quietWins >= 3) leaveLite(); }
     winStart = now; winBusy = 0;
   }
@@ -801,16 +806,16 @@ function busy(ms) {
 // quiet pages never call busy(): check every 10 s so lite mode can end
 setInterval(() => { if (liteMode) busy(0); }, LITE_WINDOW_MS);
 function leaveLite() {
-  liteMode = false; quietWins = 0;
+  liteMode = false; fxOff = false; quietWins = 0;
   document.documentElement.removeAttribute('data-wr-lite');     // read by the speed + steps recorder
   startFx(); startMesh();
   console.log('[Page Themes] page is quiet again - effects back on');
 }
 function goLite(share) {
   liteMode = true;
-  document.documentElement.setAttribute('data-wr-lite', String(Math.round(share * 100)));
-  stopFx(); stopMesh();
-  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - effects off, page changes checked once a second');
+  if (share > FX_OFF_SHARE) { fxOff = true; stopFx(); stopMesh(); }
+  document.documentElement.setAttribute('data-wr-lite', Math.round(share * 100) + (fxOff ? ' fx-off' : ''));
+  console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - page changes checked once a second' + (fxOff ? ', effects off' : ', effects kept on'));
 }
 function stopFx() {
   if (!fx) return;
@@ -818,7 +823,7 @@ function stopFx() {
 }
 const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach', 'flir'];
 function startFx() {
-  const mode = T && animOn() && !liteMode ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
+  const mode = T && animOn() && !fxOff ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
   const sig = mode + '|' + T.fxColor + '|' + JSON.stringify(T.fxColors || '');
   if (fx && fx.sig === sig) return;
@@ -1148,7 +1153,7 @@ function startFx() {
 let meshFx = null;
 function stopMesh() { if (meshFx) { cancelAnimationFrame(meshFx.raf); window.removeEventListener('resize', meshFx.resize); meshFx.cv.remove(); meshFx = null; } }
 function startMesh() {
-  if (!T || !T.mesh || window.top !== window || liteMode) { stopMesh(); return; }
+  if (!T || !T.mesh || window.top !== window || fxOff) { stopMesh(); return; }
   const sig = JSON.stringify(T.mesh) + T.bg + animOn();
   if (meshFx && meshFx.sig === sig) return;
   stopMesh();
@@ -12270,7 +12275,7 @@ setInterval(() => {
   if (location.href !== recHref) { recHref = location.href; recAdd('page', location.pathname.replace(/\d{4,}/g, '#')); }
   while (REC_ERRS.length) { const e = REC_ERRS.shift(); recEv.push({ t: e.t, ro: recRO(), pg: recPage(), k: 'ERROR', x: scriptName(e.id) + ': ' + e.msg }); }
   const lite = document.documentElement.getAttribute('data-wr-lite');
-  if (lite !== recLite) { if (recLite !== null || lite) recAdd('theme', lite ? 'lite mode ON (theme used ' + lite + '% of the time, animations off)' : 'lite mode OFF (animations back on)'); recLite = lite; }
+  if (lite !== recLite) { if (recLite !== null || lite) recAdd('theme', lite ? 'lite mode ON (theme used ' + parseInt(lite, 10) + '% of the time, ' + (/fx-off/.test(lite) ? 'animations OFF' : 'slower color checks, animations kept on') + ')' : 'lite mode OFF (back to normal)'); recLite = lite; }
 }, 1000);
 
 // speed: one summary per minute

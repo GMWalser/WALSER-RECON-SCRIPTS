@@ -199,7 +199,7 @@ setInterval(() => {
   if (location.href !== recHref) { recHref = location.href; recAdd('page', location.pathname.replace(/\d{4,}/g, '#')); }
   while (REC_ERRS.length) { const e = REC_ERRS.shift(); recEv.push({ t: e.t, ro: recRO(), pg: recPage(), k: 'ERROR', x: scriptName(e.id) + ': ' + e.msg }); }
   const lite = document.documentElement.getAttribute('data-wr-lite');
-  if (lite !== recLite) { if (recLite !== null || lite) recAdd('theme', lite ? 'lite mode ON (theme used ' + lite + '% of the time, animations off)' : 'lite mode OFF (animations back on)'); recLite = lite; }
+  if (lite !== recLite) { if (recLite !== null || lite) recAdd('theme', lite ? 'lite mode ON (theme used ' + parseInt(lite, 10) + '% of the time, ' + (/fx-off/.test(lite) ? 'animations OFF' : 'slower color checks, animations kept on') + ')' : 'lite mode OFF (back to normal)'); recLite = lite; }
 }, 1000);
 
 // speed: one summary per minute
