@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      3.0
+// @version      3.1
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -51,6 +51,23 @@ function setStatus(sel, st) {
   const opt = [...sel.options].find(o => STATUS_NAMES[L].test(o.textContent));
   if (opt) setNative(sel, opt.value);
 }
+// ---- speed: time the beta's own work; Walser Recon Tools' speed report reads it from <html data-rvr-speed> ----
+const SPEED = {};
+function timeIt(name, fn) {
+  return function () {
+    const t = performance.now();
+    try { return fn.apply(this, arguments); }
+    finally { const d = performance.now() - t, c = SPEED[name] = SPEED[name] || { ms: 0, n: 0, max: 0 }; c.ms += d; c.n++; if (d > c.max) c.max = d; }
+  };
+}
+setInterval(() => { try { document.documentElement.setAttribute('data-rvr-speed', JSON.stringify(SPEED)); } catch (e) {} }, 10000);
+// write to the page only when something changed (every write wakes up other scripts' page watchers)
+function setTag(tag, text, bg, title) {
+  if (tag.textContent !== text) tag.textContent = text;
+  if (tag.style.background !== bg && tag.dataset.bg !== bg) { tag.style.background = bg; tag.dataset.bg = bg; }
+  if (tag.title !== title) tag.title = title;
+}
+function setDisp(node, v) { if (node.style.display !== v) node.style.display = v; }
 function el(tag, css, text) { const e = document.createElement(tag); if (css) e.style.cssText = css; if (text != null) e.textContent = text; return e; }
 function setNative(field, value) {
   const proto = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : field.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
@@ -212,7 +229,12 @@ function tekionRO() {
   const m = (document.body.textContent || '').match(/RO\s*#\s*(7\d{6})/i);
   return m ? m[1] : '';
 }
+const jobCache = new WeakMap();
 function jobTitle(sec) {
+  const c = jobCache.get(sec); if (c && Date.now() - c.t < 5000) return c.v;
+  const v = jobTitleRead(sec); jobCache.set(sec, { t: Date.now(), v }); return v;
+}
+function jobTitleRead(sec) {
   const lines = (sec.innerText || '').split('\n').map(clean).filter(Boolean);
   for (const l of lines) {
     const t = l.replace(/^job\s*\d+\s*-?\s*/i, '');
@@ -255,7 +277,7 @@ function initTekion() {
   bar.id = 'rvr-bar';
   const link = el('span', 'white-space:nowrap'); bar.appendChild(link);
   const rcBtn = el('button', 'border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:700 11px Segoe UI,sans-serif;color:#fff;white-space:nowrap'); bar.appendChild(rcBtn);
-  const showRc = () => { const on = rcOn(); rcBtn.textContent = '🖱 Right-click ' + (on ? 'ON' : 'OFF'); rcBtn.style.background = on ? '#16a34a' : '#dc2626'; rcBtn.title = (on ? 'Right-click a part row = add to basket' : 'Right-click is normal (Windows menu)') + ' · click or Alt+R to switch'; };
+  const showRc = () => { const on = rcOn(); setTag(rcBtn, '🖱 Right-click ' + (on ? 'ON' : 'OFF'), on ? '#16a34a' : '#dc2626', (on ? 'Right-click a part row = add to basket' : 'Right-click is normal (Windows menu)') + ' · click or Alt+R to switch'); };
   rcBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_rc', !rcOn()); showRc(); });
   showRc(); GM_addValueChangeListener('rvr_rc', showRc);
   const bTxt = el('span', 'flex:1;color:#f59e0b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'); bar.appendChild(bTxt);
@@ -300,7 +322,7 @@ function initTekion() {
   bUndo.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); undo(); });
   document.addEventListener('keydown', e => { if (e.altKey && (e.key || '').toLowerCase() === 'z') { e.preventDefault(); undo(); } }, true);
   showUndo(); GM_addValueChangeListener('rvr_undo', showUndo);
-  const showBasket = () => { const bk = basket(); bTxt.textContent = bk ? '🧺 ' + bk.parts.length + ' in basket: ' + bk.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; bClr.disabled = !bk; bClr.style.opacity = bk ? '1' : '.45'; bClr.style.cursor = bk ? 'pointer' : 'default'; };
+  const showBasket = () => { const bk = basket(); const btx = bk ? '🧺 ' + bk.parts.length + ' in basket: ' + bk.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; if (bTxt.textContent !== btx) bTxt.textContent = btx; if (bClr.disabled !== !bk) { bClr.disabled = !bk; bClr.style.opacity = bk ? '1' : '.45'; bClr.style.cursor = bk ? 'pointer' : 'default'; } };
   bClr.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_clip', null); showBasket(); });
   showBasket(); GM_addValueChangeListener('rvr_clip', showBasket); setInterval(showBasket, 10000);
   const placeBar = () => {                            // Tekion redraws: put it back above the first job
@@ -345,8 +367,9 @@ function initTekion() {
     const roOk = fresh && ro && rv.ro === ro;
     placeBar(); showRc();
     const ago = age < 90000 ? '' : ' (RV last seen ' + Math.round(age / 60000) + ' min ago)';
-    link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro + ago : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
-    link.style.color = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626';
+    const lt = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro + ago : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
+    if (link.textContent !== lt) link.textContent = lt;
+    const lc = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626'; if (link.dataset.c !== lc) { link.style.color = lc; link.dataset.c = lc; }
     const byName = {}; if (roOk) rv.services.forEach(s => { byName[norm(s.name)] = s; });
     const batch = [];
     tekionLines().forEach(line => {
@@ -370,29 +393,31 @@ function initTekion() {
         tag.after(qb);
       }
       const key = ro + '|' + norm(line.job) + '|' + line.pn, match = byName[norm(line.job)];
-      if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; tag.title = 'Sent to RV - use O S R A to change status, 🗑 to delete'; qb.style.display = 'inline-flex'; return; }
+      if (sent[key]) { setTag(tag, '✓ RV', '#16a34a', 'Sent to RV - use O S R A to change status, 🗑 to delete'); setDisp(qb, 'inline-flex'); return; }
       const sgx = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
       const target = match || sgx.pick;
       tag._target = target && (hasParts(target) || isDone(target)) ? target : null;
-      qb.style.display = 'inline-flex';                                     // O S R A 🗑 always shown (no known line = it asks which)
-      if (isDone(target)) { tag.textContent = '✓ RV'; tag.style.background = '#15803d'; tag.title = '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'; return; }
-      if (target && hasParts(target)) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'; if (roOk && line.pn) batch.push({ line, svc: target, quoted: true }); return; }
-      if (!target && sgx.amb) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = 'Quoted in RV on one of: ' + sgx.list.filter(hasParts).map(x => x.name).join(' / ') + ' - click to pick front/rear'; return; }
-      if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
+      setDisp(qb, 'inline-flex');                                     // O S R A 🗑 always shown (no known line = it asks which)
+      if (isDone(target)) { setTag(tag, '✓ RV', '#15803d', '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'); return; }
+      if (target && hasParts(target)) { setTag(tag, '⚡ RV', '#dc2626', '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'); if (roOk && line.pn) batch.push({ line, svc: target, quoted: true }); return; }
+      if (!target && sgx.amb) { setTag(tag, '⚡ RV', '#dc2626', 'Quoted in RV on one of: ' + sgx.list.filter(hasParts).map(x => x.name).join(' / ') + ' - click to pick front/rear'); return; }
+      if (match && !/recon\s*fees/i.test(line.job)) { setTag(tag, '⇢ RV', '#2563eb', 'Exact match: RV line "' + match.name + '"'); }
       else {
-        const sg = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
-        if (sg.pick) { tag.textContent = '💡 RV'; tag.style.background = '#7c3aed'; tag.title = 'Click: suggested "' + sg.pick.name + '" (you confirm)'; if (roOk && line.pn) batch.push({ line, svc: sg.pick }); }
-        else { tag.textContent = '? RV'; tag.style.background = '#b45309'; tag.title = 'Click to choose the RV line'; }
+        const sg = sgx;
+        if (sg.pick) { setTag(tag, '💡 RV', '#7c3aed', 'Click: suggested "' + sg.pick.name + '" (you confirm)'); if (roOk && line.pn) batch.push({ line, svc: sg.pick }); }
+        else { setTag(tag, '? RV', '#b45309', 'Click to choose the RV line'); }
       }
       if (opts.auto && roOk && match && !/recon\s*fees/i.test(line.job) && line.pn && Number(line.price) > 0) send(line, match, 'auto');
     });
     batchList = batch;
-    bAll.style.display = batch.length ? '' : 'none';
+    setDisp(bAll, batch.length ? '' : 'none');
     const nq = batch.filter(x => x.quoted).length;
-    bAll.textContent = '📤 Send all ' + batch.length + (nq ? ' (' + nq + ' quoted)' : '');
+    const bt = '📤 Send all ' + batch.length + (nq ? ' (' + nq + ' quoted)' : '');
+    if (bAll.textContent !== bt) bAll.textContent = bt;
     bAll.title = batch.map(x => x.line.pn + ' → ' + x.svc.name + (x.quoted ? ' (quoted: set vendor + status)' : ' (add)')).join('\n');
   }
-  setInterval(() => { if (!document.hidden) tick(); }, 1500);
+  const tickT = timeIt('Tekion: update part buttons (every 1.5 s)', tick);
+  setInterval(() => { if (!document.hidden) tickT(); }, 1500);
 
   // ---- manual: choose a line from a short list (button) ----
   async function manualChoose(line) {
@@ -776,17 +801,23 @@ function initRv() {
     const services = onParts ? rvServices().map(s => ({ id: s.id, name: s.name, parts: s.parts, state: s.state })) : rvEditServices();
     save('rvr_rv', { ro, woId: woId(), onParts, services, ts: Date.now() });
   };
-  publish(); setInterval(publish, 3000);
-  // small badge so you can see the beta is running on RV
-  const badge = el('div', 'position:fixed;left:12px;bottom:12px;z-index:2147483600;background:#111827;color:#e5e7eb;border:1px solid #334155;border-radius:8px;padding:5px 9px;font:600 12px Segoe UI,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none');
-  badge.id = 'rvr-rv-badge'; document.documentElement.appendChild(badge);
-  const showBadge = () => {
-    const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
-    const b = basket();
-    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? '🖱 right-click ON: Alt+right-click a line to paste' : '🖱 right-click OFF (Alt+R to turn on) · Alt+V to paste');
-    badge.style.borderColor = rcOn() ? '#334155' : '#dc2626';
-  };
-  showBadge(); setInterval(showBadge, 3000); GM_addValueChangeListener('rvr_clip', showBadge);
+  const publishT = timeIt('RV: send line list to Tekion (every 3 s)', publish);
+  publishT(); setInterval(publishT, 3000);
+  // small chip right after the RO number (inside the page, scrolls with it). Click = right-click on/off.
+  const chip = el('span', 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:1px 8px;border-radius:10px;font:600 11px Segoe UI,sans-serif;vertical-align:middle;cursor:pointer;white-space:nowrap;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.5)');
+  chip.id = 'rvr-rv-chip';
+  chip.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_rc', !rcOn()); showBadge(); });
+  const showBadge = timeIt('RV: chip', () => {
+    const roEl = document.querySelector('.repair-order-number');
+    if (!roEl) { if (chip.isConnected) chip.remove(); return; }
+    if (chip.previousElementSibling !== roEl) roEl.after(chip);
+    const b = basket(), on = rcOn();
+    const t = '🛰 ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') : '🧺 empty') + ' · 🖱 ' + (on ? 'ON' : 'OFF');
+    if (chip.textContent !== t) chip.textContent = t;
+    const c = on ? '#16a34a' : '#dc2626'; if (chip.style.color !== c) chip.style.color = c;
+    chip.title = 'RV Remote (BETA) · ' + (on ? 'Alt+right-click a line to paste the basket' : 'right-click is OFF') + ' · click here or Alt+R to switch';
+  });
+  showBadge(); setInterval(showBadge, 3000); GM_addValueChangeListener('rvr_clip', showBadge); GM_addValueChangeListener('rvr_rc', showBadge);
 
   // run commands from Tekion, one at a time
   let busy = false;
@@ -918,9 +949,6 @@ function initRv() {
 // any other RV page (buckets, search...): show a badge; if Tekion sends parts for an RO
 // listed on this page, open that work order's Parts page
 function initRvOther() {
-  const badge = el('div', 'position:fixed;left:12px;bottom:12px;z-index:2147483600;background:#111827;color:#e5e7eb;border:1px solid #334155;border-radius:8px;padding:5px 9px;font:600 12px Segoe UI,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none');
-  badge.textContent = '🛰 RV Remote (BETA) · open a work order (or send parts from Tekion)';
-  document.documentElement.appendChild(badge);
   const roToWo = () => {
     const map = {};
     document.querySelectorAll('a.work-order-link').forEach(a => {
