@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.7
+// @version      1.8
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -247,44 +247,21 @@ function initTekion() {
   const sent = load('rvr_sent', {});                 // "RO|job|pn" -> command id (never send twice)
   let lastLog = [];
 
-  // ---- panel ----
-  const box = el('div', 'position:fixed;right:14px;bottom:60px;z-index:2147483600;width:320px;background:#111827;color:#e5e7eb;border:1px solid #334155;border-radius:10px;padding:10px;font:12px Segoe UI,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.55)');
-  box.id = 'rvr-panel';
-  const head = el('div', 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px');
-  head.appendChild(el('b', 'font-size:13px', '🛰 RV Remote (BETA)'));
-  const mini = el('button', 'background:#334155;color:#fff;border:0;border-radius:5px;cursor:pointer;padding:2px 7px', '▁');
-  head.appendChild(mini); box.appendChild(head);
-  const body = el('div'); box.appendChild(body);
-  mini.onclick = () => { body.style.display = body.style.display === 'none' ? '' : 'none'; };
-  const link = el('div', 'margin-bottom:6px'); body.appendChild(link);
-  const row = (label, node) => { const r = el('div', 'display:flex;align-items:center;gap:6px;margin:4px 0'); r.appendChild(el('span', 'width:62px;opacity:.75', label)); r.appendChild(node); body.appendChild(r); return r; };
-  const inCss = 'background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:3px';
-  const autoChk = el('input'); autoChk.type = 'checkbox'; autoChk.checked = opts.auto;
-  const autoLbl = el('label', 'display:flex;align-items:center;gap:4px'); autoLbl.appendChild(autoChk); autoLbl.appendChild(document.createTextNode('send exact line matches automatically'));
-  row('Auto', autoLbl);
-  const vend = el('input', inCss + ';width:70px'); vend.value = opts.vendor; vend.placeholder = 'B, F…';
-  const vprev = el('span', 'color:#4ade80');
-  const vwrap = el('span', 'display:flex;gap:6px;align-items:center'); vwrap.appendChild(vend); vwrap.appendChild(vprev);
-  row('Auto vendor', vwrap);
-  const st = el('select', inCss);
-  [['', 'leave as is'], ['A', 'A - Action Req.'], ['O', 'O - Ordered'], ['R', 'R - Arrived'], ['S', 'S - In Stock']].forEach(([v, t]) => st.appendChild(new Option(t, v)));
-  st.value = opts.status; row('Auto status', st);
-  const saveOpts = () => { opts.auto = autoChk.checked; opts.vendor = vend.value; opts.status = st.value; save('rvr_opts', opts); vprev.textContent = vend.value ? '→ ' + vendorName(vend.value) : ''; };
-  [autoChk, vend, st].forEach(x => x.addEventListener('input', saveOpts)); autoChk.addEventListener('change', saveOpts); saveOpts();
-  const bRow = el('div', 'display:flex;align-items:center;gap:6px;margin:6px 0'); body.appendChild(bRow);
-  const bTxt = el('span', 'flex:1;color:#fbbf24;font-weight:600'); bRow.appendChild(bTxt);
-  const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', 'Clear basket'); bRow.appendChild(bClr);
-  const showBasket = () => { const b = basket(); bTxt.textContent = b ? '🧺 ' + b.parts.length + ': ' + b.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; };
-  bClr.addEventListener('click', () => { save('rvr_clip', null); showBasket(); });
+  // ---- thin bar in the page, above the first job: linked? · basket · Clear ----
+  const bar = el('div', 'display:flex;align-items:center;gap:10px;margin:6px 0;padding:4px 10px;border-radius:6px;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.45);font:600 12px Segoe UI,sans-serif;color:inherit');
+  bar.id = 'rvr-bar';
+  const link = el('span', 'white-space:nowrap'); bar.appendChild(link);
+  const bTxt = el('span', 'flex:1;color:#f59e0b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'); bar.appendChild(bTxt);
+  const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', 'Clear basket'); bar.appendChild(bClr);
+  const showBasket = () => { const bk = basket(); bTxt.textContent = bk ? '🧺 ' + bk.parts.length + ' in basket: ' + bk.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; bClr.style.display = bk ? '' : 'none'; };
+  bClr.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_clip', null); showBasket(); });
   showBasket(); GM_addValueChangeListener('rvr_clip', showBasket); setInterval(showBasket, 10000);
-  const tip = el('div', 'opacity:.6;margin:6px 0 4px'); body.appendChild(tip);
-  const showTip = () => { tip.textContent = rcOn() ? 'Manual: right-click each part (adds to basket), then ONE Alt+right-click on the RV line pastes them all. Alt+R = right-click off.'
-    : 'Manual: hover + Alt+C, then hover the RV line + Alt+V. Right-click copy is OFF (Alt+R to turn on).'; };
-  showTip(); GM_addValueChangeListener('rvr_rc', showTip);
-  const logBox = el('div', 'max-height:110px;overflow:auto;background:#0b1018;border-radius:5px;padding:4px 6px;font:11px Consolas,monospace');
-  body.appendChild(logBox);
-  const note = t => { lastLog.unshift(new Date().toTimeString().slice(0, 8) + '  ' + t); lastLog = lastLog.slice(0, 30); logBox.textContent = ''; lastLog.forEach(l => logBox.appendChild(el('div', '', l))); };
-  document.documentElement.appendChild(box);
+  const placeBar = () => {                            // Tekion redraws: put it back above the first job
+    const job = document.querySelector('[data-id^="Job"]');
+    if (!job) { if (bar.isConnected) bar.remove(); return; }
+    if (bar.nextElementSibling !== job) job.parentElement.insertBefore(bar, job);
+  };
+  const note = t => log(t);
 
   // ---- send a part to RV ----
   function send(line, svc, how, ans) {
@@ -317,9 +294,9 @@ function initTekion() {
     const ro = tekionRO(), rv = load('rvr_rv', null);
     const fresh = rv && Date.now() - rv.ts < 15000;
     const roOk = fresh && ro && rv.ro === ro;
-    link.textContent = !fresh ? '🔴 RV not linked: open the RV work order Parts page (or edit page) in the other screen'
-      : !ro ? '🟡 Open an RO here' : roOk ? `🟢 Linked: RO ${ro} · ${rv.services.length} RV lines` : `🟡 RV has RO ${rv.ro || '?'} open, Tekion has ${ro}. Auto paused.`;
-    link.style.color = roOk ? '#4ade80' : fresh ? '#fbbf24' : '#f87171';
+    placeBar();
+    link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
+    link.style.color = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626';
     const byName = {}; if (roOk) rv.services.forEach(s => { byName[norm(s.name)] = s; });
     tekionLines().forEach(line => {
       let tag = line.row.querySelector('.rvr-tag');
