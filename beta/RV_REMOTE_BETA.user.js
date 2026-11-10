@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.1
+// @version      2.2
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -344,10 +344,23 @@ function initTekion() {
         const cell = line.row.querySelector('[data-test-id*="itemName-cell"]'); (cell || line.row).appendChild(tag);
       }
       tag._line = line;
+      let qb = line.row.querySelector('.rvr-qbtns');
+      if (!qb) {
+        qb = el('span', 'margin-left:4px;display:none;gap:2px'); qb.className = 'rvr-qbtns';
+        [['O', '#2563eb', 'Ordered'], ['S', '#0d9488', 'In Stock'], ['R', '#16a34a', 'Arrived'], ['A', '#b45309', 'Action Required'], ['🗑', '#7f1d1d', 'Delete this part from RV']].forEach(([k, c, t]) => {
+          const b = el('button', 'border:0;border-radius:3px;padding:0 4px;font:700 10px Segoe UI,sans-serif;cursor:pointer;color:#fff;background:' + c, k);
+          b.title = k === '🗑' ? t : 'Set RV status: ' + t;
+          b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); k === '🗑' ? quickDelete(tag._line) : quickStatus(tag._line, k); });
+          qb.appendChild(b);
+        });
+        tag.after(qb);
+      }
       const key = ro + '|' + norm(line.job) + '|' + line.pn, match = byName[norm(line.job)];
-      if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; return; }
+      if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; qb.style.display = 'inline-flex'; return; }
       const sgx = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
       const target = match || sgx.pick;
+      tag._target = target && (hasParts(target) || isDone(target)) ? target : null;
+      qb.style.display = tag._target || sent[key] ? 'inline-flex' : 'none';      // part is in RV: show O S R A 🗑
       if (isDone(target)) { tag.textContent = '✓ RV'; tag.style.background = '#15803d'; tag.title = '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'; return; }
       if (target && hasParts(target)) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'; return; }
       if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
@@ -372,24 +385,51 @@ function initTekion() {
     const part = { pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh };
     const svc = await pickLine('Send ' + line.pn + (line.desc ? ' - ' + line.desc : '') + ' to which RV line?', suggestLine(part, line.job, rv.services), rv.services);
     if (!svc) return;
-    if (hasParts(svc)) {                               // line already quoted / has parts: change their status, or N = add as new
-      const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
-      const k = await askStep('"' + svc.name + '" already has parts' + (Number(svc.parts) > 0 ? ' ($' + svc.parts + ')' : ''), '',
-        () => 'Set status: O = Ordered · S = In Stock · R = Arrived · A = Action   ·   N = add as a new part   ·   D = DELETE this part from RV', 'AORSND');
-      if (!k) return;
-      if (k === 'D') {
-        send(line, svc, 'delete', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: '' });
-        toast('Deleting ' + line.pn + ' from "' + svc.name + '"… (↶ Undo puts it back)'); return;
-      }
-      if (k !== 'N') {
-        learnLine(line.pn, svc.name);
-        send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: k });
-        toast(line.pn + ' → ' + NAMES[k] + ' on "' + svc.name + '"'); return;
-      }
-    }
+    if (hasParts(svc)) { orderQuoted(line, svc); return; }   // quoted line: Vendor, then Status
     const a = await askPaste(part); if (!a) return;
     learnLine(line.pn, svc.name);
     send(line, svc, 'button', withAnswers(part, a)); toast(`Sent ${line.pn} to "${svc.name}"`);
+  }
+
+  // quoted part: Vendor (Enter = leave as is), then Status A/O/R/S; RV fills both and saves
+  async function orderQuoted(line, svc) {
+    const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+    const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
+    const onHand = Number(line.oh) > 0, defV = onHand ? 'ST' : last.vendor;
+    const vendor = await askStep('Vendor · ' + line.pn + ' on "' + svc.name + '"' + (onHand ? ' · 💡 OH qty ' + line.oh + ' - stock?' : ''), defV,
+      x => (x ? '→ ' + vendorName(x) : '(leave vendor as is)') + '   · B=SUBCHEV F=FMP N=NAPA D=DOB O=OR A=AZ ST=STOCK');
+    if (vendor === null) return;
+    const sDef = vendorName(vendor) === 'STOCK' ? 'S' : (last.status || 'O');
+    const k = await askStep('Status · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'Ordered'), true);
+    if (k === null) return;
+    const status = statusLetter(k) || sDef;
+    if (vendor && vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor, status });
+    learnLine(line.pn, svc.name);
+    send(line, svc, 'status', { part: { pn: line.pn, desc: vendor ? vendorName(vendor) : '', qty: line.qty, price: line.price }, status });
+    toast(line.pn + ' → ' + (vendor ? vendorName(vendor) + ' · ' : '') + NAMES[status] + ' on "' + svc.name + '"');
+  }
+  // the RV line a Tekion part belongs to (or ask)
+  async function lineFor(line) {
+    const rv = load('rvr_rv', null);
+    if (!rv || !rv.services.length) { toast('RV is not linked yet - open the RO in RV', true); return null; }
+    const t = line.row.querySelector('.rvr-tag'), known = t && t._target;
+    if (known) return rv.services.find(s => s.id === known.id) || known;
+    const part = { pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh };
+    return pickLine('Which RV line is ' + line.pn + ' on?', suggestLine(part, line.job, rv.services), rv.services);
+  }
+  // O / S / R / A buttons: just the status (check-in); 🗑 = delete from RV (asks first)
+  async function quickStatus(line, k) {
+    const svc = await lineFor(line); if (!svc) return;
+    const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+    send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: k });
+    toast(line.pn + ' → ' + NAMES[k] + ' on "' + svc.name + '"');
+  }
+  async function quickDelete(line) {
+    const svc = await lineFor(line); if (!svc) return;
+    const y = await askStep('Delete ' + line.pn + ' from "' + svc.name + '" in RV?', '', () => 'press Y = yes, delete it · Esc = no', 'Y');
+    if (y !== 'Y') return;
+    send(line, svc, 'delete', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: '' });
+    toast('Deleting ' + line.pn + ' from "' + svc.name + '"… (↶ Undo puts it back)');
   }
 
   // ---- manual: hover a line + Alt+C copies it ----
@@ -534,6 +574,8 @@ function rvEditServices() {                        // the work order (edit) page
     let name = clean(inp ? inp.value : '');
     if (!name && trigger) name = clean(trigger.getAttribute('data-modaltitle') || (r.innerText || '').split('\n').map(clean).find(x => /[a-z]{3}/i.test(x)) || '');   // locked lines
     if (!name) return;
+    const rej = r.querySelector('input[name$="[rejected]"]');
+    if (r.querySelector('.checkbox-holder.rejected') || (rej && rej.value === '1')) return;   // thumbs down: parts removed
     const ic = trigger && trigger.querySelector('[data-statuscolor]');
     if (ic) { const k = ic.getAttribute('data-statuscolor') + ' / ' + ic.getAttribute('title'); if (!seenColors.has(k)) { seenColors.add(k); log('icon color seen:', k, '->', iconState(trigger) || 'none'); } }
     seen.add(id); out.push({ id, name, parts: linePartsMoney(r, trigger), state: iconState(trigger) });
@@ -631,19 +673,23 @@ async function addPartViaModal(svcId, svcName, part, status, saveAfter) {
   return 'ok';
 }
 // set the status of parts already on a line (quoted parts): the part # that matches, else the Action Required ones
-function setRowsStatus(container, pn, status) {
+function setRowsStatus(container, pn, status, vendor) {
   const rows = [...container.querySelectorAll('tr')].filter(r => r.querySelector('textarea[id*="part_number"], input[id*="part_number"]'));
   const pnOf = r => pnKey((r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value);
   const stOf = r => r.querySelector('td.save_value.status select, select[data-field-name="status"]');
   const k = pnKey(pn);
   let hit = rows.filter(r => k && pnOf(r) && (pnOf(r) === k || pnOf(r).includes(k) || k.includes(pnOf(r))));
-  if (!hit.length) hit = rows.filter(r => { const s = stOf(r); return s && /action/i.test((s.options[s.selectedIndex] || {}).textContent || ''); });
+  const stText = r => { const s = stOf(r); return s ? ((s.options[s.selectedIndex] || {}).textContent || '').trim() : ''; };
+  const descOf = r => r.querySelector('td.save_value.description textarea, textarea[data-field-name="description"]');
+  if (!hit.length) hit = rows.filter(r => /action/i.test(stText(r)) && !/no action/i.test(stText(r)));          // Action Required rows
+  if (!hit.length) hit = rows.filter(r => !/order|arriv|stock/i.test(stText(r)));                               // rows not ordered/arrived/stock yet
   if (!hit.length && rows.length === 1) hit = rows;
-  const prev = hit.map(r => ({ pn: (r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value, value: (stOf(r) || {}).value }));
-  hit.forEach(r => setStatus(stOf(r), status));
-  return { n: hit.length, prev };
+  const prev = hit.map(r => ({ pn: (r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value, value: (stOf(r) || {}).value, desc: (descOf(r) || {}).value }));
+  hit.forEach(r => { if (status) setStatus(stOf(r), status); const d = descOf(r); if (vendor && d) setNative(d, vendor); });
+  const has = rows.map(r => ((r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value || '?') + ' (' + (stText(r) || '?') + ')').join(', ');
+  return { n: hit.length, prev, has };
 }
-async function statusViaModal(svcId, svcName, pn, status) {
+async function statusViaModal(svcId, svcName, pn, status, vendor) {
   const line = document.querySelector('[data-service-id="' + svcId + '"]');
   const trigger = line && line.querySelector('[data-target="#parts_modal"]');
   if (!trigger) return 'error: parts icon not found on "' + svcName + '"';
@@ -651,10 +697,10 @@ async function statusViaModal(svcId, svcName, pn, status) {
     const sb = document.querySelector('[id^="desktop-save-button-"]'); if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(600); }
   }
   if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(700); }
-  const r = setRowsStatus(document.getElementById('parts_modal'), pn, status);
+  const r = setRowsStatus(document.getElementById('parts_modal'), pn, status, vendor);
   await sleep(400);
   await saveWin();
-  if (!r.n) return 'error: no part to change on "' + svcName + '" (no matching part # / Action Required part)';
+  if (!r.n) { log('no match for', pn, 'on', svcName, '- rows:', r.has); return 'error: ' + pn + ' not found on "' + svcName + '" - it has: ' + (r.has || 'no parts'); }
   pushUndo({ kind: 'status', svcId, svcName, prev: r.prev, label: (r.prev.map(x => x.pn).join(', ') || pn) + ' → ' + (({ A: 'Action', O: 'Ordered', R: 'Arrived', S: 'In Stock' })[statusLetter(status)] || 'status') + ' on "' + svcName + '"' });
   return 'ok';
 }
@@ -703,7 +749,7 @@ async function runUndo() {
   if (u.kind === 'status') {
     const err = await openWin(u.svcId, u.svcName); if (err) return err;
     const modal = document.getElementById('parts_modal');
-    u.prev.forEach(x => { const r = [...modal.querySelectorAll('tr')].find(t => { const f = t.querySelector(PN_SEL); return f && f.value === x.pn; }); const sel = r && r.querySelector(ST_SEL); if (sel && x.value != null) setNative(sel, x.value); });
+    u.prev.forEach(x => { const r = [...modal.querySelectorAll('tr')].find(t => { const f = t.querySelector(PN_SEL); return f && f.value === x.pn; }); const sel = r && r.querySelector(ST_SEL); if (sel && x.value != null) setNative(sel, x.value); const d = r && r.querySelector('td.save_value.description textarea, textarea[data-field-name="description"]'); if (d && x.desc != null && d.value !== x.desc) setNative(d, x.desc); });
     await sleep(400); await saveWin(); return 'ok';
   }
   if (u.kind === 'delete') {
@@ -747,8 +793,8 @@ function initRv() {
             res = onParts ? 'error: undo / delete work on the RV work order page (not the Parts page)'
               : c.how === 'undo' ? await runUndo() : await deleteViaModal(c.svcId, c.svcName, c.part.pn);
           } else if (c.how === 'status') {                       // change status of parts already quoted on the line
-            if (onParts) { const sec = document.getElementById('parts-section-' + c.svcId); res = sec ? (setRowsStatus(sec, c.part.pn, c.status).n ? 'ok' : 'error: no part to change on "' + c.svcName + '"') : 'error: RV line "' + c.svcName + '" not on this page'; }
-            else res = await statusViaModal(c.svcId, c.svcName, c.part.pn, c.status);
+            if (onParts) { const sec = document.getElementById('parts-section-' + c.svcId); const r = sec && setRowsStatus(sec, c.part.pn, c.status, c.part.desc); res = !sec ? 'error: RV line "' + c.svcName + '" not on this page' : r.n ? 'ok' : 'error: ' + c.part.pn + ' not found on "' + c.svcName + '" - it has: ' + (r.has || 'no parts'); }
+            else res = await statusViaModal(c.svcId, c.svcName, c.part.pn, c.status, c.part.desc);
           } else if (onParts) {
             const svc = rvServices().find(s => s.id === c.svcId) || rvServices().find(s => norm(s.name) === norm(c.svcName));
             res = svc ? await addPart(svc, c.part, c.status) : 'error: RV line "' + c.svcName + '" not on this page';
