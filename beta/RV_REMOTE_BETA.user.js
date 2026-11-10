@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.7
+// @version      2.8
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -355,7 +355,7 @@ function initTekion() {
       let qb = line.row.querySelector('.rvr-qbtns');
       if (!qb) {
         qb = el('span', 'margin-left:6px;display:inline-flex;gap:4px'); qb.className = 'rvr-qbtns';
-        [['O', '#2563eb', 'Ordered'], ['S', '#0d9488', 'In Stock'], ['R', '#16a34a', 'Arrived'], ['A', '#b45309', 'Action Required'], ['🗑', '#7f1d1d', 'Delete this part from RV']].forEach(([k, c, t]) => {
+        [['A', '#b45309', 'Action Required'], ['R', '#16a34a', 'Arrived'], ['S', '#0d9488', 'In Stock'], ['O', '#2563eb', 'Ordered'], ['🗑', '#7f1d1d', 'Delete this part from RV']].forEach(([k, c, t]) => {
           const b = el('button', 'border:0;border-radius:4px;padding:3px 0;min-width:24px;font:700 13px Segoe UI,sans-serif;cursor:pointer;color:#fff;background:' + c, k);
           b.title = k === '🗑' ? t : 'Set RV status: ' + t;
           b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); k === '🗑' ? quickDelete(tag._line) : quickStatus(tag._line, k); });
