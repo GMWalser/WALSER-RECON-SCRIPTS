@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.9
+// @version      2.1
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -46,6 +46,7 @@ const STATUS_NAMES = { A: /^(?!.*no action).*action/i, O: /^(?!.*back).*order/i,
 const OLD_NUM = { '1': 'A', '3': 'O', '5': 'R', '6': 'S' };
 const statusLetter = st => { const t = String(st || '').toUpperCase(); return STATUS_NAMES[t] ? t : OLD_NUM[t] || ''; };
 function setStatus(sel, st) {
+  if (sel && String(st).startsWith('v:')) { setNative(sel, String(st).slice(2)); return; }
   const L = statusLetter(st); if (!sel || !L) return;
   const opt = [...sel.options].find(o => STATUS_NAMES[L].test(o.textContent));
   if (opt) setNative(sel, opt.value);
@@ -252,8 +253,42 @@ function initTekion() {
   bar.id = 'rvr-bar';
   const link = el('span', 'white-space:nowrap'); bar.appendChild(link);
   const bTxt = el('span', 'flex:1;color:#f59e0b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'); bar.appendChild(bTxt);
-  const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', 'Clear basket'); bar.appendChild(bClr);
-  const showBasket = () => { const bk = basket(); bTxt.textContent = bk ? '🧺 ' + bk.parts.length + ' in basket: ' + bk.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; bClr.style.display = bk ? '' : 'none'; };
+  const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', '🗑 Empty basket'); bar.appendChild(bClr);
+  let batchList = [];
+  const bAll = el('button', 'background:#7c3aed;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif;display:none'); bar.insertBefore(bAll, bTxt);
+  bAll.addEventListener('click', async e => {
+    e.preventDefault(); e.stopPropagation();
+    const list = batchList.slice(); if (!list.length) return;
+    const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
+    const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+    const what = list.map(x => x.line.pn + ' → ' + x.svc.name.replace(/^\*+\s*/, '')).join(' · ');
+    const vendor = await askStep('Send ' + list.length + ' parts: ' + what + ' · Vendor for all', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ ST=STOCK');
+    if (vendor === null) return;
+    const sDef = vendorName(vendor) === 'STOCK' ? 'S' : last.status;
+    const stk = await askStep('Status for all ' + list.length + ' · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'leave as is'), true);
+    if (stk === null) return;
+    const status = statusLetter(stk) || sDef;
+    if (vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor, status });
+    list.sort((a, b) => String(a.svc.id).localeCompare(String(b.svc.id)));
+    list.forEach((x, i) => {
+      const lastOfLine = !list[i + 1] || list[i + 1].svc.id !== x.svc.id;      // save once per RV line
+      learnLine(x.line.pn, x.svc.name);
+      send(x.line, x.svc, 'button', { part: { pn: x.line.pn, desc: vendorName(vendor), qty: x.line.qty, price: x.line.price }, status, saveAfter: lastOfLine });
+    });
+    toast('Sent ' + list.length + ' parts to RV');
+  });
+  const bUndo = el('button', 'background:#334155;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'); bar.appendChild(bUndo);
+  const showUndo = () => { const u = load('rvr_undo', []).slice(-1)[0]; bUndo.style.display = u ? '' : 'none'; if (u) { bUndo.textContent = '↶ Undo: ' + u.label; bUndo.title = 'Undo the last change in RV (Alt+Z): ' + u.label; } };
+  const undo = () => {
+    const u = load('rvr_undo', []).slice(-1)[0]; if (!u) { toast('Nothing to undo'); return; }
+    const cmds = load('rvr_cmds', []).filter(c => Date.now() - c.ts < 10 * 60 * 1000);
+    cmds.push({ id: Date.now() + '-u' + Math.random().toString(36).slice(2, 6), ro: tekionRO(), how: 'undo', ts: Date.now() }); save('rvr_cmds', cmds);
+    toast('Undo: ' + u.label);
+  };
+  bUndo.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); undo(); });
+  document.addEventListener('keydown', e => { if (e.altKey && (e.key || '').toLowerCase() === 'z') { e.preventDefault(); undo(); } }, true);
+  showUndo(); GM_addValueChangeListener('rvr_undo', showUndo);
+  const showBasket = () => { const bk = basket(); bTxt.textContent = bk ? '🧺 ' + bk.parts.length + ' in basket: ' + bk.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; bClr.disabled = !bk; bClr.style.opacity = bk ? '1' : '.45'; bClr.style.cursor = bk ? 'pointer' : 'default'; };
   bClr.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_clip', null); showBasket(); });
   showBasket(); GM_addValueChangeListener('rvr_clip', showBasket); setInterval(showBasket, 10000);
   const placeBar = () => {                            // Tekion redraws: put it back above the first job
@@ -269,6 +304,7 @@ function initTekion() {
     const key = ro + '|' + norm(line.job) + '|' + line.pn;
     const cmd = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro, svcId: svc.id, svcName: svc.name, how,
       part: ans ? ans.part : { pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }, status: ans ? ans.status : opts.status, ts: Date.now() };
+    if (ans && ans.saveAfter === false) cmd.saveAfter = false;
     const cmds = load('rvr_cmds', []).filter(c => Date.now() - c.ts < 10 * 60 * 1000);   // drop anything older than 10 min
     cmds.push(cmd); save('rvr_cmds', cmds);
     sent[key] = cmd.id; save('rvr_sent', sent);
@@ -284,7 +320,7 @@ function initTekion() {
     const cmds = load('rvr_cmds', []);
     Object.keys(res).forEach(id => {
       if (old[id] === res[id]) return;
-      const c = cmds.find(x => x.id === id), pn = c ? c.part.pn : '';
+      const c = cmds.find(x => x.id === id), pn = c && c.part ? c.part.pn : '';
       note(res[id] === 'ok' ? `✓ ${pn} added in RV` : (res[id].startsWith('skip') ? '• ' : '✗ ') + res[id]);
     });
   });
@@ -298,6 +334,7 @@ function initTekion() {
     link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
     link.style.color = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626';
     const byName = {}; if (roOk) rv.services.forEach(s => { byName[norm(s.name)] = s; });
+    const batch = [];
     tekionLines().forEach(line => {
       let tag = line.row.querySelector('.rvr-tag');
       if (!tag) {
@@ -316,11 +353,15 @@ function initTekion() {
       if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
       else {
         const sg = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
-        if (sg.pick) { tag.textContent = '💡 RV'; tag.style.background = '#7c3aed'; tag.title = 'Click: suggested "' + sg.pick.name + '" (you confirm)'; }
+        if (sg.pick) { tag.textContent = '💡 RV'; tag.style.background = '#7c3aed'; tag.title = 'Click: suggested "' + sg.pick.name + '" (you confirm)'; if (roOk && line.pn) batch.push({ line, svc: sg.pick }); }
         else { tag.textContent = '? RV'; tag.style.background = '#b45309'; tag.title = 'Click to choose the RV line'; }
       }
       if (opts.auto && roOk && match && !/recon\s*fees/i.test(line.job) && line.pn && Number(line.price) > 0) send(line, match, 'auto');
     });
+    batchList = batch;
+    bAll.style.display = batch.length ? '' : 'none';
+    bAll.textContent = '📤 Send all ' + batch.length + ' suggested';
+    bAll.title = batch.map(x => x.line.pn + ' → ' + x.svc.name).join('\n');
   }
   setInterval(() => { if (!document.hidden) tick(); }, 1500);
 
@@ -334,8 +375,12 @@ function initTekion() {
     if (hasParts(svc)) {                               // line already quoted / has parts: change their status, or N = add as new
       const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
       const k = await askStep('"' + svc.name + '" already has parts' + (Number(svc.parts) > 0 ? ' ($' + svc.parts + ')' : ''), '',
-        () => 'Set status: O = Ordered · S = In Stock · R = Arrived · A = Action   ·   N = add as a new part', 'AORSN');
+        () => 'Set status: O = Ordered · S = In Stock · R = Arrived · A = Action   ·   N = add as a new part   ·   D = DELETE this part from RV', 'AORSND');
       if (!k) return;
+      if (k === 'D') {
+        send(line, svc, 'delete', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: '' });
+        toast('Deleting ' + line.pn + ' from "' + svc.name + '"… (↶ Undo puts it back)'); return;
+      }
       if (k !== 'N') {
         learnLine(line.pn, svc.name);
         send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: k });
@@ -594,8 +639,9 @@ function setRowsStatus(container, pn, status) {
   let hit = rows.filter(r => k && pnOf(r) && (pnOf(r) === k || pnOf(r).includes(k) || k.includes(pnOf(r))));
   if (!hit.length) hit = rows.filter(r => { const s = stOf(r); return s && /action/i.test((s.options[s.selectedIndex] || {}).textContent || ''); });
   if (!hit.length && rows.length === 1) hit = rows;
+  const prev = hit.map(r => ({ pn: (r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value, value: (stOf(r) || {}).value }));
   hit.forEach(r => setStatus(stOf(r), status));
-  return hit.length;
+  return { n: hit.length, prev };
 }
 async function statusViaModal(svcId, svcName, pn, status) {
   const line = document.querySelector('[data-service-id="' + svcId + '"]');
@@ -605,11 +651,66 @@ async function statusViaModal(svcId, svcName, pn, status) {
     const sb = document.querySelector('[id^="desktop-save-button-"]'); if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(600); }
   }
   if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(700); }
-  const n = setRowsStatus(document.getElementById('parts_modal'), pn, status);
+  const r = setRowsStatus(document.getElementById('parts_modal'), pn, status);
   await sleep(400);
+  await saveWin();
+  if (!r.n) return 'error: no part to change on "' + svcName + '" (no matching part # / Action Required part)';
+  pushUndo({ kind: 'status', svcId, svcName, prev: r.prev, label: (r.prev.map(x => x.pn).join(', ') || pn) + ' → ' + (({ A: 'Action', O: 'Ordered', R: 'Arrived', S: 'In Stock' })[statusLetter(status)] || 'status') + ' on "' + svcName + '"' });
+  return 'ok';
+}
+// ---- shared helpers for the parts window ----
+const PN_SEL = 'textarea[id*="part_number"], input[id*="part_number"]', ST_SEL = 'td.save_value.status select, select[data-field-name="status"]';
+async function saveWin() {
   const sb = document.querySelector('[id^="desktop-save-button-"]');
-  if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(800); }
-  return n ? 'ok' : 'error: no part to change on "' + svcName + '" (no matching part # / Action Required part)';
+  if (sb && modalOpen()) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(800); }
+}
+async function openWin(svcId, svcName) {
+  const line = document.querySelector('[data-service-id="' + svcId + '"]');
+  const trigger = line && line.querySelector('[data-target="#parts_modal"]');
+  if (!trigger) return 'error: parts icon not found on "' + svcName + '"';
+  if (modalOpen() && openSvc && openSvc !== String(svcId)) await saveWin();
+  if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(700); }
+  return '';
+}
+// undo list (newest last), shared with Tekion so its Undo button can show what it will undo
+function pushUndo(u) { const l = load('rvr_undo', []); l.push(Object.assign(u, { ts: Date.now() })); save('rvr_undo', l.slice(-20)); }
+// delete a part (exact part # only) from a line, then save
+async function deleteViaModal(svcId, svcName, pn, noUndo) {
+  const err = await openWin(svcId, svcName); if (err) return err;
+  const modal = document.getElementById('parts_modal'), k = pnKey(pn);
+  const rows = [...modal.querySelectorAll('tr')].filter(r => { const f = r.querySelector(PN_SEL); return f && k && pnKey(f.value) === k && r.offsetParent !== null; });
+  if (!rows.length) { await saveWin(); return 'error: ' + pn + ' is not on "' + svcName + '"'; }
+  const kept = [];
+  for (const r of rows) {
+    const val = sel => { const f = r.querySelector(sel); return f ? f.value : ''; };
+    kept.push({ pn: val(PN_SEL), desc: val('td.save_value.description textarea, textarea[data-field-name="description"]'), qty: val('input[data-field-name="quantity"]'), price: val('input[id*="part_price"], input[data-field-name="partPrice"]'), st: (r.querySelector(ST_SEL) || {}).value });
+    const destroy = r.querySelector('input[name$="[_destroy]"]');
+    const trash = r.querySelector('[class*="trash"], [class*="delete"], [class*="remove"], [title*="elete"], [title*="emove"], [aria-label*="elete"], a[data-method="delete"], [data-action*="remove"], [data-action*="delete"], [data-action*="destroy"]');
+    if (trash) (trash.closest('a,button') || trash).click();
+    else if (destroy) { if (destroy.type === 'checkbox') destroy.checked = true; setNative(destroy, destroy.type === 'checkbox' ? destroy.value : '1'); r.style.display = 'none'; }
+    else { log('DELETE: no delete control found in this row - send this to fix it:', r.outerHTML.slice(0, 1500)); await saveWin(); return 'error: could not find the delete button for ' + pn + ' (row code is in the console)'; }
+    await sleep(500);
+  }
+  await saveWin();
+  if (!noUndo) pushUndo({ kind: 'delete', svcId, svcName, rows: kept, label: 'deleted ' + pn + ' from "' + svcName + '"' });
+  return 'ok';
+}
+// undo the newest entry
+async function runUndo() {
+  const l = load('rvr_undo', []); const u = l.pop(); if (!u) return 'skip: nothing to undo';
+  save('rvr_undo', l);
+  if (u.kind === 'add') return deleteViaModal(u.svcId, u.svcName, u.pn, true);
+  if (u.kind === 'status') {
+    const err = await openWin(u.svcId, u.svcName); if (err) return err;
+    const modal = document.getElementById('parts_modal');
+    u.prev.forEach(x => { const r = [...modal.querySelectorAll('tr')].find(t => { const f = t.querySelector(PN_SEL); return f && f.value === x.pn; }); const sel = r && r.querySelector(ST_SEL); if (sel && x.value != null) setNative(sel, x.value); });
+    await sleep(400); await saveWin(); return 'ok';
+  }
+  if (u.kind === 'delete') {
+    for (const x of u.rows) { const res = await addPartViaModal(u.svcId, u.svcName, { pn: x.pn, desc: x.desc, qty: x.qty, price: x.price }, 'v:' + x.st, true); if (res !== 'ok') return res; }
+    return 'ok';
+  }
+  return 'skip: unknown undo';
 }
 function initRv() {
   const onParts = /\/parts_overview/.test(location.pathname);
@@ -642,8 +743,11 @@ function initRv() {
         let res;
         if (c.how === 'auto' && ro && c.ro && c.ro !== ro) res = 'skip: RO ' + c.ro + ' is not the RO open in RV (' + ro + ')';
         else {
-          if (c.how === 'status') {                              // change status of parts already quoted on the line
-            if (onParts) { const sec = document.getElementById('parts-section-' + c.svcId); res = sec ? (setRowsStatus(sec, c.part.pn, c.status) ? 'ok' : 'error: no part to change on "' + c.svcName + '"') : 'error: RV line "' + c.svcName + '" not on this page'; }
+          if (c.how === 'undo' || c.how === 'delete') {
+            res = onParts ? 'error: undo / delete work on the RV work order page (not the Parts page)'
+              : c.how === 'undo' ? await runUndo() : await deleteViaModal(c.svcId, c.svcName, c.part.pn);
+          } else if (c.how === 'status') {                       // change status of parts already quoted on the line
+            if (onParts) { const sec = document.getElementById('parts-section-' + c.svcId); res = sec ? (setRowsStatus(sec, c.part.pn, c.status).n ? 'ok' : 'error: no part to change on "' + c.svcName + '"') : 'error: RV line "' + c.svcName + '" not on this page'; }
             else res = await statusViaModal(c.svcId, c.svcName, c.part.pn, c.status);
           } else if (onParts) {
             const svc = rvServices().find(s => s.id === c.svcId) || rvServices().find(s => norm(s.name) === norm(c.svcName));
@@ -652,11 +756,12 @@ function initRv() {
             const id = document.querySelector('[data-service-id="' + c.svcId + '"]') ? c.svcId
               : ((rvEditServices().find(s => norm(s.name) === norm(c.svcName)) || {}).id || '');
             res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, c.saveAfter !== false) : 'error: RV line "' + c.svcName + '" not on this page';
+            if (res === 'ok') pushUndo({ kind: 'add', svcId: id, svcName: c.svcName, pn: c.part.pn, label: 'added ' + c.part.pn + ' to "' + c.svcName + '"' });
           }
         }
         results[c.id] = res; save('rvr_results', results);
         if (res !== 'ok') toast(res, !res.startsWith('skip'));
-        else toast((c.how === 'status' ? 'Status set on ' : 'Added ' + c.part.pn + ' to ') + '"' + c.svcName + '"');
+        else toast(c.how === 'undo' ? 'Undone' : c.how === 'delete' ? 'Deleted ' + c.part.pn + ' from "' + c.svcName + '"' : (c.how === 'status' ? 'Status set on ' : 'Added ' + c.part.pn + ' to ') + '"' + c.svcName + '"');
         await sleep(300);
       }
       const ids = Object.keys(results); if (ids.length > 200) { ids.slice(0, ids.length - 200).forEach(i => delete results[i]); save('rvr_results', results); }
