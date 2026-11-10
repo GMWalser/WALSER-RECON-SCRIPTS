@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.4
+// @version      0.5
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -279,6 +279,38 @@ async function addPart(svc, part, status) {
   row.scrollIntoView({ block: 'center', behavior: 'smooth' });
   return 'ok';
 }
+// ---- main work order page: add through the line's parts icon (#parts_modal) ----
+const modalOpen = () => { const m = document.getElementById('parts_modal'); return !!(m && (m.style.display === 'block' || m.classList.contains('in') || m.classList.contains('show'))); };
+async function waitFor(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = fn(); if (v) return v; await sleep(150); } return null; }
+async function addPartViaModal(svcId, svcName, part, status, saveAfter) {
+  const line = document.querySelector('[data-service-id="' + svcId + '"]');
+  const trigger = line && line.querySelector('.inner[data-target="#parts_modal"], [data-target="#parts_modal"]');
+  if (!trigger) return 'error: parts icon not found on "' + svcName + '"';
+  if (!modalOpen()) { trigger.click(); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(500); }
+  const modal = document.getElementById('parts_modal');
+  const have = [...modal.querySelectorAll('textarea[id*="part_number"], input[id*="part_number"]')].some(f => clean(f.value).toUpperCase() === part.pn.toUpperCase());
+  if (have) return 'skip: ' + part.pn + ' already on "' + svcName + '"';
+  const add = modal.querySelector('.button-outline[data-action*="addNewPart"], [data-action*="parts-modal-controller#addNewPart"]') || document.querySelector('.button-outline[data-action*="parts-modal-controller#addNewPart"]');
+  if (!add) return 'error: "+ Add Part" not found in the parts window';
+  const before = new Set(modal.querySelectorAll('tr'));
+  add.click();
+  const row = await waitEmptyRow(modal, before, 4000);
+  if (!row) return 'error: new part row did not appear';
+  const q = sel => row.querySelector(sel);
+  setNative(q('textarea[id*="part_number"], input[id*="part_number"]'), part.pn);
+  const desc = q('td.save_value.description textarea, textarea[data-field-name="description"]'); if (desc && part.desc) setNative(desc, part.desc);
+  const qty = q('input[data-field-name="quantity"]'); if (qty) setNative(qty, part.qty || '1');
+  const price = q('input[id*="part_price"], input[data-field-name="partPrice"]'); if (price && part.price) setNative(price, part.price);
+  const stt = q('td.save_value.status select, select[data-field-name="status"]'); if (stt && status) setNative(stt, status);
+  if (!saveAfter) return 'ok';
+  await sleep(400);
+  const saveBtn = document.querySelector('[id^="desktop-save-button-"]');
+  if (!saveBtn) return 'ok (filled, but Save button not found - please save)';
+  saveBtn.click();
+  await waitFor(() => !modalOpen(), 6000);
+  await sleep(800);
+  return 'ok';
+}
 function initRv() {
   const onParts = /\/parts_overview/.test(location.pathname);
   const publish = () => {
@@ -293,7 +325,7 @@ function initRv() {
   badge.id = 'rvr-rv-badge'; document.documentElement.appendChild(badge);
   const showBadge = () => {
     const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
-    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (onParts ? 'Parts page: Alt+V to paste' : 'waiting for Tekion');
+    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · hover a line + Alt+V to paste';
   };
   showBadge(); setInterval(showBadge, 3000);
 
@@ -304,19 +336,19 @@ function initRv() {
     try {
       const results = load('rvr_results', {});
       const todo = load('rvr_cmds', []).filter(c => !results[c.id]);
-      if (todo.length && !onParts) {                              // go to the Parts page; commands wait in storage
-        toast('Tekion sent parts - opening this work order\'s Parts page…');
-        await sleep(800);
-        location.href = '/work_orders/' + woId() + '/parts_overview?limited_access=false';
-        return;
-      }
       const ro = rvRO();
       for (const c of todo) {
         let res;
         if (c.how === 'auto' && ro && c.ro && c.ro !== ro) res = 'skip: RO ' + c.ro + ' is not the RO open in RV (' + ro + ')';
         else {
-          const svc = rvServices().find(s => s.id === c.svcId) || rvServices().find(s => norm(s.name) === norm(c.svcName));
-          res = svc ? await addPart(svc, c.part, c.status) : 'error: RV line "' + c.svcName + '" not on this page';
+          if (onParts) {
+            const svc = rvServices().find(s => s.id === c.svcId) || rvServices().find(s => norm(s.name) === norm(c.svcName));
+            res = svc ? await addPart(svc, c.part, c.status) : 'error: RV line "' + c.svcName + '" not on this page';
+          } else {                                                 // main page: through that line's parts icon
+            const id = document.querySelector('[data-service-id="' + c.svcId + '"]') ? c.svcId
+              : ((rvEditServices().find(s => norm(s.name) === norm(c.svcName)) || {}).id || '');
+            res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, c.how !== 'paste') : 'error: RV line "' + c.svcName + '" not on this page';
+          }
         }
         results[c.id] = res; save('rvr_results', results);
         if (res !== 'ok') toast(res, !res.startsWith('skip'));
@@ -333,7 +365,7 @@ function initRv() {
   if (!onParts) {
     const lineOf = node => {
       const r = node.closest && node.closest('[data-service-id]');
-      return r && r.querySelector('input[name*="line_items_attributes"][name$="[name]"]') ? r : null;
+      return r && (r.querySelector('input[name*="line_items_attributes"][name$="[name]"]') || r.querySelector('[data-target="#parts_modal"]')) ? r : null;
     };
     document.addEventListener('mouseover', e => setHover(lineOf(e.target)), true);
     document.addEventListener('keydown', e => {
@@ -346,7 +378,7 @@ function initRv() {
       const cmds = load('rvr_cmds', []);
       cmds.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: clip.part, status: clip.status, ts: Date.now() });
       save('rvr_cmds', cmds);
-      toast('Pasting ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" - opening the Parts page…');
+      toast('Pasting ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" - review it, then Save (Alt+S)');
       runCmds();
     }, true);
   }
