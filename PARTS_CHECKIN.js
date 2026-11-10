@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Parts Check-In Helper
 // @namespace    walser-recon
-// @version      3.10
+// @version      3.11
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_CHECKIN.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_CHECKIN.js
@@ -59,7 +59,7 @@ try {
         // Tekion scrolls an inner panel, not the window, so find every real
         // scrollable element on the page and scroll each one to its bottom.
         function scrollToBottomOnLoad() {
-            const hasPartsList = document.body.innerText.includes('Parts List');
+            const hasPartsList = document.body.textContent.includes('Parts List');
             if (!hasPartsList) return;
             setTimeout(() => {
                 window.scrollTo(0, document.body.scrollHeight);
@@ -318,9 +318,13 @@ try {
         setInterval(tryAutoClickFulfill, 500);
 
         // --- Watch page content for changes (SPA navigation) and re-run checks ---
-        let lastPartsListState = '';
-        const observer = new MutationObserver(() => {
-            const hasPartsList = document.body.innerText.includes('Parts List');
+        let lastPartsListState = '', pcTimer = null;
+        const observer = new MutationObserver(() => {                 // v3.11: at most every 0.4 s
+            if (pcTimer) return;
+            pcTimer = setTimeout(() => { pcTimer = null; pcCheck(); }, 400);
+        });
+        function pcCheck() {
+            const hasPartsList = document.body.textContent.includes('Parts List');
             const key = hasPartsList ? 'present' : 'absent';
             if (key !== lastPartsListState) {
                 lastPartsListState = key;
@@ -328,7 +332,7 @@ try {
             }
             tryAutoClickFulfill();
             setupTotalPriceHighlight();
-        });
+        }
         observer.observe(document.body, { childList: true, subtree: true });
 
         scrollToBottomOnLoad();
