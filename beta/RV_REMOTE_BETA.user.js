@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.8
+// @version      0.9
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -255,39 +255,43 @@ function initTekion() {
 // =====================================================================
 // RV SIDE (the screen)
 // =====================================================================
-// Box shown before every manual paste: Vendor shortcut, Status letter, Qty. Enter = paste, Esc = cancel.
-function askPaste(clip) {
+// Quick prompts, one at a time, next to the mouse (like Recon Clipboard's quick part add):
+//   Qty (Enter keeps it) -> Vendor shortcut (Enter) -> Status: one key A / O / R / S.
+let lastMouse = { x: innerWidth / 2, y: innerHeight / 3 };
+document.addEventListener('mousemove', e => { lastMouse = { x: e.clientX, y: e.clientY }; }, true);
+function askStep(title, value, hint, singleKey) {
   return new Promise(resolve => {
     document.querySelectorAll('#rvr-ask').forEach(x => x.remove());
-    const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
-    const box = el('div', 'position:fixed;left:50%;top:30%;transform:translateX(-50%);z-index:2147483647;background:#0d1117;color:#e5e7eb;border:2px solid #2563eb;border-radius:10px;padding:12px 14px;font:13px Segoe UI,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.7);min-width:300px');
+    const box = el('div', 'position:fixed;z-index:2147483647;background:#0d0d0d;border:2px solid #2563eb;border-radius:10px;padding:9px 12px;font:13px Segoe UI,sans-serif;color:#e5e7eb;box-shadow:0 4px 20px rgba(0,0,0,.7);min-width:230px');
     box.id = 'rvr-ask';
-    box.appendChild(el('div', 'font-weight:700;color:#60a5fa;margin-bottom:8px', 'Paste ' + clip.part.pn + '  ($' + (clip.part.price || '?') + ')'));
-    const css = 'width:100%;box-sizing:border-box;background:#111827;color:#fff;border:1px solid #334155;border-radius:6px;padding:6px 8px;font:13px Consolas,monospace';
-    const field = (label, val, hint) => {
-      const w = el('div', 'margin:6px 0'); w.appendChild(el('div', 'font-size:11px;opacity:.7;margin-bottom:2px', label));
-      const i = el('input', css); i.value = val; w.appendChild(i); const h = el('div', 'font-size:11px;color:#4ade80;min-height:14px'); w.appendChild(h);
-      box.appendChild(w); i.addEventListener('input', () => { h.textContent = hint(i.value); }); h.textContent = hint(val); return i;
-    };
-    const v = field('Vendor (B = SUBCHEV, F = FMP, N = NAPA, O = OR …)', last.vendor, x => x ? '→ ' + vendorName(x) : '(none)');
-    const st = field('Status: A = Action Req.  O = Ordered  R = Arrived  S = In Stock', last.status, x => ({ A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' })[x.trim().toUpperCase()] || (x ? 'not a status letter' : 'leave as is'));
-    const q = field('Qty', clip.part.qty || '1', x => '');
-    box.appendChild(el('div', 'font-size:11px;opacity:.55;margin-top:6px', 'Tab = next box · Enter = paste · Esc = cancel'));
-    document.documentElement.appendChild(box);
-    v.focus(); v.select();
-    const done = ok => {
-      box.remove(); document.removeEventListener('keydown', key, true);
-      if (!ok) { resolve(null); return; }
-      const res = { vendor: v.value.trim(), status: statusLetter(st.value.trim()), qty: q.value.trim() || '1' };
-      save('rvr_lastpaste', { vendor: res.vendor, status: res.status });
-      resolve(res);
-    };
+    box.style.left = Math.min(innerWidth - 260, lastMouse.x + 12) + 'px'; box.style.top = Math.min(innerHeight - 140, lastMouse.y + 12) + 'px';
+    box.appendChild(el('div', 'font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;margin-bottom:5px', title));
+    const inp = el('input', 'width:100%;box-sizing:border-box;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:6px;padding:5px 8px;font:13px Consolas,monospace');
+    inp.value = value || ''; box.appendChild(inp);
+    const h = el('div', 'margin-top:5px;font-size:12px;color:#4ade80;min-height:15px'); box.appendChild(h);
+    const showH = () => { h.textContent = hint(inp.value); }; showH(); inp.addEventListener('input', showH);
+    document.documentElement.appendChild(box); inp.focus(); inp.select();
+    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
     const key = e => {
-      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done(true); }
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null); return; }
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); finish(inp.value.trim()); return; }
+      if (singleKey && /^[aorsAORS]$/.test(e.key) && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); finish(e.key.toUpperCase()); }
     };
     document.addEventListener('keydown', key, true);
   });
+}
+async function askPaste(clip) {
+  const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
+  const qty = await askStep('Qty · ' + clip.part.pn + ' ($' + (clip.part.price || '?') + ')', clip.part.qty || '1', () => 'Enter = keep · Esc = cancel');
+  if (qty === null) return null;
+  const vendor = await askStep('Vendor', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ');
+  if (vendor === null) return null;
+  const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+  const status = await askStep('Status · press A / O / R / S', '', () => 'Enter = ' + (NAMES[last.status] || 'leave as is'), true);
+  if (status === null) return null;
+  const res = { qty: qty || '1', vendor, status: statusLetter(status) || last.status };
+  save('rvr_lastpaste', { vendor: res.vendor, status: res.status });
+  return res;
 }
 const withAnswers = (clip, a) => ({ part: Object.assign({}, clip.part, { desc: vendorName(a.vendor), qty: a.qty }), status: a.status });
 const woId = () => (location.pathname.match(/work_orders\/(\d+)/) || [])[1] || '';
@@ -348,13 +352,21 @@ async function addPart(svc, part, status) {
   return 'ok';
 }
 // ---- main work order page: add through the line's parts icon (#parts_modal) ----
+let openSvc = '';                                     // which line's parts window is open
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-target="#parts_modal"]');
+  const r = t && t.closest('[data-service-id]'); if (r) openSvc = r.getAttribute('data-service-id');
+}, true);
 const modalOpen = () => { const m = document.getElementById('parts_modal'); return !!(m && (m.style.display === 'block' || m.classList.contains('in') || m.classList.contains('show'))); };
 async function waitFor(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = fn(); if (v) return v; await sleep(150); } return null; }
 async function addPartViaModal(svcId, svcName, part, status, saveAfter) {
   const line = document.querySelector('[data-service-id="' + svcId + '"]');
   const trigger = line && line.querySelector('.inner[data-target="#parts_modal"], [data-target="#parts_modal"]');
   if (!trigger) return 'error: parts icon not found on "' + svcName + '"';
-  if (!modalOpen()) { trigger.click(); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(500); }
+  if (modalOpen() && openSvc && openSvc !== String(svcId)) {      // window open on another line: save + close it first
+    const sb = document.querySelector('[id^="desktop-save-button-"]'); if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(600); }
+  }
+  if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(500); }
   const modal = document.getElementById('parts_modal');
   const have = [...modal.querySelectorAll('textarea[id*="part_number"], input[id*="part_number"]')].some(f => clean(f.value).toUpperCase() === part.pn.toUpperCase());
   if (have) return 'skip: ' + part.pn + ' already on "' + svcName + '"';
@@ -415,7 +427,7 @@ function initRv() {
           } else {                                                 // main page: through that line's parts icon
             const id = document.querySelector('[data-service-id="' + c.svcId + '"]') ? c.svcId
               : ((rvEditServices().find(s => norm(s.name) === norm(c.svcName)) || {}).id || '');
-            res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, c.how !== 'paste') : 'error: RV line "' + c.svcName + '" not on this page';
+            res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, true) : 'error: RV line "' + c.svcName + '" not on this page';
           }
         }
         results[c.id] = res; save('rvr_results', results);
@@ -447,15 +459,21 @@ function initRv() {
       cmds.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: clip.part, status: clip.status, ts: Date.now() });
       save('rvr_cmds', cmds);
       save('rvr_clip', null);                                 // used: right-click on parts icons goes back to Recon Clipboard
-      toast('Pasting ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" - review it, then Save (Alt+S)');
+      toast('Adding ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" and saving…');
       runCmds();
     };
     document.addEventListener('keydown', e => {
-      if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
-      e.preventDefault(); pasteLine(hovered);
+      if (!e.altKey || (e.key || '').toLowerCase() !== 'v') return;
+      const target = modalOpen() && openSvc && openLine() ? openLine() : hovered;
+      if (!target) return;
+      e.preventDefault(); pasteLine(target);
     }, true);
+    const inOpenWindow = t => { const m = document.getElementById('parts_modal'); return modalOpen() && openSvc && m && m.contains(t); };
+    const openLine = () => document.querySelector('[data-service-id="' + openSvc + '"]');
     window.addEventListener('contextmenu', e => {          // right-click the highlighted line (parts icon too) to paste
-      if (!rcOn() || !freshClip() || !onHighlightedRV(e.target)) return;
+      if (!rcOn() || !freshClip()) return;
+      if (inOpenWindow(e.target) && openLine()) { e.preventDefault(); e.stopImmediatePropagation(); pasteLine(openLine()); return; }
+      if (!onHighlightedRV(e.target)) return;
       e.preventDefault(); e.stopImmediatePropagation(); pasteLine(hovered);
     }, true);
   }
