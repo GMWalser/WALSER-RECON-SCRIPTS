@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.6
+// @version      1.7
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -104,7 +104,7 @@ const RULES = [                                     // first match wins; part te
   { part: /\btires?\b|\d{3}\/\d{2}r\d{2}/i, line: /\btires?\b/i, not: /measure/i },
   { part: /brake|\bpads?\b|rotor|caliper|\bshoes?\b|\bdrums?\b/i, line: /brake/i, brake: true },
 ];
-const hasParts = s => !!s && (Number(s.parts) > 0 || s.parts === 'yes' || !!s.state);
+const hasParts = s => !!s && (Number(s.parts) > 0 || s.parts === 'yes');   // quoted = has a price
 const isDone = s => !!s && (s.state === 'green' || s.state === 'yellow');
 const FRONT = /\b(front|frt|fr|fnt)\b/i, REAR = /\b(rear|rr|rer)\b/i;
 // -> { pick: the suggested line or null, why: text, list: lines ordered best first }
@@ -120,14 +120,15 @@ function wordHit(part, lines) {
 function suggestLine(part, job, services) {
   const lines = partsLines(services), text = part.pn + ' ' + (part.desc || '');
   const learned = load('rvr_learn', {})[pnKey(part.pn)];
-  const ordered = first => first.concat(lines.filter(s => !first.includes(s)));
+  const quoted = lines.filter(x => x.state === 'red' && hasParts(x));
+  const ordered = first => { const l = first.concat(quoted.filter(s => !first.includes(s))); return l.length ? l : lines; };
   const exact = !/recon\s*fees/i.test(job || '') && lines.find(x => norm(x.name) === norm(job));
   if (exact) return { pick: exact, why: 'same name as the Tekion job', list: ordered([exact]) };
   const qh = wordHit(part, lines.filter(x => x.state === 'red' && hasParts(x)));
   if (qh) return { pick: qh.s, why: 'quoted line, part says ' + qh.w, list: ordered([qh.s]) };
   if (learned) { const s = lines.find(x => norm(x.name) === learned); if (s) return { pick: s, why: 'last time ' + part.pn + ' went here', list: ordered([s]) }; }
   const rule = RULES.find(r => r.part.test(text) || (r.gasket && DRAIN_GASKETS.includes(pnKey(part.pn))));
-  if (!rule) { const wh = wordHit(part, lines); return wh ? { pick: wh.s, why: 'part says ' + wh.w, list: ordered([wh.s]) } : { pick: null, why: '', list: lines }; }
+  if (!rule) { const wh = wordHit(part, lines); return wh ? { pick: wh.s, why: 'part says ' + wh.w, list: ordered([wh.s]) } : { pick: null, why: '', list: ordered([]) }; }
   let hits = lines.filter(s => rule.line.test(s.name) && !(rule.not && rule.not.test(s.name)));
   if (rule.brake) {
     const where = (FRONT.test(text) || FRONT.test(job)) ? FRONT : (REAR.test(text) || REAR.test(job)) ? REAR : null;
@@ -176,7 +177,7 @@ function pickLine(title, sug, allServices) {
       if (e.key === 'Enter') { const n = parseInt(typed, 10); return finish(n ? list[n - 1] || null : sug.pick); }
       if (e.key === 'Backspace') { typed = typed.slice(0, -1); draw(); return; }
       if (!/^\d$/.test(e.key)) return;
-      if (e.key === '0' && !typed && !all) { all = true; list = sug.list.concat(allServices.filter(x => !sug.list.includes(x))); draw(); return; }
+      if (e.key === '0' && !typed && !all) { all = true; list = sug.list.concat(partsLines(allServices).filter(x => !sug.list.includes(x)), allServices.filter(x => NO_PARTS.test(x.name.replace(/^\*+\s*/, '')) && !sug.list.includes(x))); draw(); return; }
       typed += e.key;
       const n = parseInt(typed, 10);
       if (list.length < 10 || n * 10 > list.length) return finish(list[n - 1] || null);   // no 2-digit number possible: pick now
@@ -224,7 +225,8 @@ function tekionLines() {
     sec.querySelectorAll('[data-test-id*="itemName-cell"]').forEach(cell => {
       const row = cell.parentElement; if (!row) return;
       const inp = cell.querySelector('input');
-      const name = clean(inp && inp.value ? inp.value : cell.textContent);
+      const tg = cell.querySelector('.rvr-tag');
+      const name = clean(inp && inp.value ? inp.value : tg ? cell.textContent.replace(tg.textContent, '') : cell.textContent);
       if (!name || /^select$/i.test(name)) return;
       const pc = row.querySelector('[data-test-id*="sellingPrice"]'), pi = pc && pc.querySelector('input');
       const qc = row.querySelector('[data-test-id*="requiredQuantity"]'), qi = qc && qc.querySelector('input');
