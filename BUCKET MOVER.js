@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.20
+// @version      3.21
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -647,12 +647,18 @@ function injectTekionButton() {
       }
     }, 500);
   });
+  btn._stale = () => !roEl.isConnected;              // RO# field was redrawn -> make a new button there
   document.body.appendChild(btn);
 
   // Position the button right next to the RO# field, and keep it pinned
   // there as the page scrolls (the info bar itself isn't sticky, so we
   // reposition on every scroll/resize tick).
   function positionButton() {
+    if (!btn.isConnected || !roEl.isConnected) {          // page redrawn: drop this copy, a fresh one is added
+      window.removeEventListener('scroll', positionButton); window.removeEventListener('resize', positionButton);
+      if (btn.isConnected) btn.remove();
+      return;
+    }
     const rect = roEl.getBoundingClientRect();
     btn.style.left = rect.left + 'px';
     btn.style.top = (rect.bottom + 14) + 'px';
@@ -937,6 +943,7 @@ if (location.hostname === 'app.tekioncloud.com') {
   } else {
     setTimeout(tryAutoMove, 800);
     setTimeout(injectTekionButton, 1200);
+    setInterval(() => { const b = document.getElementById('rv-tekion-btn'); if (b && b._stale && b._stale()) b.remove(); if (!document.getElementById('rv-tekion-btn')) injectTekionButton(); }, 1500);
   }
 } else {
   setTimeout(init, 1000);
