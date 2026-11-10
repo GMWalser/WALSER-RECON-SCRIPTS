@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.1
+// @version      0.2
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -288,6 +288,14 @@ function initRv() {
     save('rvr_rv', { ro, woId: woId(), onParts, services, ts: Date.now() });
   };
   publish(); setInterval(publish, 3000);
+  // small badge so you can see the beta is running on RV
+  const badge = el('div', 'position:fixed;left:12px;bottom:12px;z-index:2147483600;background:#111827;color:#e5e7eb;border:1px solid #334155;border-radius:8px;padding:5px 9px;font:600 12px Segoe UI,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none');
+  badge.id = 'rvr-rv-badge'; document.documentElement.appendChild(badge);
+  const showBadge = () => {
+    const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
+    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (onParts ? 'Parts page: Alt+V to paste' : 'waiting for Tekion');
+  };
+  showBadge(); setInterval(showBadge, 3000);
 
   // run commands from Tekion, one at a time
   let busy = false;
