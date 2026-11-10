@@ -224,6 +224,10 @@ function recDescribe(el) {
   return t.tagName.toLowerCase() + (dt ? '[' + String(dt).slice(-45) + ']' : '') + (txt ? ' "' + txt + '"' : '');
 }
 document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target)); }, true);
+// any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
+window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
+// any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
+window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
 document.addEventListener('contextmenu', e => recAdd('right-click' + (e.altKey ? ' (Alt)' : ''), recDescribe(e.target)), true);
 document.addEventListener('keydown', e => {
   if (!(e.altKey || e.ctrlKey) || !e.key || e.key.length > 1 && !/^F\d/.test(e.key)) return;   // shortcuts only, never typing
