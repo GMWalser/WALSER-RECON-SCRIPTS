@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1305
+// @version      2026.1110.1323
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10957,8 +10957,8 @@ log('v1.5 loaded on', location.hostname);
 })();
 });
 
-// ===== Vehicle Parts Database Logger v2.9  (VEHICLE_PARTS_DATABASE.js) =====
-WR.add('parts_database', 'Vehicle Parts Database Logger', '2.9', ['https://app.reconvision.com/departments/3127*', 'https://app.reconvision.com/departments/3139*', 'https://app.tekioncloud.com/*'], 'document-idle',
+// ===== Vehicle Parts Database Logger v2.10  (VEHICLE_PARTS_DATABASE.js) =====
+WR.add('parts_database', 'Vehicle Parts Database Logger', '2.10', ['https://app.reconvision.com/departments/3127*', 'https://app.reconvision.com/departments/3139*', 'https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -11209,16 +11209,35 @@ if (IS_TK) {
   // actually had it -- the error path was missing it entirely, which is why
   // a failed vehicle would leave the browser signed into that RO instead of
   // exiting. Now every exit point calls this same function.
+  const SAVE_SEL = '[data-test-id="@tekion-parts-partsRoSalesDetailedView-formFooter-tertiaryButton"]';
+  const CREATE_SEL = '[data-test-id="@tekion-parts-partsRoSales-common-createGroupedPartRequestsModalButton"]';
+  // Returns true when the RO screen actually closed (Save as Draft went through).
   async function tkExitCurrentRO() {
-    const saveBtn = document.querySelector('[data-test-id="@tekion-parts-partsRoSalesDetailedView-formFooter-tertiaryButton"]');
-    if (saveBtn) {
-      fireClick(saveBtn);
-      tkLog('Clicked Save as Draft to exit RO.');
-      await delay(1500); // let the save complete
-    } else {
-      tkLog('Save as Draft button not found -- either already exited, or not inside an RO.');
+    const saveBtn = document.querySelector(SAVE_SEL);
+    if (!saveBtn) { tkLog('Save as Draft button not found -- either already exited, or not inside an RO.'); return true; }
+    fireClick(saveBtn);
+    tkLog('Clicked Save as Draft to exit RO.');
+    for (let i = 0; i < 40; i++) {                 // up to 6 s, usually much less
+      await delay(150);
+      const b = document.querySelector(SAVE_SEL);
+      if (!b || !b.isConnected) { tkLog('RO screen closed.'); return true; }
     }
+    tkLog('RO screen did not close after Save as Draft -- will be revisited by cleanup.');
+    return false;
   }
+  // ROs whose exit could not be confirmed (only these need the cleanup pass)
+  function getNeedsCleanup() { try { return JSON.parse(GM_getValue('vpd_needs_cleanup', '[]')); } catch (e) { return []; } }
+  function markNeedsCleanup(ro, need) {
+    const l = getNeedsCleanup().filter(x => x !== ro); if (need) l.push(ro);
+    GM_setValue('vpd_needs_cleanup', JSON.stringify(l));
+  }
+  // Back on the fulfillment list without reloading Tekion? (true = keep going on this page)
+  async function tkBackOnList() {
+    if (document.querySelector(SAVE_SEL)) return false;
+    try { await waitForEl(CREATE_SEL, 3000); return true; } catch (e) { return false; }
+  }
+  const roTimes = [];
+  function avgText() { if (!roTimes.length) return ''; const a = roTimes.reduce((x, y) => x + y, 0) / roTimes.length; return ` · avg ${a.toFixed(1)} s/RO`; }
 
   // ---- Scrape the current RO's parts from the fulfillment view ----
   // NOTE: These selectors are from v0.6 and have NEVER been verified
@@ -11484,6 +11503,7 @@ if (IS_TK) {
 
       setScanIndex(i); // save position so we resume here after reload
       const vehicle = queue[i];
+      const roStart = Date.now();
 
       if (logged[vehicle.dmsRO]) {
         skipped++;
@@ -11508,14 +11528,14 @@ if (IS_TK) {
         // browser was left sitting inside that RO indefinitely. Now it exits
         // the same way the success path does, regardless of whether this
         // failed vehicle was in the middle of the queue or the last one.
+        tkUpdateProgress(`${i + 1}/${queue.length} — error, exiting RO...`);
+        markNeedsCleanup(vehicle.dmsRO, !(await tkExitCurrentRO()));
         if (i < queue.length - 1) {
-          tkUpdateProgress(`${i + 1}/${queue.length} — error, exiting RO...`);
-          await tkExitCurrentRO();
           setScanIndex(i + 1);
+          if (await tkBackOnList()) continue;            // no reload needed
           location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
           return; // script will reload and auto-resume from the new index
         }
-        await tkExitCurrentRO();
         continue;
       }
 
@@ -11529,17 +11549,17 @@ if (IS_TK) {
       tkLog('Completed RO#', vehicle.dmsRO, '—', parts.length, 'parts.');
 
       // Exit the RO properly by clicking "Save as Draft", then navigate back
+      tkUpdateProgress(`${i + 1}/${queue.length} — saving & exiting RO...`);
+      markNeedsCleanup(vehicle.dmsRO, !(await tkExitCurrentRO()));
+      roTimes.push((Date.now() - roStart) / 1000);
+      tkUpdateProgress(`${i + 1}/${queue.length} done${avgText()}`);
       if (i < queue.length - 1) {
-        tkUpdateProgress(`${i + 1}/${queue.length} — saving & exiting RO...`);
-        await tkExitCurrentRO();
         setScanIndex(i + 1);
+        if (await tkBackOnList()) continue;              // Tekion is back on the list: no full reload
         location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
         return; // script will reload and auto-resume from the new index
       }
     }
-
-    // Save as Draft on the last RO to exit it properly
-    await tkExitCurrentRO();
 
     // Scan fully complete
     scanning = false;
@@ -11652,9 +11672,10 @@ if (IS_TK) {
   }
 
   async function tkRunCleanupPass() {
-    const roList = getTodayScanned();
+    const roList = getNeedsCleanup();
     if (!roList.length) {
-      tkUpdateStatus('No ROs scanned this session to clean up.');
+      tkUpdateStatus('All scanned ROs were exited during the scan -- nothing to clean up.');
+      clearTodayScanned();
       return;
     }
 
@@ -11678,18 +11699,12 @@ if (IS_TK) {
       tkUpdateProgress(`Cleanup ${i + 1}/${roList.length} — RO# ${dmsRO}`);
 
       const opened = await tkOpenROForCleanup(dmsRO);
-      if (opened) {
-        await tkExitCurrentRO();
-        exited++;
-      } else {
-        // Even if we couldn't confirm opening it, try exiting anyway --
-        // covers the case where it was already open from a prior failed attempt.
-        await tkExitCurrentRO();
-        failed++;
-      }
+      const closed = await tkExitCurrentRO();   // also covers an RO already open from an earlier attempt
+      if (opened && closed) { exited++; markNeedsCleanup(dmsRO, false); } else failed++;
 
       if (i < roList.length - 1) {
         setCleanupIndex(i + 1);
+        if (await tkBackOnList()) continue;
         location.href = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment';
         return; // script reloads and auto-resumes from the new index
       }
@@ -11832,7 +11847,7 @@ if (IS_TK) {
 
     cleanupBtn = document.createElement('button');
     cleanupBtn.textContent = "🧹 Exit Today's ROs";
-    cleanupBtn.title = 'Revisits only the ROs scanned this session and clicks Save as Draft to exit each (no re-scraping).';
+    cleanupBtn.title = 'Revisits only ROs that did not close during the scan, and clicks Save as Draft on each.';
     cleanupBtn.style.cssText = `
       background:#7c3aed;color:#fff;font-weight:700;font-size:12px;
       border:none;border-radius:6px;padding:6px 14px;cursor:pointer;
@@ -11887,19 +11902,20 @@ if (IS_TK) {
     // Auto-resume: if a scan was in progress when the page reloaded, continue it
     if (isScanActive()) {
       tkLog('Auto-resuming scan from index', getScanIndex());
-      setTimeout(() => tkRunFullScan(), 2000);
+      setTimeout(() => tkRunFullScan(), 600);
     }
     // Auto-resume: same for an in-progress cleanup pass
     if (isCleanupActive()) {
       tkLog('Auto-resuming cleanup pass from index', getCleanupIndex());
       cleanupBtn.textContent = '⏹ Stop Cleanup';
-      setTimeout(() => tkRunCleanupPass(), 2000);
+      setTimeout(() => tkRunCleanupPass(), 600);
     }
   }
 
   // Check for fulfillment page on load and on SPA navigation
   tkBuildUI();
-  const obs = new MutationObserver(() => tkBuildUI());
+  let uiT = 0;                                    // at most twice a second (Tekion changes the page constantly)
+  const obs = new MutationObserver(() => { if (!uiT) uiT = setTimeout(() => { uiT = 0; tkBuildUI(); }, 500); });
   obs.observe(document.body, { childList: true, subtree: true });
 }
 
