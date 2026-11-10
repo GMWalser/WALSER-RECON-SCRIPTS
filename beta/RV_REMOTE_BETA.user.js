@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.1
+// @version      1.2
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -77,7 +77,7 @@ const rcOn = () => load('rvr_rc', true);
 document.addEventListener('keydown', e => {
   if (!e.altKey || (e.key || '').toLowerCase() !== 'r') return;
   e.preventDefault(); save('rvr_rc', !rcOn());
-  toast('Right-click copy/paste ' + (rcOn() ? 'ON (right-click = copy in Tekion, paste in RV)' : 'OFF (normal right-click menu)'));
+  toast('Right-click copy/paste ' + (rcOn() ? 'ON (right-click = copy in Tekion, Alt+right-click = paste in RV)' : 'OFF (normal right-click menu)'));
 }, true);
 // spots Recon Clipboard already uses for right-click: never take those
 const RC_RESERVED = '[data-test-id*="sellingPrice-cell"], .block.parts_icon, .add-part-to-service-btn';
@@ -258,7 +258,7 @@ function initTekion() {
   bClr.addEventListener('click', () => { save('rvr_clip', null); showBasket(); });
   showBasket(); GM_addValueChangeListener('rvr_clip', showBasket); setInterval(showBasket, 10000);
   const tip = el('div', 'opacity:.6;margin:6px 0 4px'); body.appendChild(tip);
-  const showTip = () => { tip.textContent = rcOn() ? 'Manual: right-click each part (adds to basket), then ONE right-click on the RV line pastes them all. Alt+R = right-click off.'
+  const showTip = () => { tip.textContent = rcOn() ? 'Manual: right-click each part (adds to basket), then ONE Alt+right-click on the RV line pastes them all. Alt+R = right-click off.'
     : 'Manual: hover + Alt+C, then hover the RV line + Alt+V. Right-click copy is OFF (Alt+R to turn on).'; };
   showTip(); GM_addValueChangeListener('rvr_rc', showTip);
   const logBox = el('div', 'max-height:110px;overflow:auto;background:#0b1018;border-radius:5px;padding:4px 6px;font:11px Consolas,monospace');
@@ -347,7 +347,7 @@ function initTekion() {
     if (b.parts.some(x => x.pn === line.pn)) { toast(`${line.pn} is already in the basket (${b.parts.length} part${b.parts.length > 1 ? 's' : ''})`); return true; }
     b.parts.push({ pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh }); b.ts = Date.now();
     save('rvr_clip', b);
-    toast(`Basket: ${b.parts.length} part${b.parts.length > 1 ? 's' : ''} (${b.parts.map(x => x.pn).join(', ')}) - right-click the RV line to paste all`);
+    toast(`Basket: ${b.parts.length} part${b.parts.length > 1 ? 's' : ''} (${b.parts.map(x => x.pn).join(', ')}) - Alt+right-click the RV line to paste all`);
     note(`basket + ${line.pn} (${b.parts.length})`);
     return true;
   }
@@ -529,7 +529,7 @@ function initRv() {
   const showBadge = () => {
     const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
     const b = basket();
-    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? 'right-click a line to paste (Alt+R off)' : 'Alt+V to paste (right-click OFF)');
+    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? 'Alt+right-click a line to paste (Alt+R off)' : 'Alt+V to paste (right-click OFF)');
   };
   showBadge(); setInterval(showBadge, 3000); GM_addValueChangeListener('rvr_clip', showBadge);
 
@@ -598,12 +598,15 @@ function initRv() {
     }, true);
     const inOpenWindow = t => { const m = document.getElementById('parts_modal'); return modalOpen() && openSvc && m && m.contains(t); };
     const openLine = () => document.querySelector('[data-service-id="' + openSvc + '"]');
-    window.addEventListener('contextmenu', e => {          // right-click the highlighted line (parts icon too) to paste
-      if (rcOn() && pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }   // double right-click: ignore
-      if (!rcOn() || !freshClip()) return;
-      if (inOpenWindow(e.target) && openLine()) { e.preventDefault(); e.stopImmediatePropagation(); pasteLine(openLine()); return; }
+    window.addEventListener('contextmenu', e => {          // ALT + right-click the highlighted line (parts icon too) to paste
+      if (!e.altKey || !rcOn()) return;                    // plain right-click: RV / Recon Clipboard as normal
+      if (pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }   // double click: ignore
+      if (inOpenWindow(e.target) && openLine()) {
+        if (!freshClip()) return;                          // empty basket: Recon Clipboard's Alt+right-click in the window
+        e.preventDefault(); e.stopImmediatePropagation(); pasteLine(openLine()); return;
+      }
       if (!onHighlightedRV(e.target)) return;
-      e.preventDefault(); e.stopImmediatePropagation(); pasteLine(hovered);
+      e.preventDefault(); e.stopImmediatePropagation(); pasteLine(hovered);   // empty basket -> "basket empty" message
     }, true);
   }
   // manual paste: hover an RV line + Alt+V
@@ -634,9 +637,10 @@ function initRv() {
       if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
       e.preventDefault(); pasteSvc(hovered);
     }, true);
-    window.addEventListener('contextmenu', e => {
-      if (rcOn() && pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }
-      if (!rcOn() || !freshClip() || !onHighlightedRV(e.target)) return;
+    window.addEventListener('contextmenu', e => {          // ALT + right-click the highlighted line to paste
+      if (!e.altKey || !rcOn()) return;
+      if (pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (!onHighlightedRV(e.target)) return;
       e.preventDefault(); e.stopImmediatePropagation(); pasteSvc(hovered);
     }, true);
   }
