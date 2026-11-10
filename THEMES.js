@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      5.4
+// @version      5.5
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -710,18 +710,28 @@ let fx = null;
 // in any 10 s stretch, go LITE: stop the moving effects and check page changes once a second
 // instead of every 0.15 s. Recoloring never stops (apps like Tekion rebuild rows constantly,
 // and stopping would leave them white).
-const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, PAGE_T0 = performance.now();
-let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0;
+// v5.5: lite mode is no longer for good -- after 30 s quiet (under 2%) the effects come back.
+// The first 25 s of a page are not judged (RV work orders alone take ~10 s to load).
+const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, LITE_BACK_SHARE = .02, LITE_GRACE_MS = 25000, PAGE_T0 = performance.now();
+let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0, quietWins = 0;
 function busy(ms) {
   busyMs += ms;
   const now = performance.now();
-  if (now - PAGE_T0 < LITE_WINDOW_MS) { winStart = now; winBusy = 0; return; }   // first 10 s: page is loading, not judged
+  if (now - PAGE_T0 < LITE_GRACE_MS) { winStart = now; winBusy = 0; return; }    // page is loading, not judged
   winBusy += ms;
   if (now - winStart >= LITE_WINDOW_MS) {
     const share = winBusy / (now - winStart);
-    if (!liteMode && share > LITE_MAX_SHARE) goLite(share);
+    if (!liteMode && share > LITE_MAX_SHARE) { goLite(share); quietWins = 0; }
+    else if (liteMode) { quietWins = share < LITE_BACK_SHARE ? quietWins + 1 : 0; if (quietWins >= 3) leaveLite(); }
     winStart = now; winBusy = 0;
   }
+}
+// quiet pages never call busy(): check every 10 s so lite mode can end
+setInterval(() => { if (liteMode) busy(0); }, LITE_WINDOW_MS);
+function leaveLite() {
+  liteMode = false; quietWins = 0;
+  startFx(); startMesh();
+  console.log('[Page Themes] page is quiet again - effects back on');
 }
 function goLite(share) {
   liteMode = true;
