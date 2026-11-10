@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.9
+// @version      3.0
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -254,6 +254,10 @@ function initTekion() {
   const bar = el('div', 'display:flex;align-items:center;gap:10px;margin:6px 0;padding:4px 10px;border-radius:6px;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.45);font:600 12px Segoe UI,sans-serif;color:inherit');
   bar.id = 'rvr-bar';
   const link = el('span', 'white-space:nowrap'); bar.appendChild(link);
+  const rcBtn = el('button', 'border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:700 11px Segoe UI,sans-serif;color:#fff;white-space:nowrap'); bar.appendChild(rcBtn);
+  const showRc = () => { const on = rcOn(); rcBtn.textContent = '🖱 Right-click ' + (on ? 'ON' : 'OFF'); rcBtn.style.background = on ? '#16a34a' : '#dc2626'; rcBtn.title = (on ? 'Right-click a part row = add to basket' : 'Right-click is normal (Windows menu)') + ' · click or Alt+R to switch'; };
+  rcBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); save('rvr_rc', !rcOn()); showRc(); });
+  showRc(); GM_addValueChangeListener('rvr_rc', showRc);
   const bTxt = el('span', 'flex:1;color:#f59e0b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'); bar.appendChild(bTxt);
   const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', '🗑 Empty basket'); bar.appendChild(bClr);
   let batchList = [];
@@ -339,7 +343,7 @@ function initTekion() {
     const age = rv ? Date.now() - rv.ts : 1e12;
     const fresh = age < 30 * 60 * 1000;
     const roOk = fresh && ro && rv.ro === ro;
-    placeBar();
+    placeBar(); showRc();
     const ago = age < 90000 ? '' : ' (RV last seen ' + Math.round(age / 60000) + ' min ago)';
     link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro + ago : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
     link.style.color = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626';
@@ -779,7 +783,8 @@ function initRv() {
   const showBadge = () => {
     const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
     const b = basket();
-    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? 'Alt+right-click a line to paste (Alt+R off)' : 'Alt+V to paste (right-click OFF)');
+    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? '🖱 right-click ON: Alt+right-click a line to paste' : '🖱 right-click OFF (Alt+R to turn on) · Alt+V to paste');
+    badge.style.borderColor = rcOn() ? '#334155' : '#dc2626';
   };
   showBadge(); setInterval(showBadge, 3000); GM_addValueChangeListener('rvr_clip', showBadge);
 
