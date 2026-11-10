@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -108,15 +108,26 @@ const hasParts = s => !!s && (Number(s.parts) > 0 || s.parts === 'yes' || !!s.st
 const isDone = s => !!s && (s.state === 'green' || s.state === 'yellow');
 const FRONT = /\b(front|frt|fr|fnt)\b/i, REAR = /\b(rear|rr|rer)\b/i;
 // -> { pick: the suggested line or null, why: text, list: lines ordered best first }
+const STOP_WORDS = new Set('replace repl per diag with and the for front rear left right install team fast pass line part parts each kit assy assembly genuine oem upro'.split(' '));
+const partWords = t => [...new Set(String(t || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^\d+$/.test(w) && !STOP_WORDS.has(w)))];
+function wordHit(part, lines) {
+  const ws = partWords(part.desc); if (!ws.length) return null;
+  const scored = lines.map(s => { const n = ' ' + norm(s.name) + ' '; return { s, n: ws.filter(w => n.includes(' ' + w + ' ') || n.includes(' ' + w + 's ')).length }; }).filter(x => x.n);
+  if (!scored.length) return null;
+  scored.sort((a, b) => b.n - a.n);
+  return scored.length === 1 || scored[0].n > scored[1].n ? { s: scored[0].s, w: ws.find(w => (' ' + norm(scored[0].s.name) + ' ').includes(' ' + w)) } : null;
+}
 function suggestLine(part, job, services) {
   const lines = partsLines(services), text = part.pn + ' ' + (part.desc || '');
   const learned = load('rvr_learn', {})[pnKey(part.pn)];
   const ordered = first => first.concat(lines.filter(s => !first.includes(s)));
   const exact = !/recon\s*fees/i.test(job || '') && lines.find(x => norm(x.name) === norm(job));
   if (exact) return { pick: exact, why: 'same name as the Tekion job', list: ordered([exact]) };
+  const qh = wordHit(part, lines.filter(x => x.state === 'red' && hasParts(x)));
+  if (qh) return { pick: qh.s, why: 'quoted line, part says ' + qh.w, list: ordered([qh.s]) };
   if (learned) { const s = lines.find(x => norm(x.name) === learned); if (s) return { pick: s, why: 'last time ' + part.pn + ' went here', list: ordered([s]) }; }
   const rule = RULES.find(r => r.part.test(text) || (r.gasket && DRAIN_GASKETS.includes(pnKey(part.pn))));
-  if (!rule) return { pick: null, why: '', list: lines };
+  if (!rule) { const wh = wordHit(part, lines); return wh ? { pick: wh.s, why: 'part says ' + wh.w, list: ordered([wh.s]) } : { pick: null, why: '', list: lines }; }
   let hits = lines.filter(s => rule.line.test(s.name) && !(rule.not && rule.not.test(s.name)));
   if (rule.brake) {
     const where = (FRONT.test(text) || FRONT.test(job)) ? FRONT : (REAR.test(text) || REAR.test(job)) ? REAR : null;
