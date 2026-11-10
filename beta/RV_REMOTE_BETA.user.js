@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.2
+// @version      0.3
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
-// @match        https://app.reconvision.com/work_orders/*
+// @match        https://app.reconvision.com/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addValueChangeListener
@@ -352,6 +352,32 @@ function initRv() {
   log('RV screen ready', onParts ? '(Parts page)' : '(work order page)');
 }
 
+// any other RV page (buckets, search...): show a badge; if Tekion sends parts for an RO
+// listed on this page, open that work order's Parts page
+function initRvOther() {
+  const badge = el('div', 'position:fixed;left:12px;bottom:12px;z-index:2147483600;background:#111827;color:#e5e7eb;border:1px solid #334155;border-radius:8px;padding:5px 9px;font:600 12px Segoe UI,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none');
+  badge.textContent = '🛰 RV Remote (BETA) · open a work order (or send parts from Tekion)';
+  document.documentElement.appendChild(badge);
+  const roToWo = () => {
+    const map = {};
+    document.querySelectorAll('a.work-order-link').forEach(a => {
+      const wo = ((a.getAttribute('href') || '').match(/\/work_orders\/(\d+)/) || [])[1];
+      const c = a.querySelector('.info-bar__item--repair-order-number'), d = c && c.querySelectorAll(':scope > div');
+      const ro = d && d.length ? clean(d[d.length - 1].textContent) : '';
+      if (wo && /^7\d{6}$/.test(ro)) map[ro] = wo;
+    });
+    return map;
+  };
+  const check = () => {
+    const results = load('rvr_results', {}), todo = load('rvr_cmds', []).filter(c => !results[c.id] && Date.now() - c.ts < 10 * 60 * 1000);
+    if (!todo.length) return;
+    const wo = roToWo()[todo[0].ro];
+    if (wo) { toast('Tekion sent parts for RO ' + todo[0].ro + ' - opening its Parts page…'); location.href = '/work_orders/' + wo + '/parts_overview?limited_access=false'; }
+  };
+  GM_addValueChangeListener('rvr_cmds', check); setTimeout(check, 1500);
+}
+
 if (IS_TEKION) setTimeout(initTekion, 1200);
 else if (/\/work_orders\/\d+/.test(location.pathname)) setTimeout(initRv, 800);
+else setTimeout(initRvOther, 800);
 })();
