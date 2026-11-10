@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.8
+// @version      2.9
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -93,6 +93,8 @@ const onHighlightedRV = t => !!(hovered && t && hovered.contains(t));   // RV: w
 // RV lines that never take parts (hidden from the RV button list; "0" shows all)
 const NO_PARTS = /ready for pick ?up|measure all|^at recon|body shop review|pre-?order parts|inspection form/i;
 const partsLines = list => list.filter(s => !NO_PARTS.test(s.name.replace(/^\*+\s*/, '')));
+// catch-all lines: never suggested or batch-sent (still pickable with "0 = show all")
+const CATCH_ALL = /additional parts|parts needed|parts ordered|estimate parts|pre-?order|\bmisc\b|rob'?s line/i;
 const DRAIN_GASKETS = ['803916010', '11126AA000', '90430-12031', '11026-01M02', '94109-14000'].map(x => x.replace(/[^A-Z0-9]/gi, ''));
 const pnKey = pn => String(pn || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const RULES = [                                     // first match wins; part text -> RV line name
@@ -109,7 +111,7 @@ const hasParts = s => !!s && (Number(s.parts) > 0 || s.parts === 'yes');   // qu
 const isDone = s => !!s && (s.state === 'green' || s.state === 'yellow');
 const FRONT = /\b(front|frt|fr|fnt)\b/i, REAR = /\b(rear|rr|rer)\b/i;
 // -> { pick: the suggested line or null, why: text, list: lines ordered best first }
-const STOP_WORDS = new Set('replace repl per diag with and the for front rear left right install team fast pass line part parts each kit assy assembly genuine oem upro filter filters'.split(' '));
+const STOP_WORDS = new Set('replace repl per diag with and the for front rear left right install team fast pass line part parts each kit assy assembly genuine oem upro filter filters additional needed misc'.split(' '));
 const partWords = t => [...new Set(String(t || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^\d+$/.test(w) && !STOP_WORDS.has(w)))];
 function wordHit(part, lines) {
   const ws = partWords(part.desc); if (!ws.length) return null;
@@ -119,7 +121,7 @@ function wordHit(part, lines) {
   return scored.length === 1 || scored[0].n > scored[1].n ? { s: scored[0].s, w: ws.find(w => (' ' + norm(scored[0].s.name) + ' ').includes(' ' + w)) } : null;
 }
 function suggestLine(part, job, services) {
-  const lines = partsLines(services), text = part.pn + ' ' + (part.desc || '');
+  const lines = partsLines(services).filter(s => !CATCH_ALL.test(s.name)), text = part.pn + ' ' + (part.desc || '');
   const learned = load('rvr_learn', {})[pnKey(part.pn)];
   const quoted = lines.filter(x => x.state === 'red' && hasParts(x));
   const ordered = first => { const l = first.concat(quoted.filter(s => !first.includes(s))); return l.length ? l : lines; };
