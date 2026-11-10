@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.2
+// @version      1.3
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -136,7 +136,8 @@ function pickLine(title, sug, allServices) {
     const box = el('div', 'position:fixed;z-index:2147483647;background:#0d0d0d;border:2px solid #2563eb;border-radius:10px;padding:9px 12px;font:13px Segoe UI,sans-serif;color:#e5e7eb;box-shadow:0 4px 20px rgba(0,0,0,.7);width:330px;max-height:70vh;overflow:auto');
     box.id = 'rvr-ask';
     box.style.left = Math.max(8, Math.min(innerWidth - 350, lastMouse.x + 12)) + 'px'; box.style.top = Math.max(8, Math.min(innerHeight - 380, lastMouse.y + 12)) + 'px';
-    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
+    const away = e => { if (!box.contains(e.target)) finish(null); };   // click outside = cancel
+    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); document.removeEventListener('mousedown', away, true); resolve(v); };
     const draw = () => {
       box.textContent = '';
       box.appendChild(el('div', 'font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;margin-bottom:5px', title));
@@ -165,7 +166,7 @@ function pickLine(title, sug, allServices) {
       draw();
     };
     document.documentElement.appendChild(box); draw();
-    document.addEventListener('keydown', key, true);
+    document.addEventListener('keydown', key, true); document.addEventListener('mousedown', away, true);
   });
 }
 // on-hand qty in a Tekion row ("OH Qty" column)
@@ -381,13 +382,14 @@ function askStep(title, value, hint, singleKey) {
     const h = el('div', 'margin-top:5px;font-size:12px;color:#4ade80;min-height:15px'); box.appendChild(h);
     const showH = () => { h.textContent = hint(inp.value); }; showH(); inp.addEventListener('input', showH);
     document.documentElement.appendChild(box); inp.focus(); inp.select();
-    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
+    const away = e => { if (!box.contains(e.target)) finish(null); };   // click outside = cancel
+    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); document.removeEventListener('mousedown', away, true); resolve(v); };
     const key = e => {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null); return; }
       if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); finish(inp.value.trim()); return; }
       if (singleKey && /^[aorsAORS]$/.test(e.key) && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); finish(e.key.toUpperCase()); }
     };
-    document.addEventListener('keydown', key, true);
+    document.addEventListener('keydown', key, true); document.addEventListener('mousedown', away, true);
   });
 }
 async function askPaste(part, n, m) {
@@ -491,8 +493,13 @@ async function addPartViaModal(svcId, svcName, part, status, saveAfter) {
   }
   if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(500); }
   const modal = document.getElementById('parts_modal');
+  const closeWin = async msg => {                    // nothing added: click Save so the window does not stay open
+    const sb = document.querySelector('[id^="desktop-save-button-"]');
+    if (saveAfter && sb && modalOpen()) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(600); }
+    return msg;
+  };
   const have = [...modal.querySelectorAll('textarea[id*="part_number"], input[id*="part_number"]')].some(f => clean(f.value).toUpperCase() === part.pn.toUpperCase());
-  if (have) return 'skip: ' + part.pn + ' already on "' + svcName + '"';
+  if (have) return closeWin('skip: ' + part.pn + ' already on "' + svcName + '"');
   const add = modal.querySelector('.button-outline[data-action*="addNewPart"], [data-action*="parts-modal-controller#addNewPart"]') || document.querySelector('.button-outline[data-action*="parts-modal-controller#addNewPart"]');
   if (!add) return 'error: "+ Add Part" not found in the parts window';
   const before = new Set(modal.querySelectorAll('tr'));
@@ -536,7 +543,7 @@ function initRv() {
   // run commands from Tekion, one at a time
   let busy = false;
   async function runCmds() {
-    if (busy) return; busy = true;
+    if (busy || document.hidden) return; busy = true;
     try {
       const results = load('rvr_results', {});
       const todo = load('rvr_cmds', []).filter(c => !results[c.id]);
@@ -563,6 +570,7 @@ function initRv() {
     } finally { busy = false; }
   }
   GM_addValueChangeListener('rvr_cmds', () => runCmds());
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) runCmds(); });
   setTimeout(runCmds, 1200);
 
   // manual paste on the WORK ORDER page: hover a line + Alt+V -> queued, then the Parts page adds it
