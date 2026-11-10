@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.9
+// @version      1.0
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -82,7 +82,10 @@ document.addEventListener('keydown', e => {
 // spots Recon Clipboard already uses for right-click: never take those
 const RC_RESERVED = '[data-test-id*="sellingPrice-cell"], .block.parts_icon, .add-part-to-service-btn';
 const onHighlighted = t => !!(hovered && t && hovered.contains(t)) && !(t.closest && t.closest(RC_RESERVED));
-const freshClip = () => { const c = load('rvr_clip', null); return c && Date.now() - c.ts < 15 * 60 * 1000 ? c : null; };
+const basket = () => { const c = load('rvr_clip', null); return c && c.parts && c.parts.length && Date.now() - c.ts < 15 * 60 * 1000 ? c : null; };
+const freshClip = basket;
+let pasting = false, pasteEnd = 0;                   // while a paste runs (and 1.5 s after) extra right-clicks are swallowed
+const pasteBusy = () => pasting || Date.now() - pasteEnd < 1500;
 const onHighlightedRV = t => !!(hovered && t && hovered.contains(t));   // RV: whole line, parts icon included
 
 // =====================================================================
@@ -156,8 +159,14 @@ function initTekion() {
   st.value = opts.status; row('Auto status', st);
   const saveOpts = () => { opts.auto = autoChk.checked; opts.vendor = vend.value; opts.status = st.value; save('rvr_opts', opts); vprev.textContent = vend.value ? '→ ' + vendorName(vend.value) : ''; };
   [autoChk, vend, st].forEach(x => x.addEventListener('input', saveOpts)); autoChk.addEventListener('change', saveOpts); saveOpts();
+  const bRow = el('div', 'display:flex;align-items:center;gap:6px;margin:6px 0'); body.appendChild(bRow);
+  const bTxt = el('span', 'flex:1;color:#fbbf24;font-weight:600'); bRow.appendChild(bTxt);
+  const bClr = el('button', 'background:#7f1d1d;color:#fff;border:0;border-radius:5px;padding:2px 8px;cursor:pointer;font:600 11px Segoe UI,sans-serif', 'Clear basket'); bRow.appendChild(bClr);
+  const showBasket = () => { const b = basket(); bTxt.textContent = b ? '🧺 ' + b.parts.length + ': ' + b.parts.map(x => x.pn).join(', ') : '🧺 basket empty'; };
+  bClr.addEventListener('click', () => { save('rvr_clip', null); showBasket(); });
+  showBasket(); GM_addValueChangeListener('rvr_clip', showBasket); setInterval(showBasket, 10000);
   const tip = el('div', 'opacity:.6;margin:6px 0 4px'); body.appendChild(tip);
-  const showTip = () => { tip.textContent = rcOn() ? 'Manual: right-click the part name, then right-click the RV line (or Alt+C / Alt+V). Alt+R = right-click off.'
+  const showTip = () => { tip.textContent = rcOn() ? 'Manual: right-click each part (adds to basket), then ONE right-click on the RV line pastes them all. Alt+R = right-click off.'
     : 'Manual: hover + Alt+C, then hover the RV line + Alt+V. Right-click copy is OFF (Alt+R to turn on).'; };
   showTip(); GM_addValueChangeListener('rvr_rc', showTip);
   const logBox = el('div', 'max-height:110px;overflow:auto;background:#0b1018;border-radius:5px;padding:4px 6px;font:11px Consolas,monospace');
@@ -236,9 +245,12 @@ function initTekion() {
   function copyLine(rowEl) {
     const line = tekionLines().find(l => l.row === rowEl || rowEl.contains(l.row) || l.row.contains(rowEl));
     if (!line) { toast('Hover a part line first', true); return false; }
-    save('rvr_clip', { ro: tekionRO(), part: { pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }, status: opts.status, ts: Date.now() });
-    toast(`Copied ${line.pn} ($${line.price || '?'} x${line.qty}) - right-click (or Alt+V) the RV line`);
-    note(`copied ${line.pn}`);
+    const b = basket() || { ro: tekionRO(), parts: [] };
+    if (b.parts.some(x => x.pn === line.pn)) { toast(`${line.pn} is already in the basket (${b.parts.length} part${b.parts.length > 1 ? 's' : ''})`); return true; }
+    b.parts.push({ pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }); b.ts = Date.now();
+    save('rvr_clip', b);
+    toast(`Basket: ${b.parts.length} part${b.parts.length > 1 ? 's' : ''} (${b.parts.map(x => x.pn).join(', ')}) - right-click the RV line to paste all`);
+    note(`basket + ${line.pn} (${b.parts.length})`);
     return true;
   }
   document.addEventListener('keydown', e => {
@@ -280,9 +292,10 @@ function askStep(title, value, hint, singleKey) {
     document.addEventListener('keydown', key, true);
   });
 }
-async function askPaste(clip) {
+async function askPaste(part, n, m) {
   const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
-  const qty = await askStep('Qty · ' + clip.part.pn + ' ($' + (clip.part.price || '?') + ')', clip.part.qty || '1', () => 'Enter = keep · Esc = cancel');
+  const tag = m > 1 ? ' · part ' + n + ' of ' + m : '';
+  const qty = await askStep('Qty · ' + part.pn + ' ($' + (part.price || '?') + ')' + tag, part.qty || '1', () => 'Enter = keep · Esc = cancel');
   if (qty === null) return null;
   const vendor = await askStep('Vendor', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ');
   if (vendor === null) return null;
@@ -293,7 +306,16 @@ async function askPaste(clip) {
   save('rvr_lastpaste', { vendor: res.vendor, status: res.status });
   return res;
 }
-const withAnswers = (clip, a) => ({ part: Object.assign({}, clip.part, { desc: vendorName(a.vendor), qty: a.qty }), status: a.status });
+const withAnswers = (part, a) => ({ part: Object.assign({}, part, { desc: vendorName(a.vendor), qty: a.qty }), status: a.status });
+// ask Qty / Vendor / Status for every part in the basket; Esc cancels the whole paste
+async function askAll(b) {
+  const out = [];
+  for (let i = 0; i < b.parts.length; i++) {
+    const a = await askPaste(b.parts[i], i + 1, b.parts.length); if (!a) return null;
+    out.push(withAnswers(b.parts[i], a));
+  }
+  return out;
+}
 const woId = () => (location.pathname.match(/work_orders\/(\d+)/) || [])[1] || '';
 function rvRO() {
   const m = (document.body.textContent || '').match(/RO#\s*(7\d{6})/);
@@ -405,9 +427,10 @@ function initRv() {
   badge.id = 'rvr-rv-badge'; document.documentElement.appendChild(badge);
   const showBadge = () => {
     const ro = rvRO(), n = (onParts ? rvServices() : rvEditServices()).length;
-    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (rcOn() ? 'right-click a line to paste (Alt+R off)' : 'Alt+V to paste (right-click OFF)');
+    const b = basket();
+    badge.textContent = '🛰 RV Remote (BETA) · RO ' + (ro || '?') + ' · ' + n + ' lines · ' + (b ? '🧺 ' + b.parts.map(x => x.pn).join(' + ') + ' · ' : '🧺 empty · ') + (rcOn() ? 'right-click a line to paste (Alt+R off)' : 'Alt+V to paste (right-click OFF)');
   };
-  showBadge(); setInterval(showBadge, 3000);
+  showBadge(); setInterval(showBadge, 3000); GM_addValueChangeListener('rvr_clip', showBadge);
 
   // run commands from Tekion, one at a time
   let busy = false;
@@ -427,7 +450,7 @@ function initRv() {
           } else {                                                 // main page: through that line's parts icon
             const id = document.querySelector('[data-service-id="' + c.svcId + '"]') ? c.svcId
               : ((rvEditServices().find(s => norm(s.name) === norm(c.svcName)) || {}).id || '');
-            res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, true) : 'error: RV line "' + c.svcName + '" not on this page';
+            res = id ? await addPartViaModal(id, c.svcName, c.part, c.status, c.saveAfter !== false) : 'error: RV line "' + c.svcName + '" not on this page';
           }
         }
         results[c.id] = res; save('rvr_results', results);
@@ -449,18 +472,21 @@ function initRv() {
     };
     document.addEventListener('mouseover', e => setHover(lineOf(e.target)), true);
     const pasteLine = async lineEl => {
-      const clip0 = load('rvr_clip', null);
-      if (!clip0) { toast('Nothing copied - right-click (or Alt+C) a Tekion part line first', true); return; }
-      const a = await askPaste(clip0); if (!a) return;
-      const clip = withAnswers(clip0, a);
-      const id = lineEl.getAttribute('data-service-id');
-      const inp = lineEl.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
-      const cmds = load('rvr_cmds', []);
-      cmds.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: clip.part, status: clip.status, ts: Date.now() });
-      save('rvr_cmds', cmds);
-      save('rvr_clip', null);                                 // used: right-click on parts icons goes back to Recon Clipboard
-      toast('Adding ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" and saving…');
-      runCmds();
+      if (pasting) return;
+      const b = basket();
+      if (!b) { toast('Basket empty - right-click (or Alt+C) the Tekion part lines first', true); return; }
+      pasting = true;
+      try {
+        const list = await askAll(b); if (!list) { toast('Paste cancelled - basket kept'); return; }
+        const id = lineEl.getAttribute('data-service-id');
+        const inp = lineEl.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
+        const cmds = load('rvr_cmds', []);
+        list.forEach((c, i) => cmds.push({ id: Date.now() + '-' + i + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: c.part, status: c.status, saveAfter: i === list.length - 1, ts: Date.now() }));
+        save('rvr_cmds', cmds);
+        save('rvr_clip', null);                               // basket used up
+        toast('Adding ' + list.map(c => c.part.pn).join(' + ') + ' to "' + clean(inp ? inp.value : '') + '" and saving…');
+        await runCmds();
+      } finally { pasting = false; pasteEnd = Date.now(); }
     };
     document.addEventListener('keydown', e => {
       if (!e.altKey || (e.key || '').toLowerCase() !== 'v') return;
@@ -471,6 +497,7 @@ function initRv() {
     const inOpenWindow = t => { const m = document.getElementById('parts_modal'); return modalOpen() && openSvc && m && m.contains(t); };
     const openLine = () => document.querySelector('[data-service-id="' + openSvc + '"]');
     window.addEventListener('contextmenu', e => {          // right-click the highlighted line (parts icon too) to paste
+      if (rcOn() && pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }   // double right-click: ignore
       if (!rcOn() || !freshClip()) return;
       if (inOpenWindow(e.target) && openLine()) { e.preventDefault(); e.stopImmediatePropagation(); pasteLine(openLine()); return; }
       if (!onHighlightedRV(e.target)) return;
@@ -487,21 +514,26 @@ function initRv() {
     };
     document.addEventListener('mouseover', e => setHover(findSvc(e.target)), true);
     const pasteSvc = async header => {
-      const clip0 = load('rvr_clip', null);
-      if (!clip0) { toast('Nothing copied - right-click (or Alt+C) a Tekion part line first', true); return; }
+      if (pasting) return;
+      const b = basket();
+      if (!b) { toast('Basket empty - right-click (or Alt+C) the Tekion part lines first', true); return; }
       const svc = rvServices().find(s => s.header === header);
       if (!svc) return;
-      const a = await askPaste(clip0); if (!a) return;
-      const clip = withAnswers(clip0, a);
-      const res = await addPart(svc, clip.part, clip.status);
-      if (res === 'ok') save('rvr_clip', null);
-      toast(res === 'ok' ? 'Pasted ' + clip.part.pn + ' to "' + svc.name + '" - review, then Save' : res, res !== 'ok' && !res.startsWith('skip'));
+      pasting = true;
+      try {
+        const list = await askAll(b); if (!list) { toast('Paste cancelled - basket kept'); return; }
+        let bad = '';
+        for (const c of list) { const res = await addPart(svc, c.part, c.status); if (res !== 'ok') { bad = res; break; } await sleep(300); }
+        if (!bad) save('rvr_clip', null);
+        toast(bad || 'Pasted ' + list.map(c => c.part.pn).join(' + ') + ' to "' + svc.name + '" - review, then Save', !!bad && !bad.startsWith('skip'));
+      } finally { pasting = false; pasteEnd = Date.now(); }
     };
     document.addEventListener('keydown', e => {
       if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
       e.preventDefault(); pasteSvc(hovered);
     }, true);
     window.addEventListener('contextmenu', e => {
+      if (rcOn() && pasteBusy()) { e.preventDefault(); e.stopImmediatePropagation(); return; }
       if (!rcOn() || !freshClip() || !onHighlightedRV(e.target)) return;
       e.preventDefault(); e.stopImmediatePropagation(); pasteSvc(hovered);
     }, true);
