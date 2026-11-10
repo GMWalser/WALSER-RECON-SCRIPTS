@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1109.1847
+// @version      2026.1110.1304
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10244,8 +10244,8 @@ log('v1.7 loaded on', location.hostname);
 
 });
 
-// ===== Tekion to RV Parts Transfer v1.3  (PARTS_TRANSFER.js) =====
-WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.3', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
+// ===== Tekion to RV Parts Transfer v1.4  (PARTS_TRANSFER.js) =====
+WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.4', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10423,6 +10423,16 @@ async function fillOne(svc, part, status) {
   await sleep(350);
   return price || !part.price ? 'ok' : 'ok (no price box found)';
 }
+// Same vendor shortcuts as Recon Clipboard's quick part add (type B -> SUBCHEV, F -> FMP ...).
+// Anything not in the list is used exactly as typed.
+const VENDOR_MAP = {
+  'F': 'FMP', 'A': 'AZ', 'O': 'OR', 'N': 'NAPA', 'B': 'SUBCHEV', 'H': 'HON',
+  'D': 'DOB', 'I': 'INFINITI', 'T': 'TOY', 'LK': 'LKQ', 'AU': 'AUDI',
+  'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
+  'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
+  'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF',
+};
+const vendorName = t => { const k = (t || '').trim().toUpperCase(); return VENDOR_MAP[k] || (t || '').trim(); };
 function initRvParts() {
   const id = woId(), wo = load('workorders', {})[id] || {}, caps = load('captures', {});
   const ro = wo.ro || '';
@@ -10445,7 +10455,7 @@ function initRvParts() {
   const hdr = el('tr');
   const allChk = el('input'); allChk.type = 'checkbox'; allChk.checked = true; allChk.title = 'Select / deselect all';
   const th0 = el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155'); th0.appendChild(allChk); hdr.appendChild(th0);
-  ['Part #', 'Description', 'Qty', 'Price', 'From Tekion job', 'Put on RV line'].forEach(h => hdr.appendChild(el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155;font-size:12px;opacity:.8', h)));
+  ['Part #', 'Vendor (B = SUBCHEV, F = FMP…)', 'Qty', 'Price', 'From Tekion job', 'Put on RV line'].forEach(h => hdr.appendChild(el('th', 'text-align:left;padding:3px 5px;border-bottom:1px solid #334155;font-size:12px;opacity:.8', h)));
   tbl.appendChild(hdr);
   const rows = cap.parts.map(part => {
     const tr = el('tr');
@@ -10453,8 +10463,14 @@ function initRvParts() {
     const cell = (node) => { const td = el('td', 'padding:3px 5px;border-bottom:1px solid #1f2937'); td.appendChild(node); tr.appendChild(td); return td; };
     const inp = (v, w) => { const i = el('input', `width:${w}px;background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:3px`); i.value = v || ''; return i; };
     cell(chk);
-    const pn = inp(part.pn, 120), desc = inp(part.desc, 150), qty = inp(part.qty, 42), price = inp(part.price, 70);
-    cell(pn); cell(desc); cell(qty); cell(price);
+    const pn = inp(part.pn, 120), qty = inp(part.qty, 42), price = inp(part.price, 70);
+    pn.title = part.desc || '';                                   // Tekion's part description, on hover
+    const desc = inp('', 80); desc.placeholder = 'type B, F…';
+    const vprev = el('span', 'margin-left:4px;font-size:11px;color:#4ade80');
+    const showV = () => { const v = desc.value.trim(); vprev.textContent = v && VENDOR_MAP[v.toUpperCase()] ? '→ ' + VENDOR_MAP[v.toUpperCase()] : ''; };
+    desc.addEventListener('input', showV);
+    const vwrap = el('span'); vwrap.appendChild(desc); vwrap.appendChild(vprev);
+    cell(pn); cell(vwrap); cell(qty); cell(price);
     cell(el('span', /recon\s*fees/i.test(part.job) ? 'color:#fbbf24' : 'opacity:.8', part.job));
     const sel = el('select', 'max-width:200px;background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:3px');
     sel.appendChild(new Option('— choose line —', ''));
@@ -10463,7 +10479,7 @@ function initRvParts() {
     if (!m) sel.style.borderColor = '#fbbf24';
     cell(sel);
     tbl.appendChild(tr);
-    return { chk, pn, desc, qty, price, sel };
+    return { chk, pn, desc, qty, price, sel, showV };
   });
   box.appendChild(tbl);
   // header box: select / deselect all; it follows the row boxes (partly checked = dash)
@@ -10475,6 +10491,10 @@ function initRvParts() {
   const status = el('select', 'background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:4px');
   [['', 'Status: leave as is'], ['1', 'Status: Action Req.'], ['3', 'Status: Ordered'], ['5', 'Status: Arrived'], ['6', 'Status: In Stock']].forEach(([v, t]) => status.appendChild(new Option(t, v)));
   const msg = el('span', 'opacity:.85');
+  // one vendor for every checked part (type the shortcut, it fills each row's Vendor box)
+  const allV = el('input', 'width:90px;background:#0b1018;color:#e5e7eb;border:1px solid #334155;border-radius:4px;padding:4px');
+  allV.placeholder = 'Vendor for all';
+  allV.addEventListener('input', () => { rows.forEach(r => { if (r.chk.checked) { r.desc.value = allV.value; r.showV(); } }); });
   const go = button('Fill parts into RV', '#16a34a', async () => {
     const jobs = rows.filter(r => r.chk.checked);
     const noLine = jobs.filter(r => !r.sel.value);
@@ -10483,7 +10503,7 @@ function initRvParts() {
     for (const r of jobs) {
       const svc = services.find(s => s.id === r.sel.value);
       msg.textContent = `Filling ${ok + bad.length + 1} of ${jobs.length}…`;
-      const res = await fillOne(svc, { pn: r.pn.value.trim(), desc: r.desc.value.trim(), qty: r.qty.value.trim(), price: r.price.value.trim() }, status.value);
+      const res = await fillOne(svc, { pn: r.pn.value.trim(), desc: vendorName(r.desc.value), qty: r.qty.value.trim(), price: r.price.value.trim() }, status.value);
       if (res.startsWith('ok')) { ok++; r.chk.checked = false; } else bad.push(r.pn.value + ': ' + res);
       syncAll();
     }
@@ -10491,7 +10511,7 @@ function initRvParts() {
     msg.textContent = `✓ Filled ${ok}. ${bad.length ? '⚠ ' + bad.join(' · ') : ''}  Review, then click Save (or Alt+S).`;
     log('fill done', ok, bad);
   });
-  foot.appendChild(status); foot.appendChild(go); foot.appendChild(msg);
+  foot.appendChild(allV); foot.appendChild(status); foot.appendChild(go); foot.appendChild(msg);
   box.appendChild(foot);
   document.documentElement.appendChild(box);
 }
@@ -10504,7 +10524,7 @@ else if (/\/work_orders\/\d+/.test(location.pathname)) {
   let lastPath = location.pathname;                                                  // and when you move to another work order
   setInterval(() => { if (location.pathname !== lastPath) { lastPath = location.pathname; setTimeout(rememberWorkOrder, 1500); } }, 2000);
 }
-log('v1.3 loaded on', location.hostname);
+log('v1.4 loaded on', location.hostname);
 })();
 
 });
