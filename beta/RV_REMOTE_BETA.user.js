@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -450,6 +450,19 @@ function rvRO() {
 // color of the parts icon's little badge: green check / yellow / red "!" (read from the colors on screen)
 function iconState(trigger) {
   if (!trigger) return '';
+  const ic = trigger.querySelector('[data-statuscolor]');
+  if (ic) {                                          // RV says it directly
+    const c = (ic.getAttribute('data-statuscolor') || '').toLowerCase(), t = ic.getAttribute('title') || '';
+    if (/green/.test(c)) return 'green';
+    if (/yellow|orange|amber|gold/.test(c)) return 'yellow';
+    if (/red/.test(c)) return 'red';
+    if (/grey|gray/.test(c)) return '';
+    if (/no action/i.test(t)) return '';
+    if (/action/i.test(t)) return 'red';
+    if (/order/i.test(t)) return 'yellow';
+    if (/arriv|stock|complete|received/i.test(t)) return 'green';
+    return '';
+  }
   let best = '', bestSat = 0;
   [trigger, ...trigger.querySelectorAll('*')].forEach(n => {
     const cs = getComputedStyle(n);
@@ -466,6 +479,8 @@ function iconState(trigger) {
 }
 // the "Parts" $ on a main-page line = the last $ amount before the parts icon
 function linePartsMoney(r, trigger) {
+  const pp = trigger && trigger.querySelector('.part_price');
+  if (pp) return money(pp.textContent);
   let last = '';
   const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT);
   for (let t = w.nextNode(); t; t = w.nextNode()) {
@@ -474,7 +489,7 @@ function linePartsMoney(r, trigger) {
   }
   return last;
 }
-let iconLogged = false;
+const seenColors = new Set();
 function rvEditServices() {                        // the work order (edit) page
   const out = [], seen = new Set();
   document.querySelectorAll('[data-service-id]').forEach(r => {
@@ -482,9 +497,10 @@ function rvEditServices() {                        // the work order (edit) page
     const inp = r.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
     const trigger = r.querySelector('[data-target="#parts_modal"]');
     let name = clean(inp ? inp.value : '');
-    if (!name && trigger) name = clean((r.innerText || '').split('\n').map(clean).find(x => /[a-z]{3}/i.test(x)) || '');   // locked lines: plain text
+    if (!name && trigger) name = clean(trigger.getAttribute('data-modaltitle') || (r.innerText || '').split('\n').map(clean).find(x => /[a-z]{3}/i.test(x)) || '');   // locked lines
     if (!name) return;
-    if (trigger && !iconLogged) { iconLogged = true; log('parts icon HTML (for checking colors):', trigger.outerHTML.slice(0, 600)); }
+    const ic = trigger && trigger.querySelector('[data-statuscolor]');
+    if (ic) { const k = ic.getAttribute('data-statuscolor') + ' / ' + ic.getAttribute('title'); if (!seenColors.has(k)) { seenColors.add(k); log('icon color seen:', k, '->', iconState(trigger) || 'none'); } }
     seen.add(id); out.push({ id, name, parts: linePartsMoney(r, trigger), state: iconState(trigger) });
   });
   return out;
