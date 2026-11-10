@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.4
+// @version      3.5
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -383,12 +383,29 @@
   const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
   const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
 
-  // pick an option in one of Tekion's react-select dropdowns, the same way selectVendor does
-  async function pickOption(containerId, controlTestId, typed, isMatch) {
-    const container = document.getElementById(containerId);
-    if (!container) { log('ERROR: ' + containerId + ' not found.'); return false; }
-    const input = container.querySelector('input');
-    const control = container.querySelector('[data-test-id="' + controlTestId + '"]') || container;
+  // v3.5: the window comes in more than one version (Submit / "Do In & Out Sale"), so find it by its
+  // title and the boxes by their labels; the exact ids above are only a first try.
+  function findAddPartModal() {
+    const exact = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    if (exact) return exact;
+    return [...document.querySelectorAll('.ant-v5-modal, [role="dialog"]')].find(m => {
+      const t = m.querySelector('.ant-v5-modal-title, [class*="modalTitle"]');
+      return t && /add new part/i.test(t.textContent);
+    }) || null;
+  }
+  function findField(modal, testAttr, labelRe) {
+    const exact = testAttr && modal.querySelector('[data-test="' + testAttr + '"]');
+    if (exact) return exact;
+    return [...modal.querySelectorAll('[class*="fieldC"]')].find(f => {
+      const l = f.querySelector('[class*="fieldLabel"], [class*="fLC"], label');
+      return l && labelRe.test(l.textContent);
+    }) || null;
+  }
+  // pick an option in one of Tekion's react-select dropdowns (inside a field), the same way selectVendor does
+  async function pickOption(field, typed, isMatch) {
+    if (!field) { log('ERROR: dropdown not found.'); return false; }
+    const input = field.querySelector('input');
+    const control = field.querySelector('[class*="control"]') || field;
     if (input) input.focus();
     fireMouseEvent(control, 'mousedown');
     if (input && !input.readOnly) nativeSetValue(input, typed);
@@ -402,7 +419,7 @@
       fireMouseEvent(option, 'click');
       return true;
     } catch (e) {
-      log('ERROR: no "' + typed + '" option found in ' + containerId + '.');
+      log('ERROR: no "' + typed + '" option found.');
       return false;
     }
   }
@@ -410,14 +427,19 @@
   async function setSourceCode(code, btn) {
     const old = btn.textContent;
     btn.textContent = '…';
-    const ok = await pickOption('sourceCodeId', '@tekion-parts-modals-addNewPartModal-sourceCode', code,
+    const modal = findAddPartModal(); if (!modal) return;
+    const ok = await pickOption(findField(modal, '@tekion-parts-modals-addNewPartModal-sourceCode', /source\s*code/i), code,
       t => t === code || t.startsWith(code + ' ') || t.startsWith(code + '-'));
     if (ok && code === TIRE_SOURCE) {
       await new Promise(r => setTimeout(r, 300));
       // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
-      let okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t === TIRE_BIN);
-      if (!okBin) okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t.startsWith(TIRE_BIN));
+      const binField = () => findField(modal, '@tekion-parts-modals-fields-primaryBin', /primary\s*bin/i);
+      if (!binField()) { log('No Primary Bin box (Add Part to Inventory is not ticked) - bin left alone.'); }
+      else {
+      let okBin = await pickOption(binField(), TIRE_BIN, t => t === TIRE_BIN);
+      if (!okBin) okBin = await pickOption(binField(), TIRE_BIN, t => t.startsWith(TIRE_BIN));
       log(okBin ? 'Primary Bin set to ' + TIRE_BIN : 'Could not set Primary Bin to ' + TIRE_BIN);
+      }
     }
     btn.textContent = old;
     btn.style.outline = ok ? '2px solid #fff' : '2px solid #ef4444';
@@ -426,9 +448,9 @@
   }
 
   function injectSourceButtons() {
-    const modal = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    const modal = findAddPartModal();
     if (!modal || modal.querySelector('#' + SOURCE_BTNS_ID)) return;
-    const field = modal.querySelector('[data-test="@tekion-parts-modals-addNewPartModal-sourceCode"]');
+    const field = findField(modal, '@tekion-parts-modals-addNewPartModal-sourceCode', /source\s*code/i);
     if (!field) return;
     const row = document.createElement('div');
     row.id = SOURCE_BTNS_ID;
