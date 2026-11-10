@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.21
+// @version      3.22
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -757,6 +757,11 @@ function setNativeValue(el, value) {
 function runTekionFulfillment(roNumber) {
   let stage = 'navigateIfNeeded';
   let attempts = 0;
+  // v3.22: Tekion sometimes rebuilds the RO box right after we type into it (rc_select_6 -> rc_select_7,
+  // seen in the speed + steps report), so the RO went into a box that was thrown away and nothing showed
+  // until you clicked the new box. Now: no RO choice within 1.5 s -> find the box again and retype (4 tries).
+  let typedInp = null, typedAt = 0, retypes = 0;
+  const roBox = () => document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
   const maxAttempts = 100;
   console.log('[Tekion Fulfillment] Starting for RO#', roNumber);
   const tick = setInterval(() => {
@@ -816,6 +821,7 @@ function runTekionFulfillment(roNumber) {
       const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
       if (inp) {
         setNativeValue(inp, roNumber);
+        typedInp = inp; typedAt = Date.now();
         stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage);
       }
       return;
@@ -834,6 +840,16 @@ function runTekionFulfillment(roNumber) {
       // (title="7322992"). No container/ID guessing needed.
       const opts = Array.from(document.querySelectorAll(`.ant-v5-select-item-option[title="${roNumber}"], .ant-select-item-option[title="${roNumber}"]`));
       let match = opts[0] || null;
+      if (!match && retypes < 4) {
+        const cur = roBox(), waited = Date.now() - typedAt;
+        const lost = !typedInp || !typedInp.isConnected || cur !== typedInp || (cur && cur.value !== roNumber);
+        if ((lost && waited > 1500) || waited > 3000) {
+          retypes++;
+          console.log('[Tekion Fulfillment] RO choice not showing (' + (lost ? 'RO box was rebuilt' : 'no dropdown') + ') -- typing the RO again, try ' + retypes);
+          stage = 'waitForRoInput';
+          return;
+        }
+      }
       if (!match && attempts % 8 === 0) {
         // Diagnostic: every ~2s, log what options (if any) actually exist
         // right now, regardless of whether they match roNumber -- so a

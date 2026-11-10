@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.01
+// @version      6.02
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2099,19 +2099,18 @@ if (IS_RECONVISION) {
                 anchorTop = r.top;
             }
 
-            if (anchorTop !== null) {
-                pillContainer.style.bottom = (window.innerHeight - anchorTop + 6) + 'px';
-            } else {
-                pillContainer.style.bottom = '100px';
-            }
-            pillContainer.style.right = '20px';
-            pillContainer.style.top = 'auto';
-            pillContainer.style.left = 'auto';
+            // v6.02: only write when it changed (every write makes RV re-measure the page)
+            const bottom = anchorTop !== null ? (window.innerHeight - anchorTop + 6) + 'px' : '100px';
+            const st = pillContainer.style;
+            if (st.bottom !== bottom) st.bottom = bottom;
+            if (st.right !== '20px') st.right = '20px';
+            if (st.top !== 'auto') st.top = 'auto';
+            if (st.left !== 'auto') st.left = 'auto';
         }
 
         setTimeout(positionBucketPills, 1000);
         window.addEventListener('resize', positionBucketPills);
-        setInterval(positionBucketPills, 400);
+        setInterval(() => { if (!document.hidden) positionBucketPills(); }, 1500);   // v6.02: was every 0.4 s
 
         const positionObserver = new MutationObserver(() => positionBucketPills());
         const observeEl = (id) => {
