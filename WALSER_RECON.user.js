@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1325
+// @version      2026.1110.1507
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -5783,8 +5783,8 @@ if (location.hostname === 'app.partstech.com') {
 
 });
 
-// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.20  (BUCKET MOVER.js) =====
-WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.20', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.21  (BUCKET MOVER.js) =====
+WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.21', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
@@ -6418,12 +6418,18 @@ function injectTekionButton() {
       }
     }, 500);
   });
+  btn._stale = () => !roEl.isConnected;              // RO# field was redrawn -> make a new button there
   document.body.appendChild(btn);
 
   // Position the button right next to the RO# field, and keep it pinned
   // there as the page scrolls (the info bar itself isn't sticky, so we
   // reposition on every scroll/resize tick).
   function positionButton() {
+    if (!btn.isConnected || !roEl.isConnected) {          // page redrawn: drop this copy, a fresh one is added
+      window.removeEventListener('scroll', positionButton); window.removeEventListener('resize', positionButton);
+      if (btn.isConnected) btn.remove();
+      return;
+    }
     const rect = roEl.getBoundingClientRect();
     btn.style.left = rect.left + 'px';
     btn.style.top = (rect.bottom + 14) + 'px';
@@ -6708,6 +6714,7 @@ if (location.hostname === 'app.tekioncloud.com') {
   } else {
     setTimeout(tryAutoMove, 800);
     setTimeout(injectTekionButton, 1200);
+    setInterval(() => { const b = document.getElementById('rv-tekion-btn'); if (b && b._stale && b._stale()) b.remove(); if (!document.getElementById('rv-tekion-btn')) injectTekionButton(); }, 1500);
   }
 } else {
   setTimeout(init, 1000);
