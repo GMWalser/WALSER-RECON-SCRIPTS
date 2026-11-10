@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.4
+// @version      2.6
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -134,10 +134,10 @@ function suggestLine(part, job, services) {
   if (rule.brake) {
     const where = (FRONT.test(text) || FRONT.test(job)) ? FRONT : (REAR.test(text) || REAR.test(job)) ? REAR : null;
     if (where) { const h = hits.filter(s => where.test(s.name)); if (h.length) hits = h; }
-    else if (hits.length > 1) return { pick: null, why: 'brakes: front or rear? (pick once, it remembers this part #)', list: ordered(hits) };
+    else if (hits.length > 1) return { pick: null, why: 'brakes: front or rear? (pick once, it remembers this part #)', list: ordered(hits), amb: hits.some(hasParts) };
   }
   return hits.length === 1 ? { pick: hits[0], why: (text.match(rule.part) ? 'part says ' + text.match(rule.part)[0].toLowerCase() : 'drain plug gasket'), list: ordered(hits) }
-    : { pick: null, why: hits.length ? 'pick one' : '', list: ordered(hits) };
+    : { pick: null, why: hits.length ? 'pick one' : '', list: ordered(hits), amb: hits.length > 1 && hits.some(hasParts) };
 }
 function learnLine(pn, lineName) {
   if (!pn || !lineName) return;
@@ -262,16 +262,17 @@ function initTekion() {
     const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
     const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
     const what = list.map(x => x.line.pn + ' → ' + x.svc.name.replace(/^\*+\s*/, '') + (x.quoted ? ' (quoted)' : '')).join(' · ');
-    const vendor = await askStep('Send ' + list.length + ' parts: ' + what + ' · Vendor for all', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ ST=STOCK');
+    const nNew = list.filter(x => !x.quoted).length;
+    const vendor = !nNew ? '' : await askStep('Send ' + list.length + ' parts: ' + what + ' · Vendor for the ' + nNew + ' new part' + (nNew > 1 ? 's' : '') + ' (quoted parts keep theirs)', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ ST=STOCK');
     if (vendor === null) return;
     const sDef = vendorName(vendor) === 'STOCK' ? 'S' : last.status;
-    const stk = await askStep('Status for all ' + list.length + ' · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'leave as is'), true);
+    const stk = await askStep((nNew ? '' : 'Send ' + list.length + ' quoted parts: ' + what + ' · ') + 'Status for all ' + list.length + ' · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'leave as is'), true);
     if (stk === null) return;
     const status = statusLetter(stk) || sDef;
-    if (vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor, status });
+    if (vendor && vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor, status });
     list.filter(x => x.quoted).forEach(x => {              // quoted: set vendor + status on the part already there
       learnLine(x.line.pn, x.svc.name);
-      send(x.line, x.svc, 'status', { part: { pn: x.line.pn, desc: vendorName(vendor), qty: x.line.qty, price: x.line.price }, status });
+      send(x.line, x.svc, 'status', { part: { pn: x.line.pn, desc: '', qty: x.line.qty, price: x.line.price }, status });
     });
     const adds = list.filter(x => !x.quoted);
     adds.sort((a, b) => String(a.svc.id).localeCompare(String(b.svc.id)));
@@ -363,13 +364,14 @@ function initTekion() {
         tag.after(qb);
       }
       const key = ro + '|' + norm(line.job) + '|' + line.pn, match = byName[norm(line.job)];
-      if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; qb.style.display = 'inline-flex'; return; }
+      if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; tag.title = 'Sent to RV - use O S R A to change status, 🗑 to delete'; qb.style.display = 'inline-flex'; return; }
       const sgx = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
       const target = match || sgx.pick;
       tag._target = target && (hasParts(target) || isDone(target)) ? target : null;
-      qb.style.display = tag._target || sent[key] ? 'inline-flex' : 'none';      // part is in RV: show O S R A 🗑
+      qb.style.display = tag._target || sent[key] || (!target && sgx.amb) ? 'inline-flex' : 'none';      // part is in RV: show O S R A 🗑
       if (isDone(target)) { tag.textContent = '✓ RV'; tag.style.background = '#15803d'; tag.title = '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'; return; }
       if (target && hasParts(target)) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'; if (roOk && line.pn) batch.push({ line, svc: target, quoted: true }); return; }
+      if (!target && sgx.amb) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = 'Quoted in RV on one of: ' + sgx.list.filter(hasParts).map(x => x.name).join(' / ') + ' - click to pick front/rear'; return; }
       if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
       else {
         const sg = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
@@ -402,19 +404,12 @@ function initTekion() {
   // quoted part: Vendor (Enter = leave as is), then Status A/O/R/S; RV fills both and saves
   async function orderQuoted(line, svc) {
     const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
-    const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
-    const onHand = Number(line.oh) > 0, defV = onHand ? 'ST' : last.vendor;
-    const vendor = await askStep('Vendor · ' + line.pn + ' on "' + svc.name + '"' + (onHand ? ' · 💡 OH qty ' + line.oh + ' - stock?' : ''), defV,
-      x => (x ? '→ ' + vendorName(x) : '(leave vendor as is)') + '   · B=SUBCHEV F=FMP N=NAPA D=DOB O=OR A=AZ ST=STOCK');
-    if (vendor === null) return;
-    const sDef = vendorName(vendor) === 'STOCK' ? 'S' : (last.status || 'O');
-    const k = await askStep('Status · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'Ordered'), true);
+    const k = await askStep('Status · ' + line.pn + ' on "' + svc.name + '" (quoted - vendor & qty stay as quoted)', '', () => 'press O = Ordered · S = In Stock · R = Arrived · A = Action · Enter = Ordered', true);
     if (k === null) return;
-    const status = statusLetter(k) || sDef;
-    if (vendor && vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor, status });
+    const status = statusLetter(k) || 'O';
     learnLine(line.pn, svc.name);
-    send(line, svc, 'status', { part: { pn: line.pn, desc: vendor ? vendorName(vendor) : '', qty: line.qty, price: line.price }, status });
-    toast(line.pn + ' → ' + (vendor ? vendorName(vendor) + ' · ' : '') + NAMES[status] + ' on "' + svc.name + '"');
+    send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status });
+    toast(line.pn + ' → ' + NAMES[status] + ' on "' + svc.name + '"');
   }
   // the RV line a Tekion part belongs to (or ask)
   async function lineFor(line) {
@@ -429,6 +424,7 @@ function initTekion() {
   async function quickStatus(line, k) {
     const svc = await lineFor(line); if (!svc) return;
     const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+    learnLine(line.pn, svc.name);
     send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: k });
     toast(line.pn + ' → ' + NAMES[k] + ' on "' + svc.name + '"');
   }
