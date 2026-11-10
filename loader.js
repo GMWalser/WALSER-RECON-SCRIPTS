@@ -47,13 +47,15 @@ function gmFor(id) {
 // ---- Start the scripts that belong on this page ----
 const allOff = _get(ALL_OFF_KEY, false);
 // ---- Speed report: time spent in each script's timers / observers (this page) ----
-const COST = {}, COST_T0 = performance.now();
+const COST = {}, COST_T0 = performance.now(), REC_ERRS = [];
+function recErr(id, e) { if (REC_ERRS.length < 50) REC_ERRS.push({ t: Date.now(), id, msg: String((e && (e.stack || e.message)) || e).split('\n').slice(0, 2).join(' | ').slice(0, 220) }); }
 function timedFns(id) {
-  const c = COST[id] = COST[id] || { ms: 0, n: 0, max: 0 };
+  const c = COST[id] = COST[id] || { ms: 0, n: 0, max: 0, bmax: 0 };
   const wrap = fn => typeof fn !== 'function' ? fn : function () {
     const t = performance.now();
     try { return fn.apply(this, arguments); }
-    finally { const d = performance.now() - t; c.ms += d; c.n++; if (d > c.max) c.max = d; }
+    catch (e) { recErr(id, e); throw e; }
+    finally { const d = performance.now() - t; c.ms += d; c.n++; if (d > c.max) c.max = d; if (d > c.bmax) c.bmax = d; }
   };
   const W = window;
   return [
@@ -73,7 +75,7 @@ function speedReport() {
 
 function start(s) {
   try { s.fn.apply(window, gmFor(s.id).concat(timedFns(s.id))); console.log(LOG, 'started', s.name, 'v' + s.version); }
-  catch (e) { console.error(LOG, s.name + ' crashed:', e); }
+  catch (e) { console.error(LOG, s.name + ' crashed:', e); recErr(s.id, e); }
 }
 function whenReady(cb) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cb, { once: true });
@@ -192,7 +194,13 @@ document.addEventListener('keydown', e => {
   else recAdd('key', (e.ctrlKey ? 'Ctrl+' : '') + (e.altKey ? 'Alt+' : '') + e.key.toUpperCase());
 }, true);
 let recHref = location.href;
-setInterval(() => { if (location.href !== recHref) { recHref = location.href; recAdd('page', location.pathname.replace(/\d{4,}/g, '#')); } }, 1000);
+let recLite = null;
+setInterval(() => {
+  if (location.href !== recHref) { recHref = location.href; recAdd('page', location.pathname.replace(/\d{4,}/g, '#')); }
+  while (REC_ERRS.length) { const e = REC_ERRS.shift(); recEv.push({ t: e.t, ro: recRO(), pg: recPage(), k: 'ERROR', x: scriptName(e.id) + ': ' + e.msg }); }
+  const lite = document.documentElement.getAttribute('data-wr-lite');
+  if (lite !== recLite) { if (recLite !== null || lite) recAdd('theme', lite ? 'lite mode ON (theme used ' + lite + '% of the time, animations off)' : 'lite mode OFF (animations back on)'); recLite = lite; }
+}, 1000);
 
 // speed: one summary per minute
 const recSnap = () => { const o = {}; Object.keys(COST).forEach(k => { o[k] = COST[k].ms; }); return o; };
@@ -235,7 +243,9 @@ setInterval(() => {
   Object.keys(beta).forEach(k => { const d = beta[k].ms - ((b.beta0[k] || {}).ms || 0); if (d >= 1) betaD[k] = Math.round(d); });
   if (!document.hidden || b.frames || Object.keys(ours).length) {
     const src = {}; Object.keys(b.src).forEach(k => { src[k] = Math.round(b.src[k]); });
-    recPerf.push({ t: b.t, ro: recRO(), pg: recPage(), hid: document.hidden ? 1 : 0, frames: b.frames, frameMs: Math.round(b.frameMs), blockMs: Math.round(b.blockMs), src, worst: b.worst, slow: b.slow, ours, beta: betaD });
+    const longest = {}; Object.keys(COST).forEach(k => { if (COST[k].bmax >= 30) longest[k] = Math.round(COST[k].bmax); COST[k].bmax = 0; });
+    const nodes = document.getElementsByTagName('*').length, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0;
+    recPerf.push({ t: b.t, ro: recRO(), pg: recPage(), hid: document.hidden ? 1 : 0, frames: b.frames, frameMs: Math.round(b.frameMs), blockMs: Math.round(b.blockMs), src, worst: b.worst, slow: b.slow, ours, beta: betaD, longest, nodes, mem });
   }
   recNewBucket();
 }, 60000);
@@ -250,6 +260,8 @@ function recReport(ro) {
   const ev = d.ev, pf = d.perf, out = [];
   const t0 = Math.min((ev[0] || {}).t || Infinity, (pf[0] || {}).t || Infinity), t1 = Math.max((ev[ev.length - 1] || {}).t || 0, (pf[pf.length - 1] || {}).t || 0);
   out.push('WALSER SPEED + STEPS REPORT · RO ' + ro + ' · ' + recTime(t0) + ' to ' + recTime(t1) + ' (' + Math.round((t1 - t0) / 60000) + ' min) · ' + new Date(t0).toDateString());
+  out.push('Scripts: ' + WR.list.map(x => x.name + ' ' + x.version + (_get(offKey(x.id), false) ? ' (OFF)' : '')).join(' · ') + (allOff ? ' · ALL OFF' : ''));
+  out.push('Browser: ' + navigator.userAgent.replace(/^.*?\) /, '').slice(0, 80));
   out.push('', '== SPEED ==');
   const vis = pf.filter(p => !p.hid);
   const sum = (a, f) => a.reduce((x, p) => x + f(p), 0);
@@ -266,6 +278,13 @@ function recReport(ro) {
   const beta = {}; pf.forEach(p => Object.keys(p.beta || {}).forEach(k => { beta[k] = (beta[k] || 0) + p.beta[k]; }));
   const betaL = Object.keys(beta).sort((a, b) => beta[b] - beta[a]);
   if (betaL.length) { out.push('RV Remote (BETA), time used:'); betaL.forEach(k => out.push('  ' + (beta[k] / 1000).toFixed(2).padStart(6) + ' s  ' + k)); }
+  const sites = {}; pf.forEach(p => { const s = p.pg.split(' ')[0]; const x = sites[s] = sites[s] || { nodes: 0, mem: 0 }; x.nodes = Math.max(x.nodes, p.nodes || 0); x.mem = Math.max(x.mem, p.mem || 0); });
+  const sl = Object.keys(sites).filter(k => sites[k].nodes);
+  if (sl.length) out.push('Page size (biggest seen): ' + sl.map(k => k + ' ' + sites[k].nodes + ' elements' + (sites[k].mem ? ', ' + sites[k].mem + ' MB memory' : '')).join(' · '));
+  const lg = [].concat(...pf.map(p => Object.keys(p.longest || {}).map(k => ({ t: p.t, k, ms: p.longest[k], pg: p.pg })))).sort((a, b) => b.ms - a.ms).slice(0, 8);
+  if (lg.length) { out.push('Longest single runs of our scripts (30 ms or more):'); lg.forEach(x => out.push('  ' + recTime(x.t) + '  ' + x.ms + ' ms  ' + scriptName(x.k) + '  ' + x.pg)); }
+  const errs = ev.filter(e => e.k === 'ERROR');
+  out.push(errs.length ? 'Script errors: ' + errs.length + ' (listed in the steps as ERROR)' : 'Script errors: none');
   const worst = [].concat(...pf.map(p => (p.worst || []).map(w => Object.assign({ pg: p.pg }, w)))).sort((a, b) => b.ms - a.ms).slice(0, 8);
   if (worst.length) { out.push('Worst frozen moments:'); worst.forEach(w => out.push('  ' + recTime(w.t) + '  ' + w.ms + ' ms  ' + w.pg + (w.s.length ? '  <- ' + w.s.map(s => s.n + (s.fn ? ' ' + s.fn : '') + (s.inv ? ' [' + s.inv + ']' : '') + ' ' + s.ms + 'ms').join(' | ') : ''))); }
   const slow = [].concat(...pf.map(p => (p.slow || []).map(w => Object.assign({ pg: p.pg }, w)))).sort((a, b) => b.ms - a.ms).slice(0, 10);

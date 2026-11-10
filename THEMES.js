@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      5.5
+// @version      5.6
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -730,11 +730,13 @@ function busy(ms) {
 setInterval(() => { if (liteMode) busy(0); }, LITE_WINDOW_MS);
 function leaveLite() {
   liteMode = false; quietWins = 0;
+  document.documentElement.removeAttribute('data-wr-lite');     // read by the speed + steps recorder
   startFx(); startMesh();
   console.log('[Page Themes] page is quiet again - effects back on');
 }
 function goLite(share) {
   liteMode = true;
+  document.documentElement.setAttribute('data-wr-lite', String(Math.round(share * 100)));
   stopFx(); stopMesh();
   console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - effects off, page changes checked once a second');
 }
