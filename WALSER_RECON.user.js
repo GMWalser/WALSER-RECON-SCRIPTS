@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1939
+// @version      2026.1110.1944
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1712,8 +1712,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.03  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.03', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.04  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.04', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -1733,6 +1733,9 @@ const IS_PI          = IS_TEKION && location.pathname.includes('/parts/inventory
 // that's the only reliable signal in a tabbed SPA like this.
 const IS_RO_SALES    = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && !IS_PI;
 const IS_RV_WO_EDIT  = IS_RECONVISION && /\/work_orders\/\d+\/edit/.test(location.pathname);
+
+// v6.04: leave a note in the speed + steps report
+function rvNote(msg) { try { window.dispatchEvent(new CustomEvent('wr-note', { detail: '[Recon Clipboard] ' + msg })); } catch (e) {} console.log('[Clip]', msg); }
 
 // v6.00 speed: page watchers run at most once per `ms` (Tekion changes the page many times a second)
 function rvThrottle(fn, ms) {
@@ -2590,8 +2593,10 @@ if (IS_RO_SALES) {
             console.log('[PI-Cost] modalHeader found (.ant-modal-header):', !!modalHeader, '-- text:', modalHeader ? modalHeader.innerText : '(n/a)');
             let partNum = '';
             if (modalHeader) {
-                const match = modalHeader.innerText.match(/Update\s+(\S+)/i);
+                const title = modalHeader.innerText.replace(/\s+/g, ' ').trim();
+                const match = title.match(/Update\s+(?:Part\s*#?\s*|Price\s+(?:for\s+)?)?([A-Z0-9][A-Z0-9-]*\d[A-Z0-9-]*)/i) || title.match(/Update\s+(\S+)/i);
                 if (match) partNum = match[1];
+                rvNote('P&I: price window title "' + title.slice(0, 60) + '" -> part ' + (partNum || '(none)'));
             }
             console.log('[PI-Cost] partNum parsed:', partNum || '(empty)');
             if (!partNum || !cost) {
@@ -2601,6 +2606,7 @@ if (IS_RO_SALES) {
             }
             GM_setValue('pi_update_part', partNum);
             GM_setValue('pi_update_cost', cost);
+            rvNote('P&I: opening P&I for ' + partNum + ' cost ' + cost);
             setPill('✓ Saved — opening P&I...', 'ready', false, 10000);
             console.log('[PI-Cost] Opening P&I tab for part:', partNum, 'cost:', cost);
             setTimeout(() => {
@@ -3409,7 +3415,12 @@ if (IS_PI) {
             );
             console.log('[PI-Cost] Search box found, typing part#:', partNum);
             searchBox.focus();
-            nativeSet(searchBox, partNum);
+            rvNote('P&I tab: search box found, typing ' + partNum);
+            // v6.04: no blur/focus right after typing -- that can close Tekion's suggestion list before it shows
+            const setVal = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setVal.call(searchBox, partNum);
+            searchBox.dispatchEvent(new Event('input', { bubbles: true }));
+            searchBox.dispatchEvent(new Event('change', { bubbles: true }));
 
             setPill('Waiting for result...', 'ready');
             await new Promise(r => setTimeout(r, 800));
@@ -3428,10 +3439,16 @@ if (IS_PI) {
                     if (el && el.innerText.includes(partNum)) firstItem = el;
                 }
                 if (firstItem) break;
+                if (attempt === 7) {                                 // v6.04: nothing after ~3 s -> press Enter to search
+                    ['keydown', 'keypress', 'keyup'].forEach(t => searchBox.dispatchEvent(new KeyboardEvent(t, { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true })));
+                    rvNote('P&I tab: no suggestion after 3 s - pressed Enter');
+                }
                 await new Promise(r => setTimeout(r, 300));
             }
 
             if (!firstItem) {
+                const sawFirst = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
+                rvNote('P&I tab: ' + partNum + ' NOT found after 12 s (first suggestion: ' + (sawFirst ? '"' + sawFirst.innerText.slice(0, 50) + '"' : 'none') + ', search box: "' + searchBox.value + '")');
                 setPill('⚠ ' + partNum + ' not found in list', 'err');
                 GM_setValue('pi_update_part', '');
                 GM_setValue('pi_update_cost', '');
@@ -3440,6 +3457,7 @@ if (IS_PI) {
 
             await new Promise(r => setTimeout(r, 200));
             firstItem.click();
+            rvNote('P&I tab: picked ' + partNum + ' from the list');
 
             // If we clicked the autocomplete dropdown, now wait for the table row to appear and click it
             setPill('Loading part detail...', 'ready');
@@ -3457,13 +3475,14 @@ if (IS_PI) {
             await new Promise(r => setTimeout(r, 600));
             const editBtn = await findEditPartButton(15000);
 
-            if (!editBtn) throw new Error('Edit Part button not found after 15s');
+            if (!editBtn) { rvNote('P&I tab: Edit Part button NOT found after 15 s'); throw new Error('Edit Part button not found after 15s'); }
 
             await new Promise(r => setTimeout(r, 300));
             editBtn.click();
 
             setPill('Type $' + cost + ' → Tab → Save', 'ready');
-            const costField = await waitFor('input#costPrice', 8000);
+            const costField = await waitFor('input#costPrice', 8000).catch(e => { rvNote('P&I tab: cost box (input#costPrice) NOT found after Edit Part'); throw e; });
+            rvNote('P&I tab: cost box ready - type $' + cost);
             await new Promise(r => setTimeout(r, 400));
 
             costField.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3534,6 +3553,7 @@ if (IS_PI) {
         const partNum = GM_getValue('pi_update_part', '');
         const cost    = GM_getValue('pi_update_cost', '');
         if (partNum && cost) {
+            rvNote('P&I tab: starting for ' + partNum + ' cost ' + cost);
             runPIUpdate(partNum, cost);
         } else {
             setPill('P&I ready', 'idle');
@@ -12360,6 +12380,10 @@ function recDescribe(el) {
   return t.tagName.toLowerCase() + (dt ? '[' + String(dt).slice(-45) + ']' : '') + (txt ? ' "' + txt + '"' : '');
 }
 document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target)); }, true);
+// any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
+window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
+// any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
+window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
 document.addEventListener('contextmenu', e => recAdd('right-click' + (e.altKey ? ' (Alt)' : ''), recDescribe(e.target)), true);
 document.addEventListener('keydown', e => {
   if (!(e.altKey || e.ctrlKey) || !e.key || e.key.length > 1 && !/^F\d/.test(e.key)) return;   // shortcuts only, never typing
