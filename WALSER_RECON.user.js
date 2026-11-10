@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1747
+// @version      2026.1110.1807
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.4  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.4', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.5  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.5', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -782,18 +782,28 @@ let fx = null;
 // in any 10 s stretch, go LITE: stop the moving effects and check page changes once a second
 // instead of every 0.15 s. Recoloring never stops (apps like Tekion rebuild rows constantly,
 // and stopping would leave them white).
-const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, PAGE_T0 = performance.now();
-let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0;
+// v5.5: lite mode is no longer for good -- after 30 s quiet (under 2%) the effects come back.
+// The first 25 s of a page are not judged (RV work orders alone take ~10 s to load).
+const LITE_WINDOW_MS = 10000, LITE_MAX_SHARE = .05, LITE_BACK_SHARE = .02, LITE_GRACE_MS = 25000, PAGE_T0 = performance.now();
+let liteMode = false, busyMs = 0, winStart = PAGE_T0, winBusy = 0, quietWins = 0;
 function busy(ms) {
   busyMs += ms;
   const now = performance.now();
-  if (now - PAGE_T0 < LITE_WINDOW_MS) { winStart = now; winBusy = 0; return; }   // first 10 s: page is loading, not judged
+  if (now - PAGE_T0 < LITE_GRACE_MS) { winStart = now; winBusy = 0; return; }    // page is loading, not judged
   winBusy += ms;
   if (now - winStart >= LITE_WINDOW_MS) {
     const share = winBusy / (now - winStart);
-    if (!liteMode && share > LITE_MAX_SHARE) goLite(share);
+    if (!liteMode && share > LITE_MAX_SHARE) { goLite(share); quietWins = 0; }
+    else if (liteMode) { quietWins = share < LITE_BACK_SHARE ? quietWins + 1 : 0; if (quietWins >= 3) leaveLite(); }
     winStart = now; winBusy = 0;
   }
+}
+// quiet pages never call busy(): check every 10 s so lite mode can end
+setInterval(() => { if (liteMode) busy(0); }, LITE_WINDOW_MS);
+function leaveLite() {
+  liteMode = false; quietWins = 0;
+  startFx(); startMesh();
+  console.log('[Page Themes] page is quiet again - effects back on');
 }
 function goLite(share) {
   liteMode = true;
@@ -1679,8 +1689,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v5.99  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '5.99', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.00  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.00', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -1700,6 +1710,31 @@ const IS_PI          = IS_TEKION && location.pathname.includes('/parts/inventory
 // that's the only reliable signal in a tabbed SPA like this.
 const IS_RO_SALES    = IS_TEKION && location.pathname.includes('/parts/ro-sales/') && !IS_PI;
 const IS_RV_WO_EDIT  = IS_RECONVISION && /\/work_orders\/\d+\/edit/.test(location.pathname);
+
+// v6.00 speed: page watchers run at most once per `ms` (Tekion changes the page many times a second)
+function rvThrottle(fn, ms) {
+    let last = 0, timer = null;
+    return function () {
+        if (timer) return;
+        timer = setTimeout(() => { timer = null; last = Date.now(); fn(); }, Math.max(0, ms - (Date.now() - last)));
+    };
+}
+// v6.00 speed: the VIN from Tekion's header box; the slow whole-page search at most every 10 s
+let rvVinCache = '', rvVinFullAt = 0;
+function rvFindVin() {
+    for (const el of document.querySelectorAll('span[class*="copyToClipboard_labelContent"]')) {
+        const t = (el.textContent || '').trim();
+        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) return (rvVinCache = t);
+    }
+    if (Date.now() - rvVinFullAt < 10000) return rvVinCache;
+    rvVinFullAt = Date.now();
+    for (const el of document.querySelectorAll('span,div,p,td,input')) {
+        const t = (el.tagName === 'INPUT' ? el.value : el.childElementCount === 0 ? el.textContent : '') || '';
+        const v = t.trim();
+        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return (rvVinCache = v);
+    }
+    return rvVinCache;
+}
 
 function getClip() {
     return {
@@ -1810,30 +1845,16 @@ if (IS_TEKION) {
             const trim  = trimEl  ? (trimEl.value  || trimEl.innerText  || '').trim() : '';
             const stock = stockEl ? (stockEl.value || stockEl.innerText || '').trim() : '';
             const mileage = mileageEl ? (mileageEl.value || mileageEl.innerText || '').trim() : '';
-            let vin = '';
-            document.querySelectorAll('span,div,input').forEach(el => {
-                if (vin) return;
-                const t = (el.value || el.textContent || '').trim();
-                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
-            });
+            const vin = rvFindVin();
             saveVehicleData(trim, stock, vin, mileage);
-        }, 500);
+        }, 1000);
         // Retry every 2s. A VIN is only marked done AFTER the API returns a hit.
         // Failed lookups retry up to 3x per VIN. Keyed per VIN so SPA nav to a new RO works.
         const _vinAttempts = {}; // vin -> attempt count, or 'done'
         setInterval(function() {
             // Scan LEAF elements only for an exact 17-char VIN (header VIN span is a leaf).
             // No substring matching inside big containers — that produced false positives.
-            let vin = '';
-            document.querySelectorAll('span,div,p,td,input').forEach(el => {
-                if (vin) return;
-                let t = '';
-                if (el.tagName === 'INPUT') t = el.value || '';
-                else if (el.childElementCount === 0) t = el.textContent || '';
-                else return;
-                t = t.trim();
-                if (/^[A-HJ-NPR-Z0-9]{17}$/.test(t)) vin = t;
-            });
+            const vin = rvFindVin();
             if (!vin) return;
             // FIXED (7/9/26): GM_setValue is private to THIS script --
             // another userscript (PO Vendor Quick-Add) can never read it,
@@ -2488,7 +2509,7 @@ if (IS_RO_SALES) {
     }
 
     let lastFill = 0;
-    new MutationObserver(() => {
+    new MutationObserver(rvThrottle(() => {
         const price = GM_getValue('clip_price', '');
         if (!price) { lastFill = 0; return; }
         const el = document.querySelector('[data-test-id="@tekion-parts-partsRosales-costPrice"]');
@@ -2506,9 +2527,9 @@ if (IS_RO_SALES) {
             el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
             setPill('✓ Price filled — click Save', 'ready', false, 8000);
         }, 300);
-    }).observe(document.body, { childList: true, subtree: true });
+    }, 300)).observe(document.body, { childList: true, subtree: true });
 
-    const saveBtnObserver = new MutationObserver(() => {
+    const saveBtnObserver = new MutationObserver(rvThrottle(() => {
         const saveBtn = document.querySelector(
             '[data-test-id="@tekion-parts-roSalesDetailedView-modal-updatePrice-container-submitButton"]'
         );
@@ -2557,7 +2578,7 @@ if (IS_RO_SALES) {
                 window._piTab = window.open(piUrl, '_blank');
             }, 300);
         });
-    });
+    }, 300));
     saveBtnObserver.observe(document.body, { childList: true, subtree: true });
 
     // VEHICLE HOVER TOOLTIP
@@ -2682,7 +2703,7 @@ if (IS_RO_SALES) {
             }
         });
     }
-    setInterval(scanVehicleFields, 500);
+    // v6.00: removed -- scanVehicleFields filled cachedTrim/cachedStock, which nothing reads, every 500 ms
 
     // Auto-open the vehicle drawer so the existing DOM poller (above, watches
     // #vehicleDetailsOverviewTrim / #vehicleDetailsOverviewVehicleStockNumber
@@ -2846,7 +2867,7 @@ if (IS_RO_SALES) {
         setTimeout(tryStartDrawerFetch, 1500);
     }
     attachVehicleHover();
-    new MutationObserver(attachVehicleHover).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(rvThrottle(attachVehicleHover, 300)).observe(document.body, { childList: true, subtree: true });
 }
 
 // =============================================
@@ -3044,7 +3065,7 @@ if (IS_RO_SALES) {
     }
 
     let lastPOControlField = null;
-    new MutationObserver(() => {
+    new MutationObserver(rvThrottle(() => {
         const controlField = document.querySelector('[data-test-id="@tekion-parts-purchaseOrderNew-poDetails-controlNumber-input"]');
         if (controlField && controlField !== lastPOControlField) {
             lastPOControlField = controlField;
@@ -3086,7 +3107,7 @@ if (IS_RO_SALES) {
                 }
             }, 150);
         }
-    }).observe(document.body, { childList: true, subtree: true });
+    }, 300)).observe(document.body, { childList: true, subtree: true });
 
     poPill.onclick = () => {
         poFilled = false;
@@ -3254,7 +3275,7 @@ if (IS_RO_SALES) {
     }
 
     injectPulseButtons();
-    new MutationObserver(injectPulseButtons).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(rvThrottle(injectPulseButtons, 300)).observe(document.body, { childList: true, subtree: true });
 }
 
 // =============================================
