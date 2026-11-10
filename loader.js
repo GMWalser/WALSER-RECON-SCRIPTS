@@ -49,37 +49,57 @@ const allOff = _get(ALL_OFF_KEY, false);
 // ---- Speed report: time spent in each script's timers / observers (this page) ----
 const COST = {}, COST_T0 = performance.now(), REC_ERRS = [], LABELS = new WeakMap();
 function recErr(id, e) { if (REC_ERRS.length < 50) REC_ERRS.push({ t: Date.now(), id, msg: String((e && (e.stack || e.message)) || e).split('\n').slice(0, 2).join(' | ').slice(0, 220) }); }
-function timedFns(id) {
+// each timer / page watcher / animation / event handler gets a name (its function name, or its first words of code)
+let CUR_ID = null;                                        // the script whose code is running right now
+function costLabel(fn, kind) {
+  let l = LABELS.get(fn);
+  if (!l) { l = kind + ': ' + (fn.name || String(fn).replace(/\s+/g, ' ').slice(0, 70)); LABELS.set(fn, l); }
+  return l;
+}
+function timed(id, fn, kind) {
+  if (typeof fn !== 'function') return fn;
   const c = COST[id] = COST[id] || { ms: 0, n: 0, max: 0, bmax: 0, fns: {} };
-  // each timer / page watcher / animation gets a name (its function name, or its first words of code)
-  const label = (fn, kind) => {
-    let l = LABELS.get(fn);
-    if (!l) {
-      const src = fn.name || String(fn).replace(/\s+/g, ' ').slice(0, 70);
-      l = kind + ': ' + src; LABELS.set(fn, l);
-    }
-    return l;
-  };
-  const wrap = (fn, kind) => typeof fn !== 'function' ? fn : function () {
-    const t = performance.now();
+  return function () {
+    const t = performance.now(), prev = CUR_ID; CUR_ID = id;
     try { return fn.apply(this, arguments); }
     catch (e) { recErr(id, e); throw e; }
     finally {
+      CUR_ID = prev;
       const d = performance.now() - t; c.ms += d; c.n++; if (d > c.max) c.max = d; if (d > c.bmax) c.bmax = d;
       if (d >= 1) {
-        let k = label(fn, kind); if (!c.fns[k] && Object.keys(c.fns).length >= 40) k = kind + ': (other)';
+        let k = costLabel(fn, kind); if (!c.fns[k] && Object.keys(c.fns).length >= 60) k = kind + ': (other)';
         const f = c.fns[k] = c.fns[k] || { ms: 0, n: 0, max: 0, bmax: 0 }; f.ms += d; f.n++; if (d > f.max) f.max = d; if (d > f.bmax) f.bmax = d;
       }
     }
   };
+}
+function timedFns(id) {
+  COST[id] = COST[id] || { ms: 0, n: 0, max: 0, bmax: 0, fns: {} };
   const W = window;
   return [
-    (fn, ms, ...a) => W.setInterval(wrap(fn, 'every ' + ms + ' ms'), ms, ...a),
-    (fn, ms, ...a) => W.setTimeout(wrap(fn, 'timer'), ms, ...a),
-    fn => W.requestAnimationFrame(wrap(fn, 'animation frame')),
-    class extends W.MutationObserver { constructor(cb) { super(wrap(cb, 'page watcher')); } },
+    (fn, ms, ...a) => W.setInterval(timed(id, fn, 'every ' + ms + ' ms'), ms, ...a),
+    (fn, ms, ...a) => W.setTimeout(timed(id, fn, 'timer'), ms, ...a),
+    fn => W.requestAnimationFrame(timed(id, fn, 'animation frame')),
+    class extends W.MutationObserver { constructor(cb) { super(timed(id, cb, 'page watcher')); } },
   ];
 }
+// event handlers (click, mouseover, keydown...) added by OUR scripts are timed too; the sites' own are untouched
+(function () {
+  const ET = EventTarget.prototype, add = ET.addEventListener, del = ET.removeEventListener, WR_L = new WeakMap();
+  ET.addEventListener = function (type, fn, opt) {
+    if (CUR_ID && typeof fn === 'function') {
+      let m = WR_L.get(fn); if (!m) WR_L.set(fn, m = {});
+      const w = m[type] = m[type] || timed(CUR_ID, fn, 'on ' + type);
+      return add.call(this, type, w, opt);
+    }
+    return add.call(this, type, fn, opt);
+  };
+  ET.removeEventListener = function (type, fn, opt) {
+    const m = typeof fn === 'function' && WR_L.get(fn);
+    if (m && m[type]) del.call(this, type, m[type], opt);
+    return del.call(this, type, fn, opt);
+  };
+})();
 function speedReport() {
   const secs = Math.max(1, (performance.now() - COST_T0) / 1000);
   const rows = Object.keys(COST).map(id => ({ id, name: (WR.list.find(s => s.id === id) || {}).name || id, ...COST[id] }))
@@ -89,8 +109,10 @@ function speedReport() {
 }
 
 function start(s) {
+  const prev = CUR_ID; CUR_ID = s.id;
   try { s.fn.apply(window, gmFor(s.id).concat(timedFns(s.id))); console.log(LOG, 'started', s.name, 'v' + s.version); }
   catch (e) { console.error(LOG, s.name + ' crashed:', e); recErr(s.id, e); }
+  finally { CUR_ID = prev; }
 }
 function whenReady(cb) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cb, { once: true });
@@ -222,7 +244,7 @@ const recSnap = () => { const o = {}; Object.keys(COST).forEach(k => { o[k] = CO
 const recBeta = () => { try { return JSON.parse(document.documentElement.getAttribute('data-rvr-speed') || '{}'); } catch (e) { return {}; } };
 let recB = null;
 const recFnSnap = () => { const o = {}; Object.keys(COST).forEach(id => Object.keys(COST[id].fns || {}).forEach(k => { o[id + '\u0001' + k] = COST[id].fns[k].ms; })); return o; };
-function recNewBucket() { recB = { t: recNow(), frames: 0, frameMs: 0, blockMs: 0, worst: [], src: {}, slow: [], cost0: recSnap(), beta0: recBeta(), fn0: recFnSnap() }; }
+function recNewBucket() { recB = { t: recNow(), net: { n: 0, ms: 0, over1s: 0, slowest: [] }, frames: 0, frameMs: 0, blockMs: 0, worst: [], src: {}, slow: [], cost0: recSnap(), beta0: recBeta(), fn0: recFnSnap() }; }
 recNewBucket();
 function recSrc(sc) {
   const u = sc.sourceURL || '';
@@ -245,6 +267,17 @@ try {
       recB.worst.push({ t: recNow(), ms: Math.round(f.duration), s: [] }); recB.worst.sort((a, b) => b.ms - a.ms); recB.worst.length = Math.min(recB.worst.length, 4);
     })).observe({ type: 'longtask', buffered: false });
   }
+  // network: every data request the site makes (XHR / fetch), how long until it finished
+  if (types.includes('resource')) {
+    new PerformanceObserver(list => list.getEntries().forEach(r => {
+      if (!/xmlhttprequest|fetch|beacon/.test(r.initiatorType) || !recB) return;
+      const n = recB.net, ms = Math.round(r.duration);
+      n.n++; n.ms += ms; if (ms >= 1000) n.over1s++;
+      let u = r.name; try { const x = new URL(r.name); u = x.hostname.replace(/^www\./, '') + x.pathname.replace(/[0-9a-f]{8,}|\d{4,}/gi, '#').slice(0, 60); } catch (e) {}
+      n.slowest.push({ t: recNow(), ms, u, wait: r.responseStart > 0 ? Math.round(r.responseStart - r.requestStart) : -1 });
+      n.slowest.sort((a, b) => b.ms - a.ms); n.slowest.length = Math.min(n.slowest.length, 4);
+    })).observe({ type: 'resource', buffered: false });
+  }
   if (types.includes('event')) {
     new PerformanceObserver(list => list.getEntries().forEach(ev => {
       if (!/^(click|dblclick|keydown|contextmenu)$/.test(ev.name)) return;   // real actions only, not hover
@@ -253,7 +286,7 @@ try {
     })).observe({ type: 'event', durationThreshold: 104, buffered: false });
   }
 } catch (e) { console.warn(LOG, 'speed recorder not available:', e); }
-setInterval(() => {
+function recMinute() {
   const b = recB, now = recSnap(), beta = recBeta(), ours = {}, betaD = {};
   Object.keys(now).forEach(k => { const d = now[k] - (b.cost0[k] || 0); if (d >= 1) ours[k] = Math.round(d); });
   Object.keys(beta).forEach(k => { const d = beta[k].ms - ((b.beta0[k] || {}).ms || 0); if (d >= 1) betaD[k] = Math.round(d); });
@@ -269,11 +302,21 @@ setInterval(() => {
     Object.keys(COST).forEach(id => Object.values(COST[id].fns || {}).forEach(f => { f.bmax = 0; }));
     parts.sort((x, y) => y.ms - x.ms); parts.length = Math.min(parts.length, 8);
     const nodes = document.getElementsByTagName('*').length, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0;
-    recPerf.push({ t: b.t, ro: recRO(), pg: recPage(), hid: document.hidden ? 1 : 0, frames: b.frames, frameMs: Math.round(b.frameMs), blockMs: Math.round(b.blockMs), src, worst: b.worst, slow: b.slow, ours, beta: betaD, longest, nodes, mem, parts });
+    const cn = navigator.connection || {};
+    const conn = cn.effectiveType ? { type: cn.effectiveType, mbps: cn.downlink, rtt: cn.rtt } : null;
+    recPerf.push({ t: b.t, net: b.net, conn, ro: recRO(), pg: recPage(), hid: document.hidden ? 1 : 0, frames: b.frames, frameMs: Math.round(b.frameMs), blockMs: Math.round(b.blockMs), src, worst: b.worst, slow: b.slow, ours, beta: betaD, longest, nodes, mem, parts });
   }
   recNewBucket();
-}, 60000);
+}
+setInterval(recMinute, 60000);
 recAdd('page', location.pathname.replace(/\d{4,}/g, '#'));
+(function recLoad() {
+  const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation') || [])[0];
+  if (!nav || !nav.loadEventEnd) { if (performance.now() < 120000) setTimeout(recLoad, 2000); return; }
+  const server = Math.round(nav.responseStart - nav.requestStart), dl = Math.round(nav.responseEnd - nav.responseStart);
+  const code = Math.round(nav.domContentLoadedEventEnd - nav.responseEnd), total = Math.round(nav.loadEventEnd - nav.startTime);
+  recAdd('page load', 'total ' + total + ' ms = server wait ' + server + ' ms + download ' + dl + ' ms + page code ' + code + ' ms (+ images/files after)');
+})();
 
 // ---- report ----
 const recTime = t => new Date(t).toTimeString().slice(0, 8);
@@ -298,7 +341,7 @@ function recReport(ro) {
   if (srcL.length) { out.push('Who caused the frozen time (script time inside those frames):'); srcL.forEach(k => out.push('  ' + (src[k] / 1000).toFixed(1).padStart(6) + ' s  ' + k)); }
   const ours = {}; pf.forEach(p => Object.keys(p.ours || {}).forEach(k => { ours[k] = (ours[k] || 0) + p.ours[k]; }));
   const oursL = Object.keys(ours).sort((a, b) => ours[b] - ours[a]).slice(0, 10);
-  if (oursL.length) { out.push('Walser Recon Tools, time each script used (timers/observers):'); oursL.forEach(k => out.push('  ' + (ours[k] / 1000).toFixed(2).padStart(6) + ' s  ' + scriptName(k) + '  (' + (ours[k] / Math.max(1, pf.length) / 1000).toFixed(3) + ' s/min)')); }
+  if (oursL.length) { out.push('Walser Recon Tools, time each script used (timers, page watchers, animations, event handlers):'); oursL.forEach(k => out.push('  ' + (ours[k] / 1000).toFixed(2).padStart(6) + ' s  ' + scriptName(k) + '  (' + (ours[k] / Math.max(1, pf.length) / 1000).toFixed(3) + ' s/min)')); }
   const beta = {}; pf.forEach(p => Object.keys(p.beta || {}).forEach(k => { beta[k] = (beta[k] || 0) + p.beta[k]; }));
   const betaL = Object.keys(beta).sort((a, b) => beta[b] - beta[a]);
   if (betaL.length) { out.push('RV Remote (BETA), time used:'); betaL.forEach(k => out.push('  ' + (beta[k] / 1000).toFixed(2).padStart(6) + ' s  ' + k)); }
@@ -316,13 +359,22 @@ function recReport(ro) {
   if (worst.length) { out.push('Worst frozen moments:'); worst.forEach(w => out.push('  ' + recTime(w.t) + '  ' + w.ms + ' ms  ' + w.pg + (w.s.length ? '  <- ' + w.s.map(s => s.n + (s.fn ? ' ' + s.fn : '') + (s.inv ? ' [' + s.inv + ']' : '') + ' ' + s.ms + 'ms').join(' | ') : ''))); }
   const slow = [].concat(...pf.map(p => (p.slow || []).map(w => Object.assign({ pg: p.pg }, w)))).sort((a, b) => b.ms - a.ms).slice(0, 10);
   if (slow.length) { out.push('Slow clicks / keys (over 0.1 s until the screen updated):'); slow.forEach(w => out.push('  ' + recTime(w.t) + '  ' + w.ms + ' ms  ' + w.pg + '  ' + w.what)); }
+  out.push('', '== NETWORK (is it the internet?) ==');
+  const nets = pf.map(p => p.net).filter(Boolean), nn = sum(nets, n => n.n), nms = sum(nets, n => n.ms), n1 = sum(nets, n => n.over1s);
+  out.push('Data requests: ' + nn + (nn ? ', average ' + Math.round(nms / nn) + ' ms each, ' + n1 + ' took over 1 s' : ''));
+  const sr = [].concat(...pf.map(p => ((p.net || {}).slowest || []).map(x => Object.assign({ pg: p.pg.split(' ')[0] }, x)))).sort((a, b) => b.ms - a.ms).slice(0, 8);
+  if (sr.length) { out.push('Slowest requests (time until finished · server wait when known):'); sr.forEach(x => out.push('  ' + recTime(x.t) + '  ' + x.ms + ' ms' + (x.wait >= 0 ? ' (server wait ' + x.wait + ' ms)' : '') + '  ' + x.pg + '  ' + x.u)); }
+  const loads = ev.filter(e => e.k === 'page load');
+  if (loads.length) { out.push('Page loads:'); loads.slice(-8).forEach(e => out.push('  ' + recTime(e.t) + '  ' + e.pg + '  ' + e.x)); }
+  const cs = pf.map(p => p.conn).filter(Boolean);
+  if (cs.length) { const c = cs[cs.length - 1]; out.push('Connection (as Chrome reports it): ' + c.type + ', about ' + c.mbps + ' Mbps, ' + c.rtt + ' ms delay'); }
   out.push('', '== STEPS (' + ev.length + ') ==');
   let lastPg = '';
   ev.slice(-400).forEach(e => { out.push(recTime(e.t) + '  ' + (e.pg !== lastPg ? e.pg + '  ' : '') + e.k + (e.x ? '  ' + e.x : '')); lastPg = e.pg; });
   return out.join('\n');
 }
 function recShow() {
-  recFlush();
+  recMinute(); recFlush();                                 // include the minute you are in now
   document.querySelectorAll('#wr-rec').forEach(x => x.remove());
   const idx = _get(REC_INDEX, []).slice().reverse();
   if (!idx.length) { alert('Nothing recorded yet. Work an RO, then open this again.'); return; }
