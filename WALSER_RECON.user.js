@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1510
+// @version      2026.1110.1717
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1679,8 +1679,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v5.97  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '5.97', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v5.98  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '5.98', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -2163,9 +2163,32 @@ if (IS_PARTSTECH) {
 
 if (IS_REPAIRLINK) {
 
+    // v5.98: cart table (#gridDiv_oecDataTable) Description column, e.g. "Lamp Assy - Stop - Additional".
+    // The column is found by its header text; if there is no header match, the 3rd column (confirmed via DOM screenshot).
+    function rlDescCell(t) {
+        const td = t.closest && t.closest('#gridDiv_oecDataTable tbody td');
+        if (!td || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
+        const table = td.closest('table');
+        const idx = [...table.querySelectorAll('thead th')].findIndex(th => /desc/i.test(th.textContent));
+        const col = [...td.parentElement.children].indexOf(td);
+        return (idx >= 0 ? col === idx : col === 2) && td.innerText.trim() ? td : null;
+    }
+
     document.addEventListener('contextmenu', (e) => {
         const partEl  = e.target.closest('span.partNumCol');
         const priceEl = e.target.closest('dd.hiddenPrice');
+        const descEl  = !partEl && !priceEl ? rlDescCell(e.target) : null;
+        if (descEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const desc = descEl.innerText.trim().replace(/\s+/g, ' ');
+            GM_setValue('clip_desc', desc);
+            try { navigator.clipboard.writeText(desc).catch(() => {}); } catch (err) {}   // Ctrl+V works too
+            console.log('[Clip] Right-click SAVED description:', JSON.stringify(desc));
+            descEl.style.background = 'rgba(96,165,250,0.4)';
+            setTimeout(() => { descEl.style.background = ''; }, 600);
+            return;
+        }
         if (partEl) {
             e.preventDefault();
             e.stopPropagation();
@@ -2191,15 +2214,53 @@ if (IS_REPAIRLINK) {
     document.addEventListener('mouseover', (e) => {
         const p  = e.target.closest('span.partNumCol');
         const pr = e.target.closest('dd.hiddenPrice');
+        const d  = !p && !pr ? rlDescCell(e.target) : null;
         if (p)  p.style.outline  = '2px dashed #4ade80';
         if (pr) pr.style.outline = '2px dashed #facc15';
+        if (d)  d.style.outline  = '2px dashed #60a5fa';
     });
     document.addEventListener('mouseout', (e) => {
         const p  = e.target.closest('span.partNumCol');
         const pr = e.target.closest('dd.hiddenPrice');
+        const d  = !p && !pr ? rlDescCell(e.target) : null;
         if (p)  p.style.outline = '';
         if (pr) pr.style.outline = '';
+        if (d)  d.style.outline = '';
     });
+}
+
+// =============================================
+// TEKION: right-click the Part Description box in "Add New Part" to paste the
+// description copied from RepairLink; auto-close the "User Authentication failed at OEM" error
+// =============================================
+if (IS_TEKION) {
+    document.addEventListener('contextmenu', (e) => {
+        const modal = e.target.closest && e.target.closest('[data-test-id="undefined-AddNewPartModal"]');
+        if (!modal) return;
+        let field = e.target.closest('[class*="fieldC"]');
+        if (!field || !/description/i.test((field.querySelector('[class*="fieldLabel"], [class*="fLC"]') || field).textContent)) return;
+        const inp = field.querySelector('input, textarea');
+        const desc = GM_getValue('clip_desc', '');
+        if (!inp || !desc) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const proto = inp.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(inp, desc.toUpperCase());
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+        inp.style.outline = '2px solid #60a5fa';
+        setTimeout(() => { inp.style.outline = ''; }, 700);
+        console.log('[Clip] Pasted description into Add New Part:', desc);
+    }, true);
+
+    // Tekion's toasts close when clicked (class Toastify__toast--close-on-click)
+    setInterval(() => {
+        document.querySelectorAll('.Toastify__toast').forEach(t => {
+            if (t.dataset.rvAutoClosed || !/authentication failed at oem/i.test(t.textContent)) return;
+            t.dataset.rvAutoClosed = '1';
+            setTimeout(() => { const x = t.querySelector('.Toastify__close-button'); (x || t).click(); console.log('[Clip] Auto-closed OEM login error'); }, 300);
+        });
+    }, 700);
 }
 
 // =============================================
@@ -9381,8 +9442,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.3  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.3', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.4  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.4', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9747,15 +9808,90 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
     log('Misc PO: filled default Part/Qty/Cost on first row.');
   }
 
+  // v3.4: Add New Part window -- Source Code buttons. 300 (tires) also sets
+  // Primary Bin to TIRE. Confirmed via DOM screenshots (11/10/26):
+  //   window:      [data-test-id="undefined-AddNewPartModal"]
+  //   Source Code: #sourceCodeId, control data-test-id="@tekion-parts-modals-addNewPartModal-sourceCode"
+  //   Primary Bin: #primaryBinId, control data-test-id="@tekion-parts-modals-fields-primaryBin"
+  //   current value shows in [class*="singleValue"], e.g. "100 - STANDARD (246A)"
+  const SOURCE_BTNS_ID = 'rv-source-code-btns';
+  const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
+  const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
+
+  // pick an option in one of Tekion's react-select dropdowns, the same way selectVendor does
+  async function pickOption(containerId, controlTestId, typed, isMatch) {
+    const container = document.getElementById(containerId);
+    if (!container) { log('ERROR: ' + containerId + ' not found.'); return false; }
+    const input = container.querySelector('input');
+    const control = container.querySelector('[data-test-id="' + controlTestId + '"]') || container;
+    if (input) input.focus();
+    fireMouseEvent(control, 'mousedown');
+    if (input && !input.readOnly) nativeSetValue(input, typed);
+    try {
+      const option = await waitFor(() => {
+        const opts = [...document.querySelectorAll('[id^="react-select-"][id*="-option-"]')];
+        return opts.find(el => isMatch((el.textContent || '').trim().toUpperCase())) || null;
+      }, 4000, 150);
+      fireMouseEvent(option, 'mousedown');
+      fireMouseEvent(option, 'mouseup');
+      fireMouseEvent(option, 'click');
+      return true;
+    } catch (e) {
+      log('ERROR: no "' + typed + '" option found in ' + containerId + '.');
+      return false;
+    }
+  }
+
+  async function setSourceCode(code, btn) {
+    const old = btn.textContent;
+    btn.textContent = '…';
+    const ok = await pickOption('sourceCodeId', '@tekion-parts-modals-addNewPartModal-sourceCode', code,
+      t => t === code || t.startsWith(code + ' ') || t.startsWith(code + '-'));
+    if (ok && code === TIRE_SOURCE) {
+      await new Promise(r => setTimeout(r, 300));
+      // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
+      let okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t === TIRE_BIN);
+      if (!okBin) okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t.startsWith(TIRE_BIN));
+      log(okBin ? 'Primary Bin set to ' + TIRE_BIN : 'Could not set Primary Bin to ' + TIRE_BIN);
+    }
+    btn.textContent = old;
+    btn.style.outline = ok ? '2px solid #fff' : '2px solid #ef4444';
+    setTimeout(() => { btn.style.outline = ''; }, 1200);
+    log(ok ? 'Source Code set to ' + code : 'Could not set Source Code ' + code);
+  }
+
+  function injectSourceButtons() {
+    const modal = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    if (!modal || modal.querySelector('#' + SOURCE_BTNS_ID)) return;
+    const field = modal.querySelector('[data-test="@tekion-parts-modals-addNewPartModal-sourceCode"]');
+    if (!field) return;
+    const row = document.createElement('div');
+    row.id = SOURCE_BTNS_ID;
+    row.style.cssText = 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;';
+    SOURCE_CODES.forEach(code => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = code;
+      b.title = code === TIRE_SOURCE ? 'Source Code 300 + Primary Bin TIRE' : 'Source Code ' + code;
+      b.style.cssText = 'padding:5px 12px;font-size:14px;font-weight:700;border-radius:20px;border:none;cursor:pointer;color:#fff;background:' + (code === TIRE_SOURCE ? '#15803d' : '#1d4ed8') + ';';
+      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setSourceCode(code, b); });
+      row.appendChild(b);
+    });
+    field.appendChild(row);
+    log('Injected Source Code buttons in Add New Part.');
+  }
+
   const observer = new MutationObserver(() => {
     cleanupIfOrphaned();
     injectButtons();
+    injectSourceButtons();
     refreshVin();
     fillMiscPoDefaults();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   injectButtons();
+  injectSourceButtons();
   refreshVin();
   fillMiscPoDefaults();
 })();

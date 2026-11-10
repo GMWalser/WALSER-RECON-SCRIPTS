@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.3
+// @version      3.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
-// @description  Quick-add buttons for the most-used vendors on Tekion's PO Create Miscellaneous Order screen (now including the European OEM dealers and Hyundai/Kia). Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
+// @description  Source Code buttons (336/337/338/333/300/100; 300 also sets Primary Bin TIRE) in Tekion's Add New Part window. Quick-add buttons for the most-used vendors on Tekion's PO Create Miscellaneous Order screen (now including the European OEM dealers and Hyundai/Kia). Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle
@@ -373,15 +373,90 @@
     log('Misc PO: filled default Part/Qty/Cost on first row.');
   }
 
+  // v3.4: Add New Part window -- Source Code buttons. 300 (tires) also sets
+  // Primary Bin to TIRE. Confirmed via DOM screenshots (11/10/26):
+  //   window:      [data-test-id="undefined-AddNewPartModal"]
+  //   Source Code: #sourceCodeId, control data-test-id="@tekion-parts-modals-addNewPartModal-sourceCode"
+  //   Primary Bin: #primaryBinId, control data-test-id="@tekion-parts-modals-fields-primaryBin"
+  //   current value shows in [class*="singleValue"], e.g. "100 - STANDARD (246A)"
+  const SOURCE_BTNS_ID = 'rv-source-code-btns';
+  const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
+  const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
+
+  // pick an option in one of Tekion's react-select dropdowns, the same way selectVendor does
+  async function pickOption(containerId, controlTestId, typed, isMatch) {
+    const container = document.getElementById(containerId);
+    if (!container) { log('ERROR: ' + containerId + ' not found.'); return false; }
+    const input = container.querySelector('input');
+    const control = container.querySelector('[data-test-id="' + controlTestId + '"]') || container;
+    if (input) input.focus();
+    fireMouseEvent(control, 'mousedown');
+    if (input && !input.readOnly) nativeSetValue(input, typed);
+    try {
+      const option = await waitFor(() => {
+        const opts = [...document.querySelectorAll('[id^="react-select-"][id*="-option-"]')];
+        return opts.find(el => isMatch((el.textContent || '').trim().toUpperCase())) || null;
+      }, 4000, 150);
+      fireMouseEvent(option, 'mousedown');
+      fireMouseEvent(option, 'mouseup');
+      fireMouseEvent(option, 'click');
+      return true;
+    } catch (e) {
+      log('ERROR: no "' + typed + '" option found in ' + containerId + '.');
+      return false;
+    }
+  }
+
+  async function setSourceCode(code, btn) {
+    const old = btn.textContent;
+    btn.textContent = '…';
+    const ok = await pickOption('sourceCodeId', '@tekion-parts-modals-addNewPartModal-sourceCode', code,
+      t => t === code || t.startsWith(code + ' ') || t.startsWith(code + '-'));
+    if (ok && code === TIRE_SOURCE) {
+      await new Promise(r => setTimeout(r, 300));
+      // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
+      let okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t === TIRE_BIN);
+      if (!okBin) okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t.startsWith(TIRE_BIN));
+      log(okBin ? 'Primary Bin set to ' + TIRE_BIN : 'Could not set Primary Bin to ' + TIRE_BIN);
+    }
+    btn.textContent = old;
+    btn.style.outline = ok ? '2px solid #fff' : '2px solid #ef4444';
+    setTimeout(() => { btn.style.outline = ''; }, 1200);
+    log(ok ? 'Source Code set to ' + code : 'Could not set Source Code ' + code);
+  }
+
+  function injectSourceButtons() {
+    const modal = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    if (!modal || modal.querySelector('#' + SOURCE_BTNS_ID)) return;
+    const field = modal.querySelector('[data-test="@tekion-parts-modals-addNewPartModal-sourceCode"]');
+    if (!field) return;
+    const row = document.createElement('div');
+    row.id = SOURCE_BTNS_ID;
+    row.style.cssText = 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;';
+    SOURCE_CODES.forEach(code => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = code;
+      b.title = code === TIRE_SOURCE ? 'Source Code 300 + Primary Bin TIRE' : 'Source Code ' + code;
+      b.style.cssText = 'padding:5px 12px;font-size:14px;font-weight:700;border-radius:20px;border:none;cursor:pointer;color:#fff;background:' + (code === TIRE_SOURCE ? '#15803d' : '#1d4ed8') + ';';
+      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setSourceCode(code, b); });
+      row.appendChild(b);
+    });
+    field.appendChild(row);
+    log('Injected Source Code buttons in Add New Part.');
+  }
+
   const observer = new MutationObserver(() => {
     cleanupIfOrphaned();
     injectButtons();
+    injectSourceButtons();
     refreshVin();
     fillMiscPoDefaults();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   injectButtons();
+  injectSourceButtons();
   refreshVin();
   fillMiscPoDefaults();
 })();

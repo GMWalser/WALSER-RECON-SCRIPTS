@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.97
+// @version      5.98
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -498,9 +498,32 @@ if (IS_PARTSTECH) {
 
 if (IS_REPAIRLINK) {
 
+    // v5.98: cart table (#gridDiv_oecDataTable) Description column, e.g. "Lamp Assy - Stop - Additional".
+    // The column is found by its header text; if there is no header match, the 3rd column (confirmed via DOM screenshot).
+    function rlDescCell(t) {
+        const td = t.closest && t.closest('#gridDiv_oecDataTable tbody td');
+        if (!td || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
+        const table = td.closest('table');
+        const idx = [...table.querySelectorAll('thead th')].findIndex(th => /desc/i.test(th.textContent));
+        const col = [...td.parentElement.children].indexOf(td);
+        return (idx >= 0 ? col === idx : col === 2) && td.innerText.trim() ? td : null;
+    }
+
     document.addEventListener('contextmenu', (e) => {
         const partEl  = e.target.closest('span.partNumCol');
         const priceEl = e.target.closest('dd.hiddenPrice');
+        const descEl  = !partEl && !priceEl ? rlDescCell(e.target) : null;
+        if (descEl) {
+            e.preventDefault();
+            e.stopPropagation();
+            const desc = descEl.innerText.trim().replace(/\s+/g, ' ');
+            GM_setValue('clip_desc', desc);
+            try { navigator.clipboard.writeText(desc).catch(() => {}); } catch (err) {}   // Ctrl+V works too
+            console.log('[Clip] Right-click SAVED description:', JSON.stringify(desc));
+            descEl.style.background = 'rgba(96,165,250,0.4)';
+            setTimeout(() => { descEl.style.background = ''; }, 600);
+            return;
+        }
         if (partEl) {
             e.preventDefault();
             e.stopPropagation();
@@ -526,15 +549,53 @@ if (IS_REPAIRLINK) {
     document.addEventListener('mouseover', (e) => {
         const p  = e.target.closest('span.partNumCol');
         const pr = e.target.closest('dd.hiddenPrice');
+        const d  = !p && !pr ? rlDescCell(e.target) : null;
         if (p)  p.style.outline  = '2px dashed #4ade80';
         if (pr) pr.style.outline = '2px dashed #facc15';
+        if (d)  d.style.outline  = '2px dashed #60a5fa';
     });
     document.addEventListener('mouseout', (e) => {
         const p  = e.target.closest('span.partNumCol');
         const pr = e.target.closest('dd.hiddenPrice');
+        const d  = !p && !pr ? rlDescCell(e.target) : null;
         if (p)  p.style.outline = '';
         if (pr) pr.style.outline = '';
+        if (d)  d.style.outline = '';
     });
+}
+
+// =============================================
+// TEKION: right-click the Part Description box in "Add New Part" to paste the
+// description copied from RepairLink; auto-close the "User Authentication failed at OEM" error
+// =============================================
+if (IS_TEKION) {
+    document.addEventListener('contextmenu', (e) => {
+        const modal = e.target.closest && e.target.closest('[data-test-id="undefined-AddNewPartModal"]');
+        if (!modal) return;
+        let field = e.target.closest('[class*="fieldC"]');
+        if (!field || !/description/i.test((field.querySelector('[class*="fieldLabel"], [class*="fLC"]') || field).textContent)) return;
+        const inp = field.querySelector('input, textarea');
+        const desc = GM_getValue('clip_desc', '');
+        if (!inp || !desc) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const proto = inp.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(inp, desc.toUpperCase());
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+        inp.style.outline = '2px solid #60a5fa';
+        setTimeout(() => { inp.style.outline = ''; }, 700);
+        console.log('[Clip] Pasted description into Add New Part:', desc);
+    }, true);
+
+    // Tekion's toasts close when clicked (class Toastify__toast--close-on-click)
+    setInterval(() => {
+        document.querySelectorAll('.Toastify__toast').forEach(t => {
+            if (t.dataset.rvAutoClosed || !/authentication failed at oem/i.test(t.textContent)) return;
+            t.dataset.rvAutoClosed = '1';
+            setTimeout(() => { const x = t.querySelector('.Toastify__close-button'); (x || t).click(); console.log('[Clip] Auto-closed OEM login error'); }, 300);
+        });
+    }, 700);
 }
 
 // =============================================
