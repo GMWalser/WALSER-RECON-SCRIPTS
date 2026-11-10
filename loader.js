@@ -223,7 +223,7 @@ function recDescribe(el) {
   const txt = (t.getAttribute('aria-label') || t.title || (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ? '' : t.textContent) || '').replace(/\s+/g, ' ').trim().slice(0, 60);
   return t.tagName.toLowerCase() + (dt ? '[' + String(dt).slice(-45) + ']' : '') + (txt ? ' "' + txt + '"' : '');
 }
-document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target)); }, true);
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target) + (e.isTrusted ? '' : '  (by code)')); }, true);
 // any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
 window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
 // any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))

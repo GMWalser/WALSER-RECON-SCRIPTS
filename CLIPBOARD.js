@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.04
+// @version      6.05
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2439,7 +2439,10 @@ if (IS_RECONVISION) {
             snapshottedServiceIds.add(serviceId);
 
             console.log('[RV Line Snapshot] Processing:', currentTitle, '(service', serviceId, ')');
+            const tClick = performance.now();
             notesLink.click();
+            const clickMs = performance.now() - tClick;   // v6.05: RV's own Notes window code runs inside this click
+            if (clickMs > 100) rvNote('RV line snapshot: RV took ' + Math.round(clickMs) + ' ms to open the Notes window for "' + currentTitle.slice(0, 40) + '"');
 
             const hiddenIdField = await waitForCondition(() => {
                 const el = document.querySelector('#work_order_line_items_attributes_id');
@@ -2511,7 +2514,11 @@ if (IS_RECONVISION) {
             }
         }
 
-        setTimeout(runSnapshotPass, 2000); // let the page settle first
+        // v6.05: it ran 2 s after the script started -- on RV work orders that is while RV's own page code is
+        // still running (1.6 s in the speed report), so both piled up into one long freeze (427 ms).
+        // Now: after the page has fully loaded, +1.5 s, when the browser is idle (at most 3 s later).
+        const startPass = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(runSnapshotPass, { timeout: 3000 }) : runSnapshotPass()), 1500);
+        if (document.readyState === 'complete') startPass(); else window.addEventListener('load', startPass, { once: true });
     }
 
     // =============================================
