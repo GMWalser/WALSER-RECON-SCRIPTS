@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1903
+// @version      2026.1110.1919
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -12416,12 +12416,22 @@ recAdd('page', location.pathname.replace(/\d{4,}/g, '#'));
 // ---- report ----
 const recTime = t => new Date(t).toTimeString().slice(0, 8);
 const scriptName = id => (WR.list.find(s => s.id === id) || {}).name || id;
+const REC_ALL = '__all__', REC_ALL_MS = 3 * 60 * 60 * 1000;
 function recReport(ro) {
   recFlush();
-  const d = _get(REC_KEY(ro), null); if (!d) return 'No log for RO ' + ro;
+  let d;
+  if (ro === REC_ALL) {                                     // every page and every RO, one timeline (check-in, bucket work...)
+    const since = recNow() - REC_ALL_MS, ev = [], perf = [];
+    _get(REC_INDEX, []).forEach(i => { const x = _get(REC_KEY(i.ro), null); if (!x) return; x.ev.forEach(e => { if (e.t >= since) ev.push(e); }); x.perf.forEach(q => { if (q.t >= since) perf.push(q); }); });
+    ev.sort((a, b) => a.t - b.t); perf.sort((a, b) => a.t - b.t);
+    if (!ev.length && !perf.length) return 'Nothing recorded in the last 3 hours';
+    d = { ev, perf };
+  } else d = _get(REC_KEY(ro), null);
+  if (!d) return 'No log for RO ' + ro;
+  const all = ro === REC_ALL;
   const ev = d.ev, pf = d.perf, out = [];
   const t0 = Math.min((ev[0] || {}).t || Infinity, (pf[0] || {}).t || Infinity), t1 = Math.max((ev[ev.length - 1] || {}).t || 0, (pf[pf.length - 1] || {}).t || 0);
-  out.push('WALSER SPEED + STEPS REPORT · RO ' + ro + ' · ' + recTime(t0) + ' to ' + recTime(t1) + ' (' + Math.round((t1 - t0) / 60000) + ' min) · ' + new Date(t0).toDateString());
+  out.push('WALSER SPEED + STEPS REPORT · ' + (all ? 'EVERYTHING (all pages + ROs, last 3 hours)' : 'RO ' + ro) + ' · ' + recTime(t0) + ' to ' + recTime(t1) + ' (' + Math.round((t1 - t0) / 60000) + ' min) · ' + new Date(t0).toDateString());
   out.push('Scripts: ' + WR.list.map(x => x.name + ' ' + x.version + (_get(offKey(x.id), false) ? ' (OFF)' : '')).join(' · ') + (allOff ? ' · ALL OFF' : ''));
   out.push('Browser: ' + navigator.userAgent.replace(/^.*?\) /, '').slice(0, 80));
   out.push('', '== SPEED ==');
@@ -12465,7 +12475,12 @@ function recReport(ro) {
   if (cs.length) { const c = cs[cs.length - 1]; out.push('Connection (as Chrome reports it): ' + c.type + ', about ' + c.mbps + ' Mbps, ' + c.rtt + ' ms delay'); }
   out.push('', '== STEPS (' + ev.length + ') ==');
   let lastPg = '';
-  ev.slice(-400).forEach(e => { out.push(recTime(e.t) + '  ' + (e.pg !== lastPg ? e.pg + '  ' : '') + e.k + (e.x ? '  ' + e.x : '')); lastPg = e.pg; });
+  let lastRo = '';
+  ev.slice(all ? -700 : -400).forEach(e => {
+    const roTag = all && e.ro !== lastRo ? '[RO ' + e.ro + ']  ' : '';
+    out.push(recTime(e.t) + '  ' + roTag + (e.pg !== lastPg || roTag ? e.pg + '  ' : '') + e.k + (e.x ? '  ' + e.x : ''));
+    lastPg = e.pg; lastRo = e.ro;
+  });
   return out.join('\n');
 }
 function recShow() {
@@ -12483,8 +12498,9 @@ function recShow() {
     '<div style="text-align:right;margin-top:8px"><button id="wr-rec-clear">Clear all logs</button> <button id="wr-rec-close">Close</button> <button id="wr-rec-copy" style="font-weight:bold">Copy</button></div></div>';
   document.body.appendChild(box);
   const sel = box.querySelector('#wr-rec-ro'), txt = box.querySelector('#wr-rec-txt');
+  sel.appendChild(new Option('⏱ Everything, all pages + ROs (last 3 hours)', REC_ALL));
   idx.forEach(i => sel.appendChild(new Option(i.ro + '  (' + recTime(i.first) + ' - ' + recTime(i.last) + ')', i.ro)));
-  sel.value = idx.some(i => i.ro === cur) ? cur : idx[0].ro;
+  sel.value = REC_ALL;
   const show = () => { txt.value = recReport(sel.value); };
   sel.onchange = show; show();
   box.querySelector('#wr-rec-close').onclick = () => box.remove();
