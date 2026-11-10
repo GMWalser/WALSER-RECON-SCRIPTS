@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.3
+// @version      1.4
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -104,12 +104,16 @@ const RULES = [                                     // first match wins; part te
   { part: /\btires?\b|\d{3}\/\d{2}r\d{2}/i, line: /\btires?\b/i, not: /measure/i },
   { part: /brake|\bpads?\b|rotor|caliper|\bshoes?\b|\bdrums?\b/i, line: /brake/i, brake: true },
 ];
+const hasParts = s => !!s && (Number(s.parts) > 0 || s.parts === 'yes' || !!s.state);
+const isDone = s => !!s && (s.state === 'green' || s.state === 'yellow');
 const FRONT = /\b(front|frt|fr|fnt)\b/i, REAR = /\b(rear|rr|rer)\b/i;
 // -> { pick: the suggested line or null, why: text, list: lines ordered best first }
 function suggestLine(part, job, services) {
   const lines = partsLines(services), text = part.pn + ' ' + (part.desc || '');
   const learned = load('rvr_learn', {})[pnKey(part.pn)];
   const ordered = first => first.concat(lines.filter(s => !first.includes(s)));
+  const exact = !/recon\s*fees/i.test(job || '') && lines.find(x => norm(x.name) === norm(job));
+  if (exact) return { pick: exact, why: 'same name as the Tekion job', list: ordered([exact]) };
   if (learned) { const s = lines.find(x => norm(x.name) === learned); if (s) return { pick: s, why: 'last time ' + part.pn + ' went here', list: ordered([s]) }; }
   const rule = RULES.find(r => r.part.test(text) || (r.gasket && DRAIN_GASKETS.includes(pnKey(part.pn))));
   if (!rule) return { pick: null, why: '', list: lines };
@@ -144,13 +148,15 @@ function pickLine(title, sug, allServices) {
       if (sug.pick) box.appendChild(el('div', 'color:#4ade80;margin-bottom:6px', '💡 Enter = ' + sug.pick.name + (sug.why ? '  (' + sug.why + ')' : '')));
       else if (sug.why) box.appendChild(el('div', 'color:#fbbf24;margin-bottom:6px', '💡 ' + sug.why));
       list.forEach((s, i) => {
-        const r = el('div', 'padding:3px 6px;border-radius:5px;cursor:pointer;' + (s === sug.pick ? 'background:#14532d;' : ''), (i + 1) + '. ' + s.name);
+        const dot = { green: '🟢 ', yellow: '🟡 ', red: '🔴 ' }[s.state] || '⚪ ';
+        const r = el('div', 'padding:3px 6px;border-radius:5px;cursor:pointer;' + (s === sug.pick ? 'background:#14532d;' : ''), (i + 1) + '. ' + dot + s.name + (Number(s.parts) > 0 ? '  $' + s.parts : ''));
         r.addEventListener('mouseenter', () => { r.style.background = '#1e3a8a'; });
         r.addEventListener('mouseleave', () => { r.style.background = s === sug.pick ? '#14532d' : ''; });
         r.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); finish(s); });
         box.appendChild(r);
       });
-      box.appendChild(el('div', 'opacity:.55;font-size:11px;margin-top:6px', (typed ? 'typed: ' + typed + ' (Enter) · ' : '') + (all ? '' : '0 = show all lines · ') + 'Esc = cancel'));
+      box.appendChild(el('div', 'opacity:.55;font-size:11px;margin-top:6px', '🔴 quoted / action req. · 🟡 ordered · 🟢 done · ⚪ no parts'));
+      box.appendChild(el('div', 'opacity:.55;font-size:11px;margin-top:2px', (typed ? 'typed: ' + typed + ' (Enter) · ' : '') + (all ? '' : '0 = show all lines · ') + 'Esc / click away = cancel'));
     };
     const key = e => {
       if (e.ctrlKey || e.altKey) return;
@@ -313,6 +319,10 @@ function initTekion() {
       tag._line = line;
       const key = ro + '|' + norm(line.job) + '|' + line.pn, match = byName[norm(line.job)];
       if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; return; }
+      const sgx = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
+      const target = match || sgx.pick;
+      if (isDone(target)) { tag.textContent = '✓ RV'; tag.style.background = '#15803d'; tag.title = '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'; return; }
+      if (target && hasParts(target)) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'; return; }
       if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
       else {
         const sg = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
@@ -331,6 +341,17 @@ function initTekion() {
     const part = { pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh };
     const svc = await pickLine('Send ' + line.pn + (line.desc ? ' - ' + line.desc : '') + ' to which RV line?', suggestLine(part, line.job, rv.services), rv.services);
     if (!svc) return;
+    if (hasParts(svc)) {                               // line already quoted / has parts: change their status, or N = add as new
+      const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
+      const k = await askStep('"' + svc.name + '" already has parts' + (Number(svc.parts) > 0 ? ' ($' + svc.parts + ')' : ''), '',
+        () => 'Set status: O = Ordered · S = In Stock · R = Arrived · A = Action   ·   N = add as a new part', 'AORSN');
+      if (!k) return;
+      if (k !== 'N') {
+        learnLine(line.pn, svc.name);
+        send(line, svc, 'status', { part: { pn: line.pn, desc: '', qty: line.qty, price: line.price }, status: k });
+        toast(line.pn + ' → ' + NAMES[k] + ' on "' + svc.name + '"'); return;
+      }
+    }
     const a = await askPaste(part); if (!a) return;
     learnLine(line.pn, svc.name);
     send(line, svc, 'button', withAnswers(part, a)); toast(`Sent ${line.pn} to "${svc.name}"`);
@@ -387,7 +408,8 @@ function askStep(title, value, hint, singleKey) {
     const key = e => {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null); return; }
       if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); finish(inp.value.trim()); return; }
-      if (singleKey && /^[aorsAORS]$/.test(e.key) && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); finish(e.key.toUpperCase()); }
+      const keys = typeof singleKey === 'string' ? singleKey : 'AORS';
+      if (singleKey && e.key.length === 1 && keys.includes(e.key.toUpperCase()) && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); finish(e.key.toUpperCase()); }
     };
     document.addEventListener('keydown', key, true); document.addEventListener('mousedown', away, true);
   });
@@ -425,13 +447,45 @@ function rvRO() {
   if (m) { const all = load('rvr_wo_ro', {}); if (all[woId()] !== m[1]) { all[woId()] = m[1]; save('rvr_wo_ro', all); } return m[1]; }
   return load('rvr_wo_ro', {})[woId()] || '';
 }
+// color of the parts icon's little badge: green check / yellow / red "!" (read from the colors on screen)
+function iconState(trigger) {
+  if (!trigger) return '';
+  let best = '', bestSat = 0;
+  [trigger, ...trigger.querySelectorAll('*')].forEach(n => {
+    const cs = getComputedStyle(n);
+    [cs.color, cs.backgroundColor, cs.fill, cs.stroke].forEach(c => {
+      const m = (c || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/); if (!m || (m[4] !== undefined && +m[4] < 0.3)) return;
+      const r = +m[1], g = +m[2], b = +m[3], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      if (mx < 90) return; const sat = (mx - mn) / mx; if (sat < 0.35 || sat <= bestSat) return;
+      let h = mx === r ? ((g - b) / (mx - mn)) * 60 : mx === g ? (2 + (b - r) / (mx - mn)) * 60 : (4 + (r - g) / (mx - mn)) * 60; if (h < 0) h += 360;
+      const st = (h < 20 || h > 335) ? 'red' : (h >= 25 && h <= 65) ? 'yellow' : (h >= 75 && h <= 170) ? 'green' : '';
+      if (st) { best = st; bestSat = sat; }
+    });
+  });
+  return best;
+}
+// the "Parts" $ on a main-page line = the last $ amount before the parts icon
+function linePartsMoney(r, trigger) {
+  let last = '';
+  const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT);
+  for (let t = w.nextNode(); t; t = w.nextNode()) {
+    if (trigger && (trigger.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)) break;
+    const m = t.textContent.match(/\$\s*([\d,]+\.\d\d)/); if (m) last = m[1].replace(/,/g, '');
+  }
+  return last;
+}
+let iconLogged = false;
 function rvEditServices() {                        // the work order (edit) page
   const out = [], seen = new Set();
   document.querySelectorAll('[data-service-id]').forEach(r => {
     const id = r.getAttribute('data-service-id'); if (!id || seen.has(id)) return;
     const inp = r.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
-    const name = clean(inp ? inp.value : ''); if (!name) return;
-    seen.add(id); out.push({ id, name });
+    const trigger = r.querySelector('[data-target="#parts_modal"]');
+    let name = clean(inp ? inp.value : '');
+    if (!name && trigger) name = clean((r.innerText || '').split('\n').map(clean).find(x => /[a-z]{3}/i.test(x)) || '');   // locked lines: plain text
+    if (!name) return;
+    if (trigger && !iconLogged) { iconLogged = true; log('parts icon HTML (for checking colors):', trigger.outerHTML.slice(0, 600)); }
+    seen.add(id); out.push({ id, name, parts: linePartsMoney(r, trigger), state: iconState(trigger) });
   });
   return out;
 }
@@ -441,7 +495,11 @@ function rvServices() {
     const id = h.getAttribute('data-service-id');
     const name = clean((h.textContent || '').replace(/^\W*Service:\s*/i, '').replace(/\d+\s*Parts?\s*Add Part to Service[\s\S]*$/i, ''));
     const btn = h.querySelector('.add-part-to-service-btn') || [...h.querySelectorAll('button,a')].find(x => /add part to service/i.test(x.textContent));
-    if (btn) out.push({ id, name, btn, header: h });
+    if (!btn) return;
+    const sec = document.getElementById('parts-section-' + id);
+    const sts = sec ? [...sec.querySelectorAll('td.save_value.status select, select[data-field-name="status"]')].map(x => (x.options[x.selectedIndex] || {}).textContent || '') : [];
+    const state = !sts.length ? '' : sts.some(t => /action/i.test(t)) ? 'red' : sts.some(t => /order/i.test(t)) ? 'yellow' : 'green';
+    out.push({ id, name, btn, header: h, parts: sts.length ? 'yes' : '', state });
   });
   return out;
 }
@@ -521,12 +579,38 @@ async function addPartViaModal(svcId, svcName, part, status, saveAfter) {
   await sleep(800);
   return 'ok';
 }
+// set the status of parts already on a line (quoted parts): the part # that matches, else the Action Required ones
+function setRowsStatus(container, pn, status) {
+  const rows = [...container.querySelectorAll('tr')].filter(r => r.querySelector('textarea[id*="part_number"], input[id*="part_number"]'));
+  const pnOf = r => pnKey((r.querySelector('textarea[id*="part_number"], input[id*="part_number"]') || {}).value);
+  const stOf = r => r.querySelector('td.save_value.status select, select[data-field-name="status"]');
+  const k = pnKey(pn);
+  let hit = rows.filter(r => k && pnOf(r) && (pnOf(r) === k || pnOf(r).includes(k) || k.includes(pnOf(r))));
+  if (!hit.length) hit = rows.filter(r => { const s = stOf(r); return s && /action/i.test((s.options[s.selectedIndex] || {}).textContent || ''); });
+  if (!hit.length && rows.length === 1) hit = rows;
+  hit.forEach(r => setStatus(stOf(r), status));
+  return hit.length;
+}
+async function statusViaModal(svcId, svcName, pn, status) {
+  const line = document.querySelector('[data-service-id="' + svcId + '"]');
+  const trigger = line && line.querySelector('[data-target="#parts_modal"]');
+  if (!trigger) return 'error: parts icon not found on "' + svcName + '"';
+  if (modalOpen() && openSvc && openSvc !== String(svcId)) {
+    const sb = document.querySelector('[id^="desktop-save-button-"]'); if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(600); }
+  }
+  if (!modalOpen()) { trigger.click(); openSvc = String(svcId); if (!(await waitFor(modalOpen, 5000))) return 'error: parts window did not open for "' + svcName + '"'; await sleep(700); }
+  const n = setRowsStatus(document.getElementById('parts_modal'), pn, status);
+  await sleep(400);
+  const sb = document.querySelector('[id^="desktop-save-button-"]');
+  if (sb) { sb.click(); await waitFor(() => !modalOpen(), 6000); await sleep(800); }
+  return n ? 'ok' : 'error: no part to change on "' + svcName + '" (no matching part # / Action Required part)';
+}
 function initRv() {
   const onParts = /\/parts_overview/.test(location.pathname);
   const publish = () => {
     if (document.hidden && !onParts) return;
     const ro = rvRO();
-    const services = onParts ? rvServices().map(s => ({ id: s.id, name: s.name })) : rvEditServices();
+    const services = onParts ? rvServices().map(s => ({ id: s.id, name: s.name, parts: s.parts, state: s.state })) : rvEditServices();
     save('rvr_rv', { ro, woId: woId(), onParts, services, ts: Date.now() });
   };
   publish(); setInterval(publish, 3000);
@@ -552,7 +636,10 @@ function initRv() {
         let res;
         if (c.how === 'auto' && ro && c.ro && c.ro !== ro) res = 'skip: RO ' + c.ro + ' is not the RO open in RV (' + ro + ')';
         else {
-          if (onParts) {
+          if (c.how === 'status') {                              // change status of parts already quoted on the line
+            if (onParts) { const sec = document.getElementById('parts-section-' + c.svcId); res = sec ? (setRowsStatus(sec, c.part.pn, c.status) ? 'ok' : 'error: no part to change on "' + c.svcName + '"') : 'error: RV line "' + c.svcName + '" not on this page'; }
+            else res = await statusViaModal(c.svcId, c.svcName, c.part.pn, c.status);
+          } else if (onParts) {
             const svc = rvServices().find(s => s.id === c.svcId) || rvServices().find(s => norm(s.name) === norm(c.svcName));
             res = svc ? await addPart(svc, c.part, c.status) : 'error: RV line "' + c.svcName + '" not on this page';
           } else {                                                 // main page: through that line's parts icon
@@ -563,7 +650,7 @@ function initRv() {
         }
         results[c.id] = res; save('rvr_results', results);
         if (res !== 'ok') toast(res, !res.startsWith('skip'));
-        else toast('Added ' + c.part.pn + ' to "' + c.svcName + '" - review, then Save');
+        else toast((c.how === 'status' ? 'Status set on ' : 'Added ' + c.part.pn + ' to ') + '"' + c.svcName + '"');
         await sleep(300);
       }
       const ids = Object.keys(results); if (ids.length > 200) { ids.slice(0, ids.length - 200).forEach(i => delete results[i]); save('rvr_results', results); }
