@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      5.98
+// @version      5.99
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -501,12 +501,14 @@ if (IS_REPAIRLINK) {
     // v5.98: cart table (#gridDiv_oecDataTable) Description column, e.g. "Lamp Assy - Stop - Additional".
     // The column is found by its header text; if there is no header match, the 3rd column (confirmed via DOM screenshot).
     function rlDescCell(t) {
-        const td = t.closest && t.closest('#gridDiv_oecDataTable tbody td');
-        if (!td || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
-        const table = td.closest('table');
-        const idx = [...table.querySelectorAll('thead th')].findIndex(th => /desc/i.test(th.textContent));
+        const td = t.closest && t.closest('td');
+        if (!td || td.closest('thead') || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
+        const table = td.closest('table'); if (!table) return null;
+        const heads = [...table.querySelectorAll('thead th, thead td')];
+        const idx = heads.findIndex(th => /desc/i.test(th.textContent));
         const col = [...td.parentElement.children].indexOf(td);
-        return (idx >= 0 ? col === idx : col === 2) && td.innerText.trim() ? td : null;
+        const ok = idx >= 0 ? col === idx : (table.id === 'gridDiv_oecDataTable' && col === 2);   // any table with a Description column
+        return ok && td.innerText.trim() ? td : null;
     }
 
     document.addEventListener('contextmenu', (e) => {
@@ -570,8 +572,10 @@ if (IS_REPAIRLINK) {
 // =============================================
 if (IS_TEKION) {
     document.addEventListener('contextmenu', (e) => {
-        const modal = e.target.closest && e.target.closest('[data-test-id="undefined-AddNewPartModal"]');
+        const modal = e.target.closest && (e.target.closest('[data-test-id="undefined-AddNewPartModal"]') || e.target.closest('.ant-v5-modal, [role="dialog"]'));
         if (!modal) return;
+        const title = modal.querySelector('.ant-v5-modal-title, [class*="modalTitle"]');
+        if (!modal.matches('[data-test-id="undefined-AddNewPartModal"]') && !(title && /add new part/i.test(title.textContent))) return;
         let field = e.target.closest('[class*="fieldC"]');
         if (!field || !/description/i.test((field.querySelector('[class*="fieldLabel"], [class*="fLC"]') || field).textContent)) return;
         const inp = field.querySelector('input, textarea');

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1717
+// @version      2026.1110.1722
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1679,8 +1679,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v5.98  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '5.98', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v5.99  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '5.99', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -2166,12 +2166,14 @@ if (IS_REPAIRLINK) {
     // v5.98: cart table (#gridDiv_oecDataTable) Description column, e.g. "Lamp Assy - Stop - Additional".
     // The column is found by its header text; if there is no header match, the 3rd column (confirmed via DOM screenshot).
     function rlDescCell(t) {
-        const td = t.closest && t.closest('#gridDiv_oecDataTable tbody td');
-        if (!td || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
-        const table = td.closest('table');
-        const idx = [...table.querySelectorAll('thead th')].findIndex(th => /desc/i.test(th.textContent));
+        const td = t.closest && t.closest('td');
+        if (!td || td.closest('thead') || td.querySelector('span.partNumCol, dd.hiddenPrice')) return null;
+        const table = td.closest('table'); if (!table) return null;
+        const heads = [...table.querySelectorAll('thead th, thead td')];
+        const idx = heads.findIndex(th => /desc/i.test(th.textContent));
         const col = [...td.parentElement.children].indexOf(td);
-        return (idx >= 0 ? col === idx : col === 2) && td.innerText.trim() ? td : null;
+        const ok = idx >= 0 ? col === idx : (table.id === 'gridDiv_oecDataTable' && col === 2);   // any table with a Description column
+        return ok && td.innerText.trim() ? td : null;
     }
 
     document.addEventListener('contextmenu', (e) => {
@@ -2235,8 +2237,10 @@ if (IS_REPAIRLINK) {
 // =============================================
 if (IS_TEKION) {
     document.addEventListener('contextmenu', (e) => {
-        const modal = e.target.closest && e.target.closest('[data-test-id="undefined-AddNewPartModal"]');
+        const modal = e.target.closest && (e.target.closest('[data-test-id="undefined-AddNewPartModal"]') || e.target.closest('.ant-v5-modal, [role="dialog"]'));
         if (!modal) return;
+        const title = modal.querySelector('.ant-v5-modal-title, [class*="modalTitle"]');
+        if (!modal.matches('[data-test-id="undefined-AddNewPartModal"]') && !(title && /add new part/i.test(title.textContent))) return;
         let field = e.target.closest('[class*="fieldC"]');
         if (!field || !/description/i.test((field.querySelector('[class*="fieldLabel"], [class*="fLC"]') || field).textContent)) return;
         const inp = field.querySelector('input, textarea');
@@ -9442,8 +9446,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.4  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.4', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.5  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.5', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9818,12 +9822,29 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
   const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
   const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
 
-  // pick an option in one of Tekion's react-select dropdowns, the same way selectVendor does
-  async function pickOption(containerId, controlTestId, typed, isMatch) {
-    const container = document.getElementById(containerId);
-    if (!container) { log('ERROR: ' + containerId + ' not found.'); return false; }
-    const input = container.querySelector('input');
-    const control = container.querySelector('[data-test-id="' + controlTestId + '"]') || container;
+  // v3.5: the window comes in more than one version (Submit / "Do In & Out Sale"), so find it by its
+  // title and the boxes by their labels; the exact ids above are only a first try.
+  function findAddPartModal() {
+    const exact = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    if (exact) return exact;
+    return [...document.querySelectorAll('.ant-v5-modal, [role="dialog"]')].find(m => {
+      const t = m.querySelector('.ant-v5-modal-title, [class*="modalTitle"]');
+      return t && /add new part/i.test(t.textContent);
+    }) || null;
+  }
+  function findField(modal, testAttr, labelRe) {
+    const exact = testAttr && modal.querySelector('[data-test="' + testAttr + '"]');
+    if (exact) return exact;
+    return [...modal.querySelectorAll('[class*="fieldC"]')].find(f => {
+      const l = f.querySelector('[class*="fieldLabel"], [class*="fLC"], label');
+      return l && labelRe.test(l.textContent);
+    }) || null;
+  }
+  // pick an option in one of Tekion's react-select dropdowns (inside a field), the same way selectVendor does
+  async function pickOption(field, typed, isMatch) {
+    if (!field) { log('ERROR: dropdown not found.'); return false; }
+    const input = field.querySelector('input');
+    const control = field.querySelector('[class*="control"]') || field;
     if (input) input.focus();
     fireMouseEvent(control, 'mousedown');
     if (input && !input.readOnly) nativeSetValue(input, typed);
@@ -9837,7 +9858,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
       fireMouseEvent(option, 'click');
       return true;
     } catch (e) {
-      log('ERROR: no "' + typed + '" option found in ' + containerId + '.');
+      log('ERROR: no "' + typed + '" option found.');
       return false;
     }
   }
@@ -9845,14 +9866,19 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
   async function setSourceCode(code, btn) {
     const old = btn.textContent;
     btn.textContent = '…';
-    const ok = await pickOption('sourceCodeId', '@tekion-parts-modals-addNewPartModal-sourceCode', code,
+    const modal = findAddPartModal(); if (!modal) return;
+    const ok = await pickOption(findField(modal, '@tekion-parts-modals-addNewPartModal-sourceCode', /source\s*code/i), code,
       t => t === code || t.startsWith(code + ' ') || t.startsWith(code + '-'));
     if (ok && code === TIRE_SOURCE) {
       await new Promise(r => setTimeout(r, 300));
       // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
-      let okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t === TIRE_BIN);
-      if (!okBin) okBin = await pickOption('primaryBinId', '@tekion-parts-modals-fields-primaryBin', TIRE_BIN, t => t.startsWith(TIRE_BIN));
+      const binField = () => findField(modal, '@tekion-parts-modals-fields-primaryBin', /primary\s*bin/i);
+      if (!binField()) { log('No Primary Bin box (Add Part to Inventory is not ticked) - bin left alone.'); }
+      else {
+      let okBin = await pickOption(binField(), TIRE_BIN, t => t === TIRE_BIN);
+      if (!okBin) okBin = await pickOption(binField(), TIRE_BIN, t => t.startsWith(TIRE_BIN));
       log(okBin ? 'Primary Bin set to ' + TIRE_BIN : 'Could not set Primary Bin to ' + TIRE_BIN);
+      }
     }
     btn.textContent = old;
     btn.style.outline = ok ? '2px solid #fff' : '2px solid #ef4444';
@@ -9861,9 +9887,9 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
   }
 
   function injectSourceButtons() {
-    const modal = document.querySelector('[data-test-id="undefined-AddNewPartModal"]');
+    const modal = findAddPartModal();
     if (!modal || modal.querySelector('#' + SOURCE_BTNS_ID)) return;
-    const field = modal.querySelector('[data-test="@tekion-parts-modals-addNewPartModal-sourceCode"]');
+    const field = findField(modal, '@tekion-parts-modals-addNewPartModal-sourceCode', /source\s*code/i);
     if (!field) return;
     const row = document.createElement('div');
     row.id = SOURCE_BTNS_ID;
