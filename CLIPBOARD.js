@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.02
+// @version      6.03
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -810,22 +810,32 @@ if (IS_RO_SALES) {
             el.dispatchEvent(new Event('change', { bubbles: true }));
         }, 100);
 
-        setTimeout(() => {
+        // v6.03: Tekion keeps showing the PREVIOUS search for a moment, so the first suggestion was often
+        // the part from the row above (seen in the speed + steps report on every new row). Now it waits
+        // (up to 4 s) until the first suggestion IS the pasted part number, and never picks another part.
+        const pnKey = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const want = pnKey(part);
+        let tries = 0, sawItem = false;
+        const pickWhenReady = () => {
             const firstItem = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
-            if (!firstItem) {
-                el.blur();
-                afterPaste(part, price);
-                return;
-            }
-            const isCreateOnly = firstItem.textContent.trim().startsWith('Create');
-            if (isCreateOnly) {
+            const txt = firstItem ? firstItem.textContent.trim() : '';
+            if (firstItem) sawItem = true;
+            if (firstItem && /^Create/i.test(txt) && pnKey(txt).includes(want)) {
                 GM_setValue('clip_price', '');
                 setPill('⚠ Not in database — finish manually', 'warn', false, 6000);
                 return;
             }
-            firstItem.click();
-            afterPaste(part, price);
-        }, 600);
+            if (firstItem && !/^Create/i.test(txt) && want && pnKey(txt.split(' - ')[0]).includes(want)) {
+                firstItem.click();
+                afterPaste(part, price);
+                return;
+            }
+            if (++tries < 27) { setTimeout(pickWhenReady, 150); return; }
+            if (!sawItem) { el.blur(); afterPaste(part, price); return; }   // no list at all: same as before
+            setPill('⚠ ' + part + ' did not come up in the list — pick it yourself', 'warn', false, 7000);
+            console.log('[Clip] Paste: first suggestion never matched', part, '- left it for you to pick (last shown: ' + txt.slice(0, 60) + ')');
+        };
+        setTimeout(pickWhenReady, 400);
 
     }, true);
 

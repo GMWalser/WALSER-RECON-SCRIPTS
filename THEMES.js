@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      5.7
+// @version      5.8
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -561,7 +561,11 @@ function scan(roots, redo) {
     if (deferred.has(r) && !isHiddenBox(r)) { deferred.delete(r); collect(r, false); return; }   // a hidden part was just shown
     collect(r, redo);
   });
-  if (!pumping && work.length) { pumping = true; cycleStart = performance.now(); clearRedo(); requestAnimationFrame(pump); }
+  if (!pumping && work.length) {
+    pumping = true; cycleStart = performance.now(); clearRedo();
+    if (document.readyState !== 'complete' && window.requestIdleCallback) requestIdleCallback(() => requestAnimationFrame(pump), { timeout: 400 });   // v5.8
+    else requestAnimationFrame(pump);
+  }
 }
 function clearRedo() { work.forEach(x => { if (x.redo && x.el.isConnected) clearEl(x.el); }); }   // one change, before reading
 function writeDecisions() {
@@ -628,6 +632,18 @@ function flush() {
 // ---------- animations: glowing buttons + moving wallpaper effects ----------
 // Turned off by the panel's "Animations" checkbox, or when Windows/the browser
 // asks for reduced motion. Canvas effects run ~30 fps and pause in background tabs.
+// v5.8: moving effects only run in the window you are using (focused + visible). Other windows keep
+// the last picture, still, at no cost. Uses an html data attribute (not a class: our page watcher
+// re-checks colors on class changes).
+const viewing = () => !document.hidden && document.hasFocus();
+function markViewing() {
+  const still = !viewing(), has = document.documentElement.hasAttribute('data-wr-still');
+  if (still && !has) document.documentElement.setAttribute('data-wr-still', '');
+  else if (!still && has) document.documentElement.removeAttribute('data-wr-still');
+}
+['focus', 'blur'].forEach(ev => window.addEventListener(ev, markViewing));
+document.addEventListener('visibilitychange', markViewing);
+setTimeout(markViewing, 500);
 function animOn() {
   return cfg.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
@@ -635,7 +651,7 @@ function animOn() {
 function hasFx(n) { return (' ' + ((T && T.fx) || '') + ' ').includes(' ' + n + ' '); }
 function animCss() {
   const g = T.accent, c = T.fxColor || T.accent, hc = T.hoverColor || T.accent;
-  let css = '';
+  let css = '\nhtml[data-wr-still] *,html[data-wr-still] *::before,html[data-wr-still] *::after,html[data-wr-still]::before,html[data-wr-still]::after{animation-play-state:paused !important}';
   if (T.glow) css += `
 @keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
@@ -821,7 +837,7 @@ function startFx() {
   function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; ctx.clearRect(0, 0, W, H); init(); }
   function frame(t) {
     fx.raf = requestAnimationFrame(frame);
-    if (document.hidden || t - last < 50) return;          // ~20 fps
+    if (!viewing() || t - last < 50) return;               // ~20 fps, only in the window you are using
     last = t; const tfx = performance.now(); try { drawFrame(t); } finally { busy(performance.now() - tfx); }
   }
   function drawFrame(t) {
@@ -1105,7 +1121,7 @@ function startMesh() {
   }
   function frame(t) {
     meshFx.raf = requestAnimationFrame(frame);
-    if (document.hidden || t - last < 50) return;         // ~20 fps is plenty for a slow drift
+    if (!viewing() || t - last < 50) return;              // ~20 fps is plenty for a slow drift; only when viewed
     last = t; draw(t);
   }
   meshFx = { sig, cv, raf: 0, resize };

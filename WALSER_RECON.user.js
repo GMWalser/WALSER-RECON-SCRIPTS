@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1919
+// @version      2026.1110.1939
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.7  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.7', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.8  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -633,7 +633,11 @@ function scan(roots, redo) {
     if (deferred.has(r) && !isHiddenBox(r)) { deferred.delete(r); collect(r, false); return; }   // a hidden part was just shown
     collect(r, redo);
   });
-  if (!pumping && work.length) { pumping = true; cycleStart = performance.now(); clearRedo(); requestAnimationFrame(pump); }
+  if (!pumping && work.length) {
+    pumping = true; cycleStart = performance.now(); clearRedo();
+    if (document.readyState !== 'complete' && window.requestIdleCallback) requestIdleCallback(() => requestAnimationFrame(pump), { timeout: 400 });   // v5.8
+    else requestAnimationFrame(pump);
+  }
 }
 function clearRedo() { work.forEach(x => { if (x.redo && x.el.isConnected) clearEl(x.el); }); }   // one change, before reading
 function writeDecisions() {
@@ -700,6 +704,18 @@ function flush() {
 // ---------- animations: glowing buttons + moving wallpaper effects ----------
 // Turned off by the panel's "Animations" checkbox, or when Windows/the browser
 // asks for reduced motion. Canvas effects run ~30 fps and pause in background tabs.
+// v5.8: moving effects only run in the window you are using (focused + visible). Other windows keep
+// the last picture, still, at no cost. Uses an html data attribute (not a class: our page watcher
+// re-checks colors on class changes).
+const viewing = () => !document.hidden && document.hasFocus();
+function markViewing() {
+  const still = !viewing(), has = document.documentElement.hasAttribute('data-wr-still');
+  if (still && !has) document.documentElement.setAttribute('data-wr-still', '');
+  else if (!still && has) document.documentElement.removeAttribute('data-wr-still');
+}
+['focus', 'blur'].forEach(ev => window.addEventListener(ev, markViewing));
+document.addEventListener('visibilitychange', markViewing);
+setTimeout(markViewing, 500);
 function animOn() {
   return cfg.anim !== false && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
@@ -707,7 +723,7 @@ function animOn() {
 function hasFx(n) { return (' ' + ((T && T.fx) || '') + ' ').includes(' ' + n + ' '); }
 function animCss() {
   const g = T.accent, c = T.fxColor || T.accent, hc = T.hoverColor || T.accent;
-  let css = '';
+  let css = '\nhtml[data-wr-still] *,html[data-wr-still] *::before,html[data-wr-still] *::after,html[data-wr-still]::before,html[data-wr-still]::after{animation-play-state:paused !important}';
   if (T.glow) css += `
 @keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
@@ -893,7 +909,7 @@ function startFx() {
   function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; ctx.clearRect(0, 0, W, H); init(); }
   function frame(t) {
     fx.raf = requestAnimationFrame(frame);
-    if (document.hidden || t - last < 50) return;          // ~20 fps
+    if (!viewing() || t - last < 50) return;               // ~20 fps, only in the window you are using
     last = t; const tfx = performance.now(); try { drawFrame(t); } finally { busy(performance.now() - tfx); }
   }
   function drawFrame(t) {
@@ -1177,7 +1193,7 @@ function startMesh() {
   }
   function frame(t) {
     meshFx.raf = requestAnimationFrame(frame);
-    if (document.hidden || t - last < 50) return;         // ~20 fps is plenty for a slow drift
+    if (!viewing() || t - last < 50) return;              // ~20 fps is plenty for a slow drift; only when viewed
     last = t; draw(t);
   }
   meshFx = { sig, cv, raf: 0, resize };
@@ -1696,8 +1712,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.02  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.02', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.03  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.03', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -2492,22 +2508,32 @@ if (IS_RO_SALES) {
             el.dispatchEvent(new Event('change', { bubbles: true }));
         }, 100);
 
-        setTimeout(() => {
+        // v6.03: Tekion keeps showing the PREVIOUS search for a moment, so the first suggestion was often
+        // the part from the row above (seen in the speed + steps report on every new row). Now it waits
+        // (up to 4 s) until the first suggestion IS the pasted part number, and never picks another part.
+        const pnKey = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const want = pnKey(part);
+        let tries = 0, sawItem = false;
+        const pickWhenReady = () => {
             const firstItem = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
-            if (!firstItem) {
-                el.blur();
-                afterPaste(part, price);
-                return;
-            }
-            const isCreateOnly = firstItem.textContent.trim().startsWith('Create');
-            if (isCreateOnly) {
+            const txt = firstItem ? firstItem.textContent.trim() : '';
+            if (firstItem) sawItem = true;
+            if (firstItem && /^Create/i.test(txt) && pnKey(txt).includes(want)) {
                 GM_setValue('clip_price', '');
                 setPill('⚠ Not in database — finish manually', 'warn', false, 6000);
                 return;
             }
-            firstItem.click();
-            afterPaste(part, price);
-        }, 600);
+            if (firstItem && !/^Create/i.test(txt) && want && pnKey(txt.split(' - ')[0]).includes(want)) {
+                firstItem.click();
+                afterPaste(part, price);
+                return;
+            }
+            if (++tries < 27) { setTimeout(pickWhenReady, 150); return; }
+            if (!sawItem) { el.blur(); afterPaste(part, price); return; }   // no list at all: same as before
+            setPill('⚠ ' + part + ' did not come up in the list — pick it yourself', 'warn', false, 7000);
+            console.log('[Clip] Paste: first suggestion never matched', part, '- left it for you to pick (last shown: ' + txt.slice(0, 60) + ')');
+        };
+        setTimeout(pickWhenReady, 400);
 
     }, true);
 
@@ -8734,8 +8760,8 @@ if (location.hostname === 'app.reconvision.com') {
 })();
 });
 
-// ===== Parts Check-In Helper v3.11  (PARTS_CHECKIN.js) =====
-WR.add('parts_checkin', 'Parts Check-In Helper', '3.11', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/*'], 'document-idle',
+// ===== Parts Check-In Helper v3.12  (PARTS_CHECKIN.js) =====
+WR.add('parts_checkin', 'Parts Check-In Helper', '3.12', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
@@ -9005,7 +9031,7 @@ try {
         // first no-op click. Switched to an attempt counter (cap 3) so it can
         // actually retry a few times instead of giving up for good after one
         // click that may not have registered.
-        const fulfillAttempts = {};
+        const fulfillAttempts = {}, fulfillLastAt = {};
 
         function fireMouseEvent(el, type) {
             el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
@@ -9025,10 +9051,16 @@ try {
             if (!armedTs || (Date.now() - armedTs) > FULFILL_ARM_MAX_AGE_MS) return;
 
             const key = location.pathname;
+            // v3.12: it used to click again every 0.5 s while the button was still there -- and the button
+            // stays there under the fill window, so it was ALWAYS clicked 3 times (every check-in in the
+            // speed + steps report). Now: the fill window opened = done; a retry only if nothing opened 4 s later.
+            if (document.querySelector('[data-test-id*="orderFillTable"]')) { fulfillAttempts[key] = 99; return; }
             const attempts = fulfillAttempts[key] || 0;
             if (attempts >= 3) return;
+            if (attempts > 0 && Date.now() - (fulfillLastAt[key] || 0) < 4000) return;
 
             fulfillAttempts[key] = attempts + 1;
+            fulfillLastAt[key] = Date.now();
             fireMouseEvent(fulfillBtn, 'mousedown');
             fireMouseEvent(fulfillBtn, 'mouseup');
             fireMouseEvent(fulfillBtn, 'click');
@@ -9493,8 +9525,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.5  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.5', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.6  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.6', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9905,7 +9937,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
       fireMouseEvent(option, 'click');
       return true;
     } catch (e) {
-      log('ERROR: no "' + typed + '" option found.');
+      log('ERROR: no "' + typed + '" option found. Options shown:', [...document.querySelectorAll('[id^="react-select-"][id*="-option-"]')].map(o => o.textContent.trim()).slice(0, 25));
       return false;
     }
   }
@@ -9920,7 +9952,16 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
       await new Promise(r => setTimeout(r, 300));
       // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
       const binField = () => findField(modal, '@tekion-parts-modals-fields-primaryBin', /primary\s*bin/i);
-      if (!binField()) { log('No Primary Bin box (Add Part to Inventory is not ticked) - bin left alone.'); }
+      // v3.6: 300 (tires) always ticks "Add Part to Inventory" -- the Bin box only shows when it is ticked.
+      // Confirmed via DOM screenshot: <input id="addToInventory" data-test-id="@tekion-parts-modals-fields-addtoinventory">
+      const inv = modal.querySelector('[data-test-id="@tekion-parts-modals-fields-addtoinventory"], #addToInventory');
+      if (inv && !inv.checked) {
+        inv.click();
+        log('Ticked Add Part to Inventory (Source Code 300).');
+        for (let i = 0; i < 20 && !binField(); i++) await new Promise(r => setTimeout(r, 150));   // wait for Bin Details
+        await new Promise(r => setTimeout(r, 300));
+      }
+      if (!binField()) { log('Primary Bin box did not appear - bin left alone.'); }
       else {
       let okBin = await pickOption(binField(), TIRE_BIN, t => t === TIRE_BIN);
       if (!okBin) okBin = await pickOption(binField(), TIRE_BIN, t => t.startsWith(TIRE_BIN));

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.5
+// @version      3.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -419,7 +419,7 @@
       fireMouseEvent(option, 'click');
       return true;
     } catch (e) {
-      log('ERROR: no "' + typed + '" option found.');
+      log('ERROR: no "' + typed + '" option found. Options shown:', [...document.querySelectorAll('[id^="react-select-"][id*="-option-"]')].map(o => o.textContent.trim()).slice(0, 25));
       return false;
     }
   }
@@ -434,7 +434,16 @@
       await new Promise(r => setTimeout(r, 300));
       // exact TIRE first; if the list only has e.g. "TIRE RACK", take the first that starts with TIRE
       const binField = () => findField(modal, '@tekion-parts-modals-fields-primaryBin', /primary\s*bin/i);
-      if (!binField()) { log('No Primary Bin box (Add Part to Inventory is not ticked) - bin left alone.'); }
+      // v3.6: 300 (tires) always ticks "Add Part to Inventory" -- the Bin box only shows when it is ticked.
+      // Confirmed via DOM screenshot: <input id="addToInventory" data-test-id="@tekion-parts-modals-fields-addtoinventory">
+      const inv = modal.querySelector('[data-test-id="@tekion-parts-modals-fields-addtoinventory"], #addToInventory');
+      if (inv && !inv.checked) {
+        inv.click();
+        log('Ticked Add Part to Inventory (Source Code 300).');
+        for (let i = 0; i < 20 && !binField(); i++) await new Promise(r => setTimeout(r, 150));   // wait for Bin Details
+        await new Promise(r => setTimeout(r, 300));
+      }
+      if (!binField()) { log('Primary Bin box did not appear - bin left alone.'); }
       else {
       let okBin = await pickOption(binField(), TIRE_BIN, t => t === TIRE_BIN);
       if (!okBin) okBin = await pickOption(binField(), TIRE_BIN, t => t.startsWith(TIRE_BIN));

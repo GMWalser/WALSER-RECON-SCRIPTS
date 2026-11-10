@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Parts Check-In Helper
 // @namespace    walser-recon
-// @version      3.11
+// @version      3.12
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_CHECKIN.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_CHECKIN.js
@@ -283,7 +283,7 @@ try {
         // first no-op click. Switched to an attempt counter (cap 3) so it can
         // actually retry a few times instead of giving up for good after one
         // click that may not have registered.
-        const fulfillAttempts = {};
+        const fulfillAttempts = {}, fulfillLastAt = {};
 
         function fireMouseEvent(el, type) {
             el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
@@ -303,10 +303,16 @@ try {
             if (!armedTs || (Date.now() - armedTs) > FULFILL_ARM_MAX_AGE_MS) return;
 
             const key = location.pathname;
+            // v3.12: it used to click again every 0.5 s while the button was still there -- and the button
+            // stays there under the fill window, so it was ALWAYS clicked 3 times (every check-in in the
+            // speed + steps report). Now: the fill window opened = done; a retry only if nothing opened 4 s later.
+            if (document.querySelector('[data-test-id*="orderFillTable"]')) { fulfillAttempts[key] = 99; return; }
             const attempts = fulfillAttempts[key] || 0;
             if (attempts >= 3) return;
+            if (attempts > 0 && Date.now() - (fulfillLastAt[key] || 0) < 4000) return;
 
             fulfillAttempts[key] = attempts + 1;
+            fulfillLastAt[key] = Date.now();
             fireMouseEvent(fulfillBtn, 'mousedown');
             fireMouseEvent(fulfillBtn, 'mouseup');
             fireMouseEvent(fulfillBtn, 'click');
