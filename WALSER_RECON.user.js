@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1855
+// @version      2026.1110.1903
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1696,8 +1696,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.01  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.01', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.02  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.02', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -3781,19 +3781,18 @@ if (IS_RECONVISION) {
                 anchorTop = r.top;
             }
 
-            if (anchorTop !== null) {
-                pillContainer.style.bottom = (window.innerHeight - anchorTop + 6) + 'px';
-            } else {
-                pillContainer.style.bottom = '100px';
-            }
-            pillContainer.style.right = '20px';
-            pillContainer.style.top = 'auto';
-            pillContainer.style.left = 'auto';
+            // v6.02: only write when it changed (every write makes RV re-measure the page)
+            const bottom = anchorTop !== null ? (window.innerHeight - anchorTop + 6) + 'px' : '100px';
+            const st = pillContainer.style;
+            if (st.bottom !== bottom) st.bottom = bottom;
+            if (st.right !== '20px') st.right = '20px';
+            if (st.top !== 'auto') st.top = 'auto';
+            if (st.left !== 'auto') st.left = 'auto';
         }
 
         setTimeout(positionBucketPills, 1000);
         window.addEventListener('resize', positionBucketPills);
-        setInterval(positionBucketPills, 400);
+        setInterval(() => { if (!document.hidden) positionBucketPills(); }, 1500);   // v6.02: was every 0.4 s
 
         const positionObserver = new MutationObserver(() => positionBucketPills());
         const observeEl = (id) => {
@@ -5876,8 +5875,8 @@ if (location.hostname === 'app.partstech.com') {
 
 });
 
-// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.21  (BUCKET MOVER.js) =====
-WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.21', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.22  (BUCKET MOVER.js) =====
+WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.22', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
@@ -6621,6 +6620,11 @@ function setNativeValue(el, value) {
 function runTekionFulfillment(roNumber) {
   let stage = 'navigateIfNeeded';
   let attempts = 0;
+  // v3.22: Tekion sometimes rebuilds the RO box right after we type into it (rc_select_6 -> rc_select_7,
+  // seen in the speed + steps report), so the RO went into a box that was thrown away and nothing showed
+  // until you clicked the new box. Now: no RO choice within 1.5 s -> find the box again and retype (4 tries).
+  let typedInp = null, typedAt = 0, retypes = 0;
+  const roBox = () => document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
   const maxAttempts = 100;
   console.log('[Tekion Fulfillment] Starting for RO#', roNumber);
   const tick = setInterval(() => {
@@ -6680,6 +6684,7 @@ function runTekionFulfillment(roNumber) {
       const inp = document.querySelector('[data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-v5-select-selection-search-input, [data-test-id^="@tekion-parts-partsRoSales-common-createGroupedPartRequestsSelect"] input.ant-select-search__field');
       if (inp) {
         setNativeValue(inp, roNumber);
+        typedInp = inp; typedAt = Date.now();
         stage = 'waitForDropdownOption'; console.log('[Tekion Fulfillment] stage ->', stage);
       }
       return;
@@ -6698,6 +6703,16 @@ function runTekionFulfillment(roNumber) {
       // (title="7322992"). No container/ID guessing needed.
       const opts = Array.from(document.querySelectorAll(`.ant-v5-select-item-option[title="${roNumber}"], .ant-select-item-option[title="${roNumber}"]`));
       let match = opts[0] || null;
+      if (!match && retypes < 4) {
+        const cur = roBox(), waited = Date.now() - typedAt;
+        const lost = !typedInp || !typedInp.isConnected || cur !== typedInp || (cur && cur.value !== roNumber);
+        if ((lost && waited > 1500) || waited > 3000) {
+          retypes++;
+          console.log('[Tekion Fulfillment] RO choice not showing (' + (lost ? 'RO box was rebuilt' : 'no dropdown') + ') -- typing the RO again, try ' + retypes);
+          stage = 'waitForRoInput';
+          return;
+        }
+      }
       if (!match && attempts % 8 === 0) {
         // Diagnostic: every ~2s, log what options (if any) actually exist
         // right now, regardless of whether they match roNumber -- so a
