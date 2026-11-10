@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -88,6 +88,97 @@ let pasting = false, pasteEnd = 0;                   // while a paste runs (and 
 const pasteBusy = () => pasting || Date.now() - pasteEnd < 1500;
 const onHighlightedRV = t => !!(hovered && t && hovered.contains(t));   // RV: whole line, parts icon included
 
+// ---- SMART: which RV line a part belongs on. Only SUGGESTS - you always confirm. ----
+// RV lines that never take parts (hidden from the RV button list; "0" shows all)
+const NO_PARTS = /ready for pick ?up|measure all|^at recon|body shop review|pre-?order parts|inspection form/i;
+const partsLines = list => list.filter(s => !NO_PARTS.test(s.name.replace(/^\*+\s*/, '')));
+const DRAIN_GASKETS = ['803916010', '11126AA000', '90430-12031', '11026-01M02', '94109-14000'].map(x => x.replace(/[^A-Z0-9]/gi, ''));
+const pnKey = pn => String(pn || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const RULES = [                                     // first match wins; part text -> RV line name
+  { part: /cabin/i, line: /cabin/i },
+  { part: /oil filter|drain ?plug|plug gasket|drain gasket/i, line: /\blof\b|oil change/i, gasket: true },
+  { part: /air filter|air cleaner|air element/i, line: /air filter/i, not: /cabin/i },
+  { part: /wiper|blade/i, line: /wiper/i },
+  { part: /batt/i, line: /batt/i },
+  { part: /spark ?plug/i, line: /spark/i },
+  { part: /\btires?\b|\d{3}\/\d{2}r\d{2}/i, line: /\btires?\b/i, not: /measure/i },
+  { part: /brake|\bpads?\b|rotor|caliper|\bshoes?\b|\bdrums?\b/i, line: /brake/i, brake: true },
+];
+const FRONT = /\b(front|frt|fr|fnt)\b/i, REAR = /\b(rear|rr|rer)\b/i;
+// -> { pick: the suggested line or null, why: text, list: lines ordered best first }
+function suggestLine(part, job, services) {
+  const lines = partsLines(services), text = part.pn + ' ' + (part.desc || '');
+  const learned = load('rvr_learn', {})[pnKey(part.pn)];
+  const ordered = first => first.concat(lines.filter(s => !first.includes(s)));
+  if (learned) { const s = lines.find(x => norm(x.name) === learned); if (s) return { pick: s, why: 'last time ' + part.pn + ' went here', list: ordered([s]) }; }
+  const rule = RULES.find(r => r.part.test(text) || (r.gasket && DRAIN_GASKETS.includes(pnKey(part.pn))));
+  if (!rule) return { pick: null, why: '', list: lines };
+  let hits = lines.filter(s => rule.line.test(s.name) && !(rule.not && rule.not.test(s.name)));
+  if (rule.brake) {
+    const where = (FRONT.test(text) || FRONT.test(job)) ? FRONT : (REAR.test(text) || REAR.test(job)) ? REAR : null;
+    if (where) { const h = hits.filter(s => where.test(s.name)); if (h.length) hits = h; }
+    else if (hits.length > 1) return { pick: null, why: 'brakes: front or rear? (pick once, it remembers this part #)', list: ordered(hits) };
+  }
+  return hits.length === 1 ? { pick: hits[0], why: (text.match(rule.part) ? 'part says ' + text.match(rule.part)[0].toLowerCase() : 'drain plug gasket'), list: ordered(hits) }
+    : { pick: null, why: hits.length ? 'pick one' : '', list: ordered(hits) };
+}
+function learnLine(pn, lineName) {
+  if (!pn || !lineName) return;
+  const m = load('rvr_learn', {}); m[pnKey(pn)] = norm(lineName);
+  const k = Object.keys(m); if (k.length > 800) k.slice(0, k.length - 800).forEach(x => delete m[x]);
+  save('rvr_learn', m);
+}
+// small menu next to the mouse: Enter = suggested line, a number key = that line, 0 = show all lines, Esc = cancel
+function pickLine(title, sug, allServices) {
+  return new Promise(resolve => {
+    document.querySelectorAll('#rvr-ask').forEach(x => x.remove());
+    let list = sug.list, all = false, typed = '';
+    const box = el('div', 'position:fixed;z-index:2147483647;background:#0d0d0d;border:2px solid #2563eb;border-radius:10px;padding:9px 12px;font:13px Segoe UI,sans-serif;color:#e5e7eb;box-shadow:0 4px 20px rgba(0,0,0,.7);width:330px;max-height:70vh;overflow:auto');
+    box.id = 'rvr-ask';
+    box.style.left = Math.max(8, Math.min(innerWidth - 350, lastMouse.x + 12)) + 'px'; box.style.top = Math.max(8, Math.min(innerHeight - 380, lastMouse.y + 12)) + 'px';
+    const finish = v => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
+    const draw = () => {
+      box.textContent = '';
+      box.appendChild(el('div', 'font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;margin-bottom:5px', title));
+      if (sug.pick) box.appendChild(el('div', 'color:#4ade80;margin-bottom:6px', '💡 Enter = ' + sug.pick.name + (sug.why ? '  (' + sug.why + ')' : '')));
+      else if (sug.why) box.appendChild(el('div', 'color:#fbbf24;margin-bottom:6px', '💡 ' + sug.why));
+      list.forEach((s, i) => {
+        const r = el('div', 'padding:3px 6px;border-radius:5px;cursor:pointer;' + (s === sug.pick ? 'background:#14532d;' : ''), (i + 1) + '. ' + s.name);
+        r.addEventListener('mouseenter', () => { r.style.background = '#1e3a8a'; });
+        r.addEventListener('mouseleave', () => { r.style.background = s === sug.pick ? '#14532d' : ''; });
+        r.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); finish(s); });
+        box.appendChild(r);
+      });
+      box.appendChild(el('div', 'opacity:.55;font-size:11px;margin-top:6px', (typed ? 'typed: ' + typed + ' (Enter) · ' : '') + (all ? '' : '0 = show all lines · ') + 'Esc = cancel'));
+    };
+    const key = e => {
+      if (e.ctrlKey || e.altKey) return;
+      e.preventDefault(); e.stopPropagation();
+      if (e.key === 'Escape') return finish(null);
+      if (e.key === 'Enter') { const n = parseInt(typed, 10); return finish(n ? list[n - 1] || null : sug.pick); }
+      if (e.key === 'Backspace') { typed = typed.slice(0, -1); draw(); return; }
+      if (!/^\d$/.test(e.key)) return;
+      if (e.key === '0' && !typed && !all) { all = true; list = sug.list.concat(allServices.filter(x => !sug.list.includes(x))); draw(); return; }
+      typed += e.key;
+      const n = parseInt(typed, 10);
+      if (list.length < 10 || n * 10 > list.length) return finish(list[n - 1] || null);   // no 2-digit number possible: pick now
+      draw();
+    };
+    document.documentElement.appendChild(box); draw();
+    document.addEventListener('keydown', key, true);
+  });
+}
+// on-hand qty in a Tekion row ("OH Qty" column)
+function ohQty(row, sec) {
+  const c = row.querySelector('[data-test-id*="onHand"]');
+  if (c) { const i = c.querySelector('input'); return money(i && i.value ? i.value : c.textContent); }
+  const h = sec && [...sec.querySelectorAll('div,span,th')].find(n => !n.childElementCount && /^oh\s*qty$/i.test(clean(n.textContent)));
+  if (!h) return '';
+  let cell = h; while (cell.parentElement && cell.parentElement.children.length < 4) cell = cell.parentElement;
+  const idx = [...cell.parentElement.children].indexOf(cell), rc = row.children[idx];
+  return rc ? money(rc.textContent) : '';
+}
+
 // =====================================================================
 // TEKION SIDE (the remote)
 // =====================================================================
@@ -124,6 +215,7 @@ function tekionLines() {
         pn: clean(name.split(' - ')[0]), desc: clean(name.split(' - ').slice(1).join(' - ')),
         price: money(pi && pi.value ? pi.value : pc ? pc.textContent : ''),
         qty: money(qi && qi.value ? qi.value : qc ? qc.textContent : '') || '1',
+        oh: ohQty(row, sec),
       });
     });
   });
@@ -175,11 +267,11 @@ function initTekion() {
   document.documentElement.appendChild(box);
 
   // ---- send a part to RV ----
-  function send(line, svc, how) {
+  function send(line, svc, how, ans) {
     const ro = tekionRO(), rv = load('rvr_rv', null);
     const key = ro + '|' + norm(line.job) + '|' + line.pn;
     const cmd = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro, svcId: svc.id, svcName: svc.name, how,
-      part: { pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }, status: opts.status, ts: Date.now() };
+      part: ans ? ans.part : { pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }, status: ans ? ans.status : opts.status, ts: Date.now() };
     const cmds = load('rvr_cmds', []).filter(c => Date.now() - c.ts < 10 * 60 * 1000);   // drop anything older than 10 min
     cmds.push(cmd); save('rvr_cmds', cmds);
     sent[key] = cmd.id; save('rvr_sent', sent);
@@ -221,20 +313,26 @@ function initTekion() {
       const key = ro + '|' + norm(line.job) + '|' + line.pn, match = byName[norm(line.job)];
       if (sent[key]) { tag.textContent = '✓ RV'; tag.style.background = '#16a34a'; return; }
       if (match && !/recon\s*fees/i.test(line.job)) { tag.textContent = '⇢ RV'; tag.style.background = '#2563eb'; tag.title = 'Exact match: RV line "' + match.name + '"'; }
-      else { tag.textContent = '? RV'; tag.style.background = '#b45309'; tag.title = 'No exact RV line match - hover + Alt+C, then Alt+V on the RV line'; }
+      else {
+        const sg = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
+        if (sg.pick) { tag.textContent = '💡 RV'; tag.style.background = '#7c3aed'; tag.title = 'Click: suggested "' + sg.pick.name + '" (you confirm)'; }
+        else { tag.textContent = '? RV'; tag.style.background = '#b45309'; tag.title = 'Click to choose the RV line'; }
+      }
       if (opts.auto && roOk && match && !/recon\s*fees/i.test(line.job) && line.pn && Number(line.price) > 0) send(line, match, 'auto');
     });
   }
   setInterval(() => { if (!document.hidden) tick(); }, 1500);
 
   // ---- manual: choose a line from a short list (button) ----
-  function manualChoose(line) {
+  async function manualChoose(line) {
     const rv = load('rvr_rv', null);
     if (!rv || !rv.services.length) { toast('RV is not linked yet - open the RV work order Parts page', true); return; }
-    const names = rv.services.map((s, i) => (i + 1) + '. ' + s.name).join('\n');
-    const pick = prompt(`Send ${line.pn} ($${line.price || '?'} x${line.qty}) to which RV line?\n\n${names}\n\nType the number:`);
-    const svc = rv.services[(parseInt(pick, 10) || 0) - 1];
-    if (svc) { send(line, svc, 'button'); toast(`Sent ${line.pn} to "${svc.name}"`); }
+    const part = { pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh };
+    const svc = await pickLine('Send ' + line.pn + (line.desc ? ' - ' + line.desc : '') + ' to which RV line?', suggestLine(part, line.job, rv.services), rv.services);
+    if (!svc) return;
+    const a = await askPaste(part); if (!a) return;
+    learnLine(line.pn, svc.name);
+    send(line, svc, 'button', withAnswers(part, a)); toast(`Sent ${line.pn} to "${svc.name}"`);
   }
 
   // ---- manual: hover a line + Alt+C copies it ----
@@ -247,7 +345,7 @@ function initTekion() {
     if (!line) { toast('Hover a part line first', true); return false; }
     const b = basket() || { ro: tekionRO(), parts: [] };
     if (b.parts.some(x => x.pn === line.pn)) { toast(`${line.pn} is already in the basket (${b.parts.length} part${b.parts.length > 1 ? 's' : ''})`); return true; }
-    b.parts.push({ pn: line.pn, desc: vendorName(opts.vendor), qty: line.qty, price: line.price }); b.ts = Date.now();
+    b.parts.push({ pn: line.pn, desc: line.desc, qty: line.qty, price: line.price, oh: line.oh }); b.ts = Date.now();
     save('rvr_clip', b);
     toast(`Basket: ${b.parts.length} part${b.parts.length > 1 ? 's' : ''} (${b.parts.map(x => x.pn).join(', ')}) - right-click the RV line to paste all`);
     note(`basket + ${line.pn} (${b.parts.length})`);
@@ -295,18 +393,21 @@ function askStep(title, value, hint, singleKey) {
 async function askPaste(part, n, m) {
   const last = load('rvr_lastpaste', { vendor: '', status: 'O' });
   const tag = m > 1 ? ' · part ' + n + ' of ' + m : '';
+  const onHand = Number(part.oh) > 0;
+  const defV = onHand ? 'ST' : last.vendor, defS = onHand ? 'S' : last.status;
   const qty = await askStep('Qty · ' + part.pn + ' ($' + (part.price || '?') + ')' + tag, part.qty || '1', () => 'Enter = keep · Esc = cancel');
   if (qty === null) return null;
-  const vendor = await askStep('Vendor', last.vendor, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ');
+  const vendor = await askStep('Vendor' + (onHand ? ' · 💡 OH qty ' + part.oh + ' - stock? (type F for FMP)' : ''), defV, x => (x ? '→ ' + vendorName(x) : '(none)') + '   · B=SUBCHEV F=FMP N=NAPA O=OR A=AZ ST=STOCK');
   if (vendor === null) return null;
   const NAMES = { A: 'Action Req.', O: 'Ordered', R: 'Arrived', S: 'In Stock' };
-  const status = await askStep('Status · press A / O / R / S', '', () => 'Enter = ' + (NAMES[last.status] || 'leave as is'), true);
+  const sDef = vendorName(vendor) === 'STOCK' ? 'S' : vendorName(vendor) === vendorName(defV) ? defS : last.status;
+  const status = await askStep('Status · press A / O / R / S', '', () => 'Enter = ' + (NAMES[sDef] || 'leave as is'), true);
   if (status === null) return null;
-  const res = { qty: qty || '1', vendor, status: statusLetter(status) || last.status };
-  save('rvr_lastpaste', { vendor: res.vendor, status: res.status });
+  const res = { qty: qty || '1', vendor, status: statusLetter(status) || sDef };
+  if (vendorName(vendor) !== 'STOCK') save('rvr_lastpaste', { vendor: res.vendor, status: res.status });   // stock never becomes the default
   return res;
 }
-const withAnswers = (part, a) => ({ part: Object.assign({}, part, { desc: vendorName(a.vendor), qty: a.qty }), status: a.status });
+const withAnswers = (part, a) => ({ part: { pn: part.pn, desc: vendorName(a.vendor), qty: a.qty, price: part.price }, status: a.status });
 // ask Qty / Vendor / Status for every part in the basket; Esc cancels the whole paste
 async function askAll(b) {
   const out = [];
@@ -483,6 +584,7 @@ function initRv() {
         const cmds = load('rvr_cmds', []);
         list.forEach((c, i) => cmds.push({ id: Date.now() + '-' + i + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: c.part, status: c.status, saveAfter: i === list.length - 1, ts: Date.now() }));
         save('rvr_cmds', cmds);
+        list.forEach(c => learnLine(c.part.pn, clean(inp ? inp.value : '')));
         save('rvr_clip', null);                               // basket used up
         toast('Adding ' + list.map(c => c.part.pn).join(' + ') + ' to "' + clean(inp ? inp.value : '') + '" and saving…');
         await runCmds();
@@ -524,7 +626,7 @@ function initRv() {
         const list = await askAll(b); if (!list) { toast('Paste cancelled - basket kept'); return; }
         let bad = '';
         for (const c of list) { const res = await addPart(svc, c.part, c.status); if (res !== 'ok') { bad = res; break; } await sleep(300); }
-        if (!bad) save('rvr_clip', null);
+        if (!bad) { list.forEach(c => learnLine(c.part.pn, svc.name)); save('rvr_clip', null); }
         toast(bad || 'Pasted ' + list.map(c => c.part.pn).join(' + ') + ' to "' + svc.name + '" - review, then Save', !!bad && !bad.startsWith('skip'));
       } finally { pasting = false; pasteEnd = Date.now(); }
     };
