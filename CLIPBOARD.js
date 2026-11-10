@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.00
+// @version      6.01
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1245,14 +1245,14 @@ if (IS_RO_SALES) {
         poPill.style.bottom = 'auto';
     }
 
-    function waitForPOAnchor() {
+    function waitForPOAnchor() {                 // v6.01: textContent (no page re-measure), once a second
         const spans = document.querySelectorAll('span');
         for (const s of spans) {
-            if (s.innerText && s.innerText.trim() === 'Create another Vendor Special Order') {
+            if (s.textContent && s.textContent.trim() === 'Create another Vendor Special Order') {
                 positionPoPill(); return;
             }
         }
-        setTimeout(waitForPOAnchor, 300);
+        setTimeout(waitForPOAnchor, 1000);
     }
     waitForPOAnchor();
     window.addEventListener('resize', positionPoPill);
