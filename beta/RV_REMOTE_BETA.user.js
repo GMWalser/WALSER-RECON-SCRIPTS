@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      3.1
+// @version      3.2
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -552,10 +552,21 @@ async function askAll(b) {
   return out;
 }
 const woId = () => (location.pathname.match(/work_orders\/(\d+)/) || [])[1] || '';
+let roBox = null, roVal = '', roWo = '', roScanAt = 0;
 function rvRO() {
-  const m = (document.body.textContent || '').match(/RO#\s*(7\d{6})/);
-  if (m) { const all = load('rvr_wo_ro', {}); if (all[woId()] !== m[1]) { all[woId()] = m[1]; save('rvr_wo_ro', all); } return m[1]; }
-  return load('rvr_wo_ro', {})[woId()] || '';
+  const wo = woId();
+  if (wo !== roWo) { roWo = wo; roVal = ''; roBox = null; roScanAt = 0; }
+  if (!roBox || !roBox.isConnected) roBox = document.querySelector('.repair-order-number');
+  let m = roBox && roBox.textContent.match(/(7\d{6})/);
+  if (!m && !roVal && Date.now() - roScanAt > 30000) {            // no RO box: whole-page search at most every 30 s
+    roScanAt = Date.now(); m = (document.body.textContent || '').match(/RO#\s*(7\d{6})/);
+  }
+  if (m && m[1] !== roVal) {
+    roVal = m[1];
+    const all = load('rvr_wo_ro', {}); if (all[wo] !== roVal) { all[wo] = roVal; save('rvr_wo_ro', all); }
+  }
+  if (!roVal) roVal = load('rvr_wo_ro', {})[wo] || '';
+  return roVal;
 }
 // color of the parts icon's little badge: green check / yellow / red "!" (read from the colors on screen)
 function iconState(trigger) {
@@ -602,7 +613,9 @@ function linePartsMoney(r, trigger) {
 const seenColors = new Set();
 function rvEditServices() {                        // the work order (edit) page
   const out = [], seen = new Set();
-  document.querySelectorAll('[data-service-id]').forEach(r => {
+  let rows = document.querySelectorAll('tr[data-service-id]');
+  if (!rows.length) rows = document.querySelectorAll('[data-service-id]');
+  rows.forEach(r => {
     const id = r.getAttribute('data-service-id'); if (!id || seen.has(id)) return;
     const inp = r.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
     const trigger = r.querySelector('[data-target="#parts_modal"]');
@@ -796,13 +809,22 @@ async function runUndo() {
 const rvTab = Math.random().toString(36).slice(2, 8);
 function initRv() {
   const onParts = /\/parts_overview/.test(location.pathname);
-  const publish = () => {
-    const ro = rvRO();
-    const services = onParts ? rvServices().map(s => ({ id: s.id, name: s.name, parts: s.parts, state: s.state })) : rvEditServices();
-    save('rvr_rv', { ro, woId: woId(), onParts, services, ts: Date.now() });
+  const readRO = timeIt('RV: read RO number', rvRO);
+  const readLines = timeIt('RV: read lines', () => onParts ? rvServices().map(s => ({ id: s.id, name: s.name, parts: s.parts, state: s.state })) : rvEditServices());
+  const sendList = timeIt('RV: send line list to Tekion', (v) => save('rvr_rv', v));
+  let lastSig = '', lastSent = 0, lastRun = 0;
+  const publish = (force) => {
+    const now = Date.now();
+    if (!force && document.hidden && now - lastRun < 30000) return;   // background tab: every 30 s
+    lastRun = now;
+    const ro = readRO(), services = readLines();
+    const sig = ro + '|' + JSON.stringify(services);
+    if (sig === lastSig && now - lastSent < 60000) return;            // nothing changed: heartbeat once a minute
+    lastSig = sig; lastSent = now;
+    sendList({ ro, woId: woId(), onParts, services, ts: now });
   };
-  const publishT = timeIt('RV: send line list to Tekion (every 3 s)', publish);
-  publishT(); setInterval(publishT, 3000);
+  publish(true); setInterval(() => publish(false), 3000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) publish(true); });
   // small chip right after the RO number (inside the page, scrolls with it). Click = right-click on/off.
   const chip = el('span', 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:1px 8px;border-radius:10px;font:600 11px Segoe UI,sans-serif;vertical-align:middle;cursor:pointer;white-space:nowrap;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.5)');
   chip.id = 'rvr-rv-chip';
