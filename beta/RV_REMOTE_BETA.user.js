@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.7
+// @version      0.8
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -82,6 +82,8 @@ document.addEventListener('keydown', e => {
 // spots Recon Clipboard already uses for right-click: never take those
 const RC_RESERVED = '[data-test-id*="sellingPrice-cell"], .block.parts_icon, .add-part-to-service-btn';
 const onHighlighted = t => !!(hovered && t && hovered.contains(t)) && !(t.closest && t.closest(RC_RESERVED));
+const freshClip = () => { const c = load('rvr_clip', null); return c && Date.now() - c.ts < 15 * 60 * 1000 ? c : null; };
+const onHighlightedRV = t => !!(hovered && t && hovered.contains(t));   // RV: whole line, parts icon included
 
 // =====================================================================
 // TEKION SIDE (the remote)
@@ -431,7 +433,7 @@ function initRv() {
   if (!onParts) {
     const lineOf = node => {
       const r = node.closest && node.closest('[data-service-id]');
-      return r && (r.querySelector('input[name*="line_items_attributes"][name$="[name]"]') || r.querySelector('[data-target="#parts_modal"]')) ? r : null;
+      return r && (r.querySelector('input[name*="line_items_attributes"][name$="[name]"]') || r.querySelector('[data-target="#parts_modal"], .parts_icon')) ? r : null;
     };
     document.addEventListener('mouseover', e => setHover(lineOf(e.target)), true);
     const pasteLine = async lineEl => {
@@ -444,6 +446,7 @@ function initRv() {
       const cmds = load('rvr_cmds', []);
       cmds.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: clip.part, status: clip.status, ts: Date.now() });
       save('rvr_cmds', cmds);
+      save('rvr_clip', null);                                 // used: right-click on parts icons goes back to Recon Clipboard
       toast('Pasting ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" - review it, then Save (Alt+S)');
       runCmds();
     };
@@ -451,9 +454,9 @@ function initRv() {
       if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
       e.preventDefault(); pasteLine(hovered);
     }, true);
-    document.addEventListener('contextmenu', e => {        // right-click the line (not its parts icon) to paste
-      if (!rcOn() || !load('rvr_clip', null) || !onHighlighted(e.target)) return;
-      e.preventDefault(); e.stopPropagation(); pasteLine(hovered);
+    window.addEventListener('contextmenu', e => {          // right-click the highlighted line (parts icon too) to paste
+      if (!rcOn() || !freshClip() || !onHighlightedRV(e.target)) return;
+      e.preventDefault(); e.stopImmediatePropagation(); pasteLine(hovered);
     }, true);
   }
   // manual paste: hover an RV line + Alt+V
@@ -473,15 +476,16 @@ function initRv() {
       const a = await askPaste(clip0); if (!a) return;
       const clip = withAnswers(clip0, a);
       const res = await addPart(svc, clip.part, clip.status);
+      if (res === 'ok') save('rvr_clip', null);
       toast(res === 'ok' ? 'Pasted ' + clip.part.pn + ' to "' + svc.name + '" - review, then Save' : res, res !== 'ok' && !res.startsWith('skip'));
     };
     document.addEventListener('keydown', e => {
       if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
       e.preventDefault(); pasteSvc(hovered);
     }, true);
-    document.addEventListener('contextmenu', e => {
-      if (!rcOn() || !load('rvr_clip', null) || !onHighlighted(e.target)) return;
-      e.preventDefault(); e.stopPropagation(); pasteSvc(hovered);
+    window.addEventListener('contextmenu', e => {
+      if (!rcOn() || !freshClip() || !onHighlightedRV(e.target)) return;
+      e.preventDefault(); e.stopImmediatePropagation(); pasteSvc(hovered);
     }, true);
   }
   log('RV screen ready', onParts ? '(Parts page)' : '(work order page)');
