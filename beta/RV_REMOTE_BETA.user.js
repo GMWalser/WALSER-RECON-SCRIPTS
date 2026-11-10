@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.6
+// @version      2.7
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -354,7 +354,7 @@ function initTekion() {
       tag._line = line;
       let qb = line.row.querySelector('.rvr-qbtns');
       if (!qb) {
-        qb = el('span', 'margin-left:6px;display:none;gap:4px'); qb.className = 'rvr-qbtns';
+        qb = el('span', 'margin-left:6px;display:inline-flex;gap:4px'); qb.className = 'rvr-qbtns';
         [['O', '#2563eb', 'Ordered'], ['S', '#0d9488', 'In Stock'], ['R', '#16a34a', 'Arrived'], ['A', '#b45309', 'Action Required'], ['🗑', '#7f1d1d', 'Delete this part from RV']].forEach(([k, c, t]) => {
           const b = el('button', 'border:0;border-radius:4px;padding:3px 0;min-width:24px;font:700 13px Segoe UI,sans-serif;cursor:pointer;color:#fff;background:' + c, k);
           b.title = k === '🗑' ? t : 'Set RV status: ' + t;
@@ -368,7 +368,7 @@ function initTekion() {
       const sgx = fresh ? suggestLine(line, line.job, rv.services) : { pick: null };
       const target = match || sgx.pick;
       tag._target = target && (hasParts(target) || isDone(target)) ? target : null;
-      qb.style.display = tag._target || sent[key] || (!target && sgx.amb) ? 'inline-flex' : 'none';      // part is in RV: show O S R A 🗑
+      qb.style.display = 'inline-flex';                                     // O S R A 🗑 always shown (no known line = it asks which)
       if (isDone(target)) { tag.textContent = '✓ RV'; tag.style.background = '#15803d'; tag.title = '"' + target.name + '" is already ' + target.state + ' in RV - nothing to add (click to change)'; return; }
       if (target && hasParts(target)) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = '"' + target.name + '" is quoted in RV - click to set status (Ordered / In Stock / Arrived)'; if (roOk && line.pn) batch.push({ line, svc: target, quoted: true }); return; }
       if (!target && sgx.amb) { tag.textContent = '⚡ RV'; tag.style.background = '#dc2626'; tag.title = 'Quoted in RV on one of: ' + sgx.list.filter(hasParts).map(x => x.name).join(' / ') + ' - click to pick front/rear'; return; }
