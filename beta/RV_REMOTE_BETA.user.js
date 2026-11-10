@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      2.2
+// @version      2.3
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -97,7 +97,7 @@ const DRAIN_GASKETS = ['803916010', '11126AA000', '90430-12031', '11026-01M02', 
 const pnKey = pn => String(pn || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const RULES = [                                     // first match wins; part text -> RV line name
   { part: /cabin/i, line: /cabin/i },
-  { part: /oil filter|drain ?plug|plug gasket|drain gasket/i, line: /\blof\b|oil change/i, gasket: true },
+  { part: /oil filter|drain ?plug|plug gasket|drain gasket/i, line: /\blof\b|oil change|oil (&|and) filter/i, gasket: true },
   { part: /air filter|air cleaner|air element/i, line: /air filter/i, not: /cabin/i },
   { part: /wiper|blade/i, line: /wiper/i },
   { part: /batt/i, line: /batt/i },
@@ -328,10 +328,12 @@ function initTekion() {
   // ---- buttons + badges on each Tekion line; auto send ----
   function tick() {
     const ro = tekionRO(), rv = load('rvr_rv', null);
-    const fresh = rv && Date.now() - rv.ts < 15000;
+    const age = rv ? Date.now() - rv.ts : 1e12;
+    const fresh = age < 30 * 60 * 1000;
     const roOk = fresh && ro && rv.ro === ro;
     placeBar();
-    link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
+    const ago = age < 90000 ? '' : ' (RV last seen ' + Math.round(age / 60000) + ' min ago)';
+    link.textContent = !fresh ? '🛰 🔴 RV not linked (open the RO in RV)' : !ro ? '🛰 🟡 open an RO' : roOk ? '🛰 🟢 RV linked · RO ' + ro + ago : '🛰 🟡 RV has RO ' + (rv.ro || '?') + ' open';
     link.style.color = roOk ? '#16a34a' : fresh ? '#d97706' : '#dc2626';
     const byName = {}; if (roOk) rv.services.forEach(s => { byName[norm(s.name)] = s; });
     const batch = [];
@@ -346,9 +348,9 @@ function initTekion() {
       tag._line = line;
       let qb = line.row.querySelector('.rvr-qbtns');
       if (!qb) {
-        qb = el('span', 'margin-left:4px;display:none;gap:2px'); qb.className = 'rvr-qbtns';
+        qb = el('span', 'margin-left:6px;display:none;gap:4px'); qb.className = 'rvr-qbtns';
         [['O', '#2563eb', 'Ordered'], ['S', '#0d9488', 'In Stock'], ['R', '#16a34a', 'Arrived'], ['A', '#b45309', 'Action Required'], ['🗑', '#7f1d1d', 'Delete this part from RV']].forEach(([k, c, t]) => {
-          const b = el('button', 'border:0;border-radius:3px;padding:0 4px;font:700 10px Segoe UI,sans-serif;cursor:pointer;color:#fff;background:' + c, k);
+          const b = el('button', 'border:0;border-radius:4px;padding:3px 0;min-width:24px;font:700 13px Segoe UI,sans-serif;cursor:pointer;color:#fff;background:' + c, k);
           b.title = k === '🗑' ? t : 'Set RV status: ' + t;
           b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); k === '🗑' ? quickDelete(tag._line) : quickStatus(tag._line, k); });
           qb.appendChild(b);
@@ -758,10 +760,10 @@ async function runUndo() {
   }
   return 'skip: unknown undo';
 }
+const rvTab = Math.random().toString(36).slice(2, 8);
 function initRv() {
   const onParts = /\/parts_overview/.test(location.pathname);
   const publish = () => {
-    if (document.hidden && !onParts) return;
     const ro = rvRO();
     const services = onParts ? rvServices().map(s => ({ id: s.id, name: s.name, parts: s.parts, state: s.state })) : rvEditServices();
     save('rvr_rv', { ro, woId: woId(), onParts, services, ts: Date.now() });
@@ -780,12 +782,17 @@ function initRv() {
   // run commands from Tekion, one at a time
   let busy = false;
   async function runCmds() {
-    if (busy || document.hidden) return; busy = true;
+    if (busy) return; busy = true;
     try {
       const results = load('rvr_results', {});
       const todo = load('rvr_cmds', []).filter(c => !results[c.id]);
       const ro = rvRO();
+      const me = rvTab;
       for (const c of todo) {
+        if (c.ro && ro && c.ro !== ro) continue;                // another RO: leave it for that RV tab
+        save('rvr_claim', { id: c.id, tab: me }); await sleep(250);
+        const cl = load('rvr_claim', {}); if (cl.id !== c.id || cl.tab !== me) continue;   // another RV tab took it
+        if (load('rvr_results', {})[c.id]) continue;
         let res;
         if (c.how === 'auto' && ro && c.ro && c.ro !== ro) res = 'skip: RO ' + c.ro + ' is not the RO open in RV (' + ro + ')';
         else {
