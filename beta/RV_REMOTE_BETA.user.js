@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      1.8
+// @version      1.9
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -42,7 +42,7 @@ const VENDOR_MAP = {
 const vendorName = t => { const k = clean(t).toUpperCase(); return VENDOR_MAP[k] || clean(t); };
 
 // Status letters -> pick the RV dropdown option by its name (the numbers differ between RV pages)
-const STATUS_NAMES = { A: /action/i, O: /order/i, R: /arriv/i, S: /stock/i };
+const STATUS_NAMES = { A: /^(?!.*no action).*action/i, O: /^(?!.*back).*order/i, R: /arriv/i, S: /stock/i };   // O never picks Backordered
 const OLD_NUM = { '1': 'A', '3': 'O', '5': 'R', '6': 'S' };
 const statusLetter = st => { const t = String(st || '').toUpperCase(); return STATUS_NAMES[t] ? t : OLD_NUM[t] || ''; };
 function setStatus(sel, st) {
