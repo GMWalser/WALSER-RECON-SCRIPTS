@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.1944
+// @version      2026.1110.2002
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.8  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.8', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v5.9  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '5.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -542,7 +542,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.7: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.9: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -653,8 +653,16 @@ function writeDecisions() {
   });
   pendingDecisions = [];
 }
+let styleNoteAt = 0;
 function pump() {
   const t0 = performance.now(), picked = ruleSelector();
+  // v5.9: the first style read of a frame makes the browser finish its pending style work for the whole
+  // page first. Timed on its own so the speed report can tell that apart from our own color work.
+  if (work.length) {
+    const x = work[0], el = x.el || x;
+    if (el.isConnected) { getComputedStyle(el).color; const sw = performance.now() - t0;
+      if (sw > 100 && Date.now() - styleNoteAt > 10000) { styleNoteAt = Date.now(); try { window.dispatchEvent(new CustomEvent('wr-note', { detail: '[Page Themes] the browser needed ' + Math.round(sw) + ' ms to work out the styles of this page (' + document.getElementsByTagName('*').length + ' elements) before re-coloring could start' })); } catch (e) {} } }
+  }
   while (work.length && performance.now() - t0 < 8) {                 // READ only
     const batch = work.splice(0, 200);
     for (const x of batch) {
@@ -723,7 +731,9 @@ function animOn() {
 function hasFx(n) { return (' ' + ((T && T.fx) || '') + ' ').includes(' ' + n + ' '); }
 function animCss() {
   const g = T.accent, c = T.fxColor || T.accent, hc = T.hoverColor || T.accent;
-  let css = '\nhtml[data-wr-still] *,html[data-wr-still] *::before,html[data-wr-still] *::after,html[data-wr-still]::before,html[data-wr-still]::after{animation-play-state:paused !important}';
+  // v5.9: pause ONLY the things that animate. 5.8 used "every element", which made the browser re-work the
+  // styles of the whole page on every window switch (measured: 70-85 ms on a 43,000-element page -> 2 ms now).
+  let css = `\nhtml[data-wr-still]::before,html[data-wr-still]::after,html[data-wr-still] [data-wr-bg=accent],html[data-wr-still] [id^="${OUR}"],html[data-wr-still] [id^="${OUR}"]::after{animation-play-state:paused !important}`;
   if (T.glow) css += `
 @keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
@@ -1712,8 +1722,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.04  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.04', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.05  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.05', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -4137,7 +4147,10 @@ if (IS_RECONVISION) {
             snapshottedServiceIds.add(serviceId);
 
             console.log('[RV Line Snapshot] Processing:', currentTitle, '(service', serviceId, ')');
+            const tClick = performance.now();
             notesLink.click();
+            const clickMs = performance.now() - tClick;   // v6.05: RV's own Notes window code runs inside this click
+            if (clickMs > 100) rvNote('RV line snapshot: RV took ' + Math.round(clickMs) + ' ms to open the Notes window for "' + currentTitle.slice(0, 40) + '"');
 
             const hiddenIdField = await waitForCondition(() => {
                 const el = document.querySelector('#work_order_line_items_attributes_id');
@@ -4209,7 +4222,11 @@ if (IS_RECONVISION) {
             }
         }
 
-        setTimeout(runSnapshotPass, 2000); // let the page settle first
+        // v6.05: it ran 2 s after the script started -- on RV work orders that is while RV's own page code is
+        // still running (1.6 s in the speed report), so both piled up into one long freeze (427 ms).
+        // Now: after the page has fully loaded, +1.5 s, when the browser is idle (at most 3 s later).
+        const startPass = () => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(runSnapshotPass, { timeout: 3000 }) : runSnapshotPass()), 1500);
+        if (document.readyState === 'complete') startPass(); else window.addEventListener('load', startPass, { once: true });
     }
 
     // =============================================
@@ -12379,7 +12396,7 @@ function recDescribe(el) {
   const txt = (t.getAttribute('aria-label') || t.title || (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ? '' : t.textContent) || '').replace(/\s+/g, ' ').trim().slice(0, 60);
   return t.tagName.toLowerCase() + (dt ? '[' + String(dt).slice(-45) + ']' : '') + (txt ? ' "' + txt + '"' : '');
 }
-document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target)); }, true);
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#wr-rec')) recAdd('click', recDescribe(e.target) + (e.isTrusted ? '' : '  (by code)')); }, true);
 // any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))
 window.addEventListener('wr-note', e => recAdd('note', String(e.detail || '').slice(0, 240)));
 // any script can add a note to the report: window.dispatchEvent(new CustomEvent('wr-note', { detail: 'text' }))

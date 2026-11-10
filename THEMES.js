@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      5.8
+// @version      5.9
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -470,7 +470,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.7: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v5.9: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -581,8 +581,16 @@ function writeDecisions() {
   });
   pendingDecisions = [];
 }
+let styleNoteAt = 0;
 function pump() {
   const t0 = performance.now(), picked = ruleSelector();
+  // v5.9: the first style read of a frame makes the browser finish its pending style work for the whole
+  // page first. Timed on its own so the speed report can tell that apart from our own color work.
+  if (work.length) {
+    const x = work[0], el = x.el || x;
+    if (el.isConnected) { getComputedStyle(el).color; const sw = performance.now() - t0;
+      if (sw > 100 && Date.now() - styleNoteAt > 10000) { styleNoteAt = Date.now(); try { window.dispatchEvent(new CustomEvent('wr-note', { detail: '[Page Themes] the browser needed ' + Math.round(sw) + ' ms to work out the styles of this page (' + document.getElementsByTagName('*').length + ' elements) before re-coloring could start' })); } catch (e) {} } }
+  }
   while (work.length && performance.now() - t0 < 8) {                 // READ only
     const batch = work.splice(0, 200);
     for (const x of batch) {
@@ -651,7 +659,9 @@ function animOn() {
 function hasFx(n) { return (' ' + ((T && T.fx) || '') + ' ').includes(' ' + n + ' '); }
 function animCss() {
   const g = T.accent, c = T.fxColor || T.accent, hc = T.hoverColor || T.accent;
-  let css = '\nhtml[data-wr-still] *,html[data-wr-still] *::before,html[data-wr-still] *::after,html[data-wr-still]::before,html[data-wr-still]::after{animation-play-state:paused !important}';
+  // v5.9: pause ONLY the things that animate. 5.8 used "every element", which made the browser re-work the
+  // styles of the whole page on every window switch (measured: 70-85 ms on a 43,000-element page -> 2 ms now).
+  let css = `\nhtml[data-wr-still]::before,html[data-wr-still]::after,html[data-wr-still] [data-wr-bg=accent],html[data-wr-still] [id^="${OUR}"],html[data-wr-still] [id^="${OUR}"]::after{animation-play-state:paused !important}`;
   if (T.glow) css += `
 @keyframes wrGlow{0%,100%{box-shadow:0 0 3px ${rgba(g, .6)}}50%{box-shadow:0 0 10px ${rgba(g, .9)},0 0 22px ${rgba(g, .45)}}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite}
