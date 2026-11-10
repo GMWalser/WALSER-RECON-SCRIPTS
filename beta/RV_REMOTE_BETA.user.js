@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Remote (BETA)
 // @namespace    walser-rv-remote-beta
-// @version      0.3
+// @version      0.4
 // @author       Gabe
 // @description  BETA - not part of Walser Recon Tools. Fill RV parts from Tekion. Exact job/line name matches are sent automatically; everything else: hover a Tekion part line + Alt+C, hover an RV line + Alt+V.
 // @match        https://app.tekioncloud.com/parts/*
@@ -329,6 +329,27 @@ function initRv() {
   GM_addValueChangeListener('rvr_cmds', () => runCmds());
   setTimeout(runCmds, 1200);
 
+  // manual paste on the WORK ORDER page: hover a line + Alt+V -> queued, then the Parts page adds it
+  if (!onParts) {
+    const lineOf = node => {
+      const r = node.closest && node.closest('[data-service-id]');
+      return r && r.querySelector('input[name*="line_items_attributes"][name$="[name]"]') ? r : null;
+    };
+    document.addEventListener('mouseover', e => setHover(lineOf(e.target)), true);
+    document.addEventListener('keydown', e => {
+      if (!e.altKey || (e.key || '').toLowerCase() !== 'v' || !hovered) return;
+      e.preventDefault();
+      const clip = load('rvr_clip', null);
+      if (!clip) { toast('Nothing copied - hover a Tekion part line and press Alt+C first', true); return; }
+      const id = hovered.getAttribute('data-service-id');
+      const inp = hovered.querySelector('input[name*="line_items_attributes"][name$="[name]"]');
+      const cmds = load('rvr_cmds', []);
+      cmds.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 6), ro: rvRO(), svcId: id, svcName: clean(inp ? inp.value : ''), how: 'paste', part: clip.part, status: clip.status, ts: Date.now() });
+      save('rvr_cmds', cmds);
+      toast('Pasting ' + clip.part.pn + ' to "' + clean(inp ? inp.value : '') + '" - opening the Parts page…');
+      runCmds();
+    }, true);
+  }
   // manual paste: hover an RV line + Alt+V
   if (onParts) {
     const findSvc = node => {
