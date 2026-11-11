@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1111.1220
+// @version      2026.1111.1231
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10215,8 +10215,8 @@ log('v1.3 loaded on', location.hostname);
 })();
 });
 
-// ===== Filter Quick Add v1.7  (FILTER_QUICKADD.js) =====
-WR.add('filter_quickadd', 'Filter Quick Add', '1.7', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
+// ===== Filter Quick Add v1.8  (FILTER_QUICKADD.js) =====
+WR.add('filter_quickadd', 'Filter Quick Add', '1.8', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10232,8 +10232,8 @@ const MAX_AGE_MS = 30 * 1000;
 // Drain plug gasket by make (numbers given by Gabe).
 const GASKET_BY_MAKE = [
   { makes: ['SUBARU'], pn: '803916010' },
-  { makes: ['TOYOTA'], pn: '90430-12031' },
-  { makes: ['NISSAN'], pn: '11026-01M02' },
+  { makes: ['TOYOTA', 'LEXUS'], pn: '90430-12031' },   // v1.8: Lexus uses the Toyota gasket
+  { makes: ['NISSAN', 'INFINITI'], pn: '11026-01M02' },   // v1.8: Infiniti uses the Nissan gasket
   { makes: ['HONDA', 'ACURA', 'HYUNDAI', 'KIA', 'MAZDA', 'GENESIS'], pn: '94109-14000' },
 ];
 
@@ -10537,7 +10537,7 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.7 loaded on', location.hostname);
+log('v1.8 loaded on', location.hostname);
 })();
 
 });
