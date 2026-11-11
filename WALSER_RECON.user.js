@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1111.1838
+// @version      2026.1111.1857
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v6.0  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '6.0', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.1  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.1', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -166,6 +166,9 @@ const WALLPAPERS = {
   th_imperialbridge: { name: "Imperial Bridge", css: "repeating-linear-gradient(90deg,rgba(255,59,59,.55) 0 4px,transparent 4px 46px,rgba(125,255,154,.45) 46px 50px,transparent 50px 120px),linear-gradient(180deg,transparent 0 92%,rgba(0,0,0,.9) 92%),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 2px,transparent 2px 70px),linear-gradient(#0b0c0e,#14161a)" },
   th_crimsonsaber: { name: "Crimson Saber", css: "linear-gradient(120deg,transparent 47%,rgba(255,40,60,.95) 49.4%,rgba(255,255,255,.95) 50%,rgba(255,40,60,.95) 50.6%,transparent 53%),radial-gradient(circle at 50% 50%,rgba(255,26,46,.35),transparent 45%),linear-gradient(#070203,#070203)" },
   th_digitalrain: { name: "Digital Rain", css: "radial-gradient(ellipse at 50% 0%,rgba(0,255,65,.12),transparent 60%),linear-gradient(#000300,#000300)" },
+  th_wasteterm: { name: "Wasteland Terminal", css: "repeating-linear-gradient(0deg,rgba(27,255,128,.05) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,rgba(27,255,128,.16),transparent 65%),linear-gradient(#020a04,#020a04)" },
+  th_wasteamber: { name: "Wasteland Amber", css: "radial-gradient(ellipse at 70% 72%,rgba(255,160,40,.35),transparent 45%),url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1600 900%22 preserveAspectRatio=%22none%22><path fill=%22%230a0600%22 d=%22M0 900V690h60v-40h30v60h50V600h20v-30h25v120h40v-80l30-20v100h60V560h15l10-40 10 40h20v150h70v-60h40v-90h30v150h50V520l40-30v220h60v-50h30v-80h20l15 30v100h70V600h20l5-50 5 50h25v120h60v-90h40v110h50V560h30v-30h20v190h70v-70h30v-40h30v130h60V610h30v100h70v-60h30v-20h20v90h60V640h40v80h50V900z%22/><path fill=%22%23140b00%22 d=%22M0 900V760h80v-30h60v50h90v-40h70v60h100v-50h80v40h120v-60h60v70h140v-40h90v50h110v-30h80v40h130v-50h90v60h100v-40h70v40h80V900z%22/></svg>'),linear-gradient(180deg,#120900 0%,#3a2200 62%,#5a3400 100%)" },
+  th_shelter: { name: "Shelter Blue & Gold", css: "radial-gradient(ellipse at 50% 40%,rgba(245,197,24,.10),transparent 55%),linear-gradient(180deg,#06122a,#0a1a3a)" },
   th_mainframe: { name: "Mainframe", css: "repeating-linear-gradient(0deg,rgba(51,255,51,.06) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,rgba(51,255,51,.14),transparent 70%),linear-gradient(#010801,#010801)" },
   ar_tw_mask: { name: "Skull Mask Inks", css: "repeating-radial-gradient(circle at 50% 40%,rgba(91,74,110,.45) 0 2px,transparent 2px 9px),radial-gradient(circle at 50% 40%,rgba(240,138,42,.35),transparent 35%),linear-gradient(#120d14,#120d14)" },
   ar_tw_teal: { name: "Teal & Burnt Orange", css: "repeating-radial-gradient(circle at 50% 35%,rgba(111,154,160,.35) 0 2px,transparent 2px 10px),radial-gradient(circle at 50% 35%,rgba(226,98,42,.35),transparent 35%),linear-gradient(#0d1416,#0d1416)" },
@@ -248,6 +251,9 @@ const THEMED = {
   thermal: { name: "Thermal Vision", about: 'movie-inspired: heat vision, slow lava-lamp heat blobs', bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: 'linear-gradient(#05030f,#05030f)', wpDim: 20, wpSee: 30, glow: true, fx: 'lavalamp', fxColor: '#ff3b1f' },
   hunter: { name: "Jungle Hunter", about: 'movie-inspired: jungle canopy, three-dot laser, alien glyphs and a closing three-bar sight', bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser hunterhud', fxColor: '#ff2020' },
   xenohive: { name: "Xeno Hive", about: 'movie-inspired: ribbed biomechanical hive, acid green pulses', bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: 'biomech', fxColor: '#9cff2e' },
+  wasteterm: { name: "Wasteland Terminal", about: "retro-future wasteland: green phosphor wrist computer, HUD bars, compass, typing terminal", bg: '#020a04', surface: '#062010', text: '#8dffb4', accent: '#1bff80', accentText: '#002410', link: '#c4ffd9', border: '#0f4a24', input: '#010703', wp: WALLPAPERS.th_wasteterm.css, wpDim: 15, wpSee: 30, glow: true, fx: 'crt pipterm', fxColor: '#1bff80', mono: 145 },
+  wasteamber: { name: "Wasteland Amber", about: "retro-future wasteland: amber phosphor screen over a ruined skyline", bg: '#0d0700', surface: '#1f1200', text: '#ffc966', accent: '#ffb000', accentText: '#1f1200', link: '#ffe2a8', border: '#4a3000', input: '#0a0500', wp: WALLPAPERS.th_wasteamber.css, wpDim: 15, wpSee: 30, glow: true, fx: 'crt pipterm', fxColor: '#ffb642', mono: 38 },
+  shelter: { name: "Shelter Blue & Gold", about: "retro-future fallout shelter: blue and gold, a turning blast door, atomic-age starbursts", bg: '#06122a', surface: '#0d1f45', text: '#eef3ff', accent: '#f5c518', accentText: '#0b1a3a', link: '#ffd84d', border: '#23407a', input: '#050e22', wp: WALLPAPERS.th_shelter.css, wpDim: 10, wpSee: 30, glow: true, fx: 'shelter', fxColor: '#f5c518' },
   tracker: { name: "Motion Tracker", about: 'movie-inspired: motion tracker sweep with contacts closing in', bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'radar', fxColor: '#39ff88' },
   marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan hud', fxColor: '#f2a900' },
 };
@@ -535,7 +541,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.0: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.1: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1610,15 +1616,21 @@ const SCENES = {
   hunterhud: {
     over: true, fps: 30,
     init(S) {
-      S.next = performance.now() + 5000; S.lock = null; S.glyphs = Array.from({ length: 5 }, () => S_glyph()); S.gT = 0;
+      S.next = performance.now() + 5000; S.lock = null; S.lines = [[]]; S.gT = 0;
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
     },
     draw(ctx, S, t) {
       const { W, H } = S, red = '#ff2020';
       ctx.clearRect(0, 0, W, H);
-      if (t > S.gT) { S.gT = t + rnd(500, 1400); S.glyphs[(Math.random() * S.glyphs.length) | 0] = S_glyph(); }
+      // v6.1: alien text types itself out, one glyph at a time, line after line (newest at the bottom)
+      if (t > S.gT) {
+        const ln = S.lines[S.lines.length - 1];
+        if (ln.length >= 12) { S.lines.push([]); if (S.lines.length > 3) S.lines.shift(); S.gT = t + rnd(700, 1600); }
+        else { ln.push(Math.random() < .15 ? null : S_glyph()); S.gT = t + rnd(90, 260); }       // null = a space between words
+      }
       ctx.strokeStyle = red; ctx.lineCap = 'round';
-      S.glyphs.forEach((g, i) => drawGlyph(ctx, g, 22 + i * 26, H - 64, 10, .7));            // small readout, bottom left
+      S.lines.forEach((ln, r) => ln.forEach((g, i) => { if (g) drawGlyph(ctx, g, 18 + i * 21, H - 52 - (S.lines.length - 1 - r) * 44, 8, r === S.lines.length - 1 ? .9 : .55); }));
+      if (Math.floor(t / 400) % 2) { const ln = S.lines[S.lines.length - 1]; ctx.globalAlpha = .9; ctx.fillStyle = red; ctx.fillRect(14 + ln.length * 21, H - 52 + 26, 9, 3); }   // blinking cursor
       if (!S.lock && t > S.next) S.lock = { born: t, x: window.__wrMouse.x, y: window.__wrMouse.y };
       if (S.lock) {
         const e = t - S.lock.born;
@@ -1683,27 +1695,108 @@ const SCENES = {
   },
   // ----- Motion Tracker: the sweep turns; now and then contacts ping -- and they get closer -----
   radar: {
-    fps: 15,
-    init(S) { S.contacts = []; S.nextC = performance.now() + 4000; S.prevA = 0; },
+    over: true, fps: 12,                                 // v6.1: on top of the page -- behind it, RV and Tekion panels hid it
+    init(S) { S.contacts = []; S.nextC = performance.now() + 2500; S.prevA = 0; },
     draw(ctx, S, t) {
       const { W, H } = S, cx = W / 2, cy = H / 2, R = Math.hypot(W, H) / 2, a = (t / 4000 % 1) * 6.28, col = '#39ff88';
       ctx.clearRect(0, 0, W, H);
       const g = ctx.createConicGradient ? ctx.createConicGradient(a - 1.1, cx, cy) : null;
-      if (g) { g.addColorStop(0, 'rgba(57,255,136,0)'); g.addColorStop(.17, 'rgba(57,255,136,.22)'); g.addColorStop(.175, 'rgba(57,255,136,0)'); g.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
-      ctx.strokeStyle = 'rgba(57,255,136,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
-      if (t > S.nextC) { S.nextC = t + rnd(9000, 22000); const n = Math.random() < .3 ? (2 + (Math.random() * 3 | 0)) : 1, ang = rnd(0, 6.28); for (let i = 0; i < n; i++) S.contacts.push({ ang: ang + rnd(-.35, .35), r: rnd(.75, .95) * Math.min(W, H) / 2, v: rnd(.15, .45), ping: 0 }); }
+      if (g) { g.addColorStop(0, 'rgba(57,255,136,0)'); g.addColorStop(.17, 'rgba(57,255,136,.13)'); g.addColorStop(.175, 'rgba(57,255,136,0)'); g.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+      ctx.strokeStyle = 'rgba(57,255,136,.10)'; ctx.lineWidth = 1;                         // range rings
+      for (let rr = 90; rr < R; rr += 90) { ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.28); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(57,255,136,.45)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
+      if (t > S.nextC) { S.nextC = t + rnd(6000, 14000); const n = Math.random() < .3 ? (2 + (Math.random() * 3 | 0)) : 1, ang = rnd(0, 6.28); for (let i = 0; i < n; i++) S.contacts.push({ ang: ang + rnd(-.35, .35), r: rnd(.75, .95) * Math.min(W, H) / 2, v: rnd(.15, .45), ping: 0 }); }
       const crossed = (from, to, x) => { const f = (from % 6.28 + 6.28) % 6.28, tt = (to % 6.28 + 6.28) % 6.28, xx = (x % 6.28 + 6.28) % 6.28; return f <= tt ? (xx > f && xx <= tt) : (xx > f || xx <= tt); };
       let nearest = 0;
       S.contacts = S.contacts.filter(c => {
         c.r -= c.v; c.ang += Math.sin(t / 2000 + c.r) * .002; if (c.r < 25) return false;
         if (crossed(S.prevA, a, c.ang)) c.ping = t;
         const age = t - c.ping, al = c.ping ? clamp01(1 - age / 2200) : 0;
-        if (al > 0) { const x = cx + Math.cos(c.ang) * c.r, y = cy + Math.sin(c.ang) * c.r, bg = ctx.createRadialGradient(x, y, 0, x, y, 16); bg.addColorStop(0, `rgba(190,255,210,${al})`); bg.addColorStop(.4, `rgba(57,255,136,${al * .6})`); bg.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = bg; ctx.fillRect(x - 16, y - 16, 32, 32); }
+        if (al > 0) { const x = cx + Math.cos(c.ang) * c.r, y = cy + Math.sin(c.ang) * c.r, bg = ctx.createRadialGradient(x, y, 0, x, y, 22); bg.addColorStop(0, `rgba(210,255,225,${al})`); bg.addColorStop(.35, `rgba(57,255,136,${al * .8})`); bg.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = bg; ctx.fillRect(x - 22, y - 22, 44, 44); }
         if (!nearest || c.r < nearest) nearest = c.r;
         return true;
       });
       S.prevA = a;
       if (nearest) { ctx.globalAlpha = .85; ctx.fillStyle = col; ctx.font = 'bold 14px monospace'; ctx.fillText(String(Math.round(nearest / 12)).padStart(2, '0') + 'm', cx - 14, cy + Math.min(W, H) * .42); ctx.globalAlpha = 1; }
+    },
+  },
+  // ----- Wasteland Terminal / Amber: wrist-computer HUD (HP, compass, AP), a typing terminal and a rolling scan band -----
+  pipterm: {
+    over: true, fps: 15,
+    init(S) {
+      S.col = (T && T.fxColor) || '#1bff80'; S.lines = []; S.cur = ''; S.mi = (Math.random() * 20) | 0; S.ci = 0; S.nextC = 0; S.ap = 1; S.hp = .92;
+      S.msgs = ['> SHELTER-NET TERMLINK v2.07 ... ONLINE', '> GEIGER COUNTER: 0.4 RAD/HR  [SAFE]', '> SCANNING PARTS INVENTORY ...', '> WATER PURIFIER ......... OK', '> REACTOR CORE ........... 98%',
+        '> SURFACE CONDITIONS: DUSTY, HOSTILE', '> CAPS ON HAND: 1,337', '> RADIO: SIGNAL FOUND 104.7 MHz', '> WORK ORDER QUEUE: LOADING ...', '> REMEMBER: STAY INSIDE THE SHELTER',
+        '> DOOR SEAL INTEGRITY ...... 100%', '> HAVE A PRODUCTIVE DAY, WANDERER', '> RADIATION SUIT: CLEAN', '> NEW HOLOTAPE RECEIVED', '> AIR FILTERS: REPLACE IN 30 DAYS', '> CHECKING SUPPLY CRATES ...',
+        '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
+      if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
+      if (!window.__wrApHook) { window.__wrApHook = true; window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true }); }
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S, col = S.col; scn.S = S;
+      ctx.clearRect(0, 0, W, H);
+      const by = (t / 9000 % 1) * (H + 240) - 120, g = ctx.createLinearGradient(0, by - 60, 0, by + 60);   // rolling bright band
+      g.addColorStop(0, rgba(col, 0)); g.addColorStop(.5, rgba(col, .07)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.fillRect(0, by - 60, W, 120);
+      // typing terminal, top right
+      if (t > S.nextC) {
+        const m = S.msgs[S.mi % S.msgs.length];
+        if (S.ci < m.length) { S.cur += m[S.ci++]; S.nextC = t + rnd(35, 90); }
+        else { S.lines.push(S.cur); if (S.lines.length > 3) S.lines.shift(); S.cur = ''; S.ci = 0; S.mi++; S.nextC = t + rnd(900, 2200); }
+      }
+      const bx = W - 360, bw = 346; ctx.font = '12px Consolas, monospace';
+      ctx.globalAlpha = .55; ctx.fillStyle = '#000000'; ctx.fillRect(bx, 10, bw, 74);
+      ctx.globalAlpha = .9; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, 10.5, bw, 74);
+      ctx.fillStyle = col; [...S.lines, S.cur].forEach((l, i) => { ctx.globalAlpha = i === S.lines.length ? 1 : .7; ctx.fillText(l, bx + 8, 28 + i * 16); });
+      if (Math.floor(t / 450) % 2) { ctx.globalAlpha = 1; ctx.fillRect(bx + 8 + ctx.measureText(S.cur).width + 1, 28 + S.lines.length * 16 - 10, 7, 12); }
+      // bottom HUD: HP (left), compass (center), AP (right)
+      S.ap = Math.min(1, S.ap + .004); S.hp = .85 + .1 * Math.sin(t / 20000);
+      const y = H - 22, seg = (x, w, v, label, right) => {
+        ctx.globalAlpha = .8; ctx.fillStyle = col; ctx.font = 'bold 13px Consolas, monospace';
+        ctx.fillText(label, right ? x + w + 6 : x - 26, y + 5);
+        const n = 18, sw = w / n; for (let i = 0; i < n; i++) { const on = (right ? n - 1 - i : i) < v * n; ctx.globalAlpha = on ? .85 : .2; ctx.fillRect(x + i * sw, y - 3, sw - 2, 8); }
+      };
+      seg(40, 170, S.hp, 'HP', false);
+      seg(W - 220, 170, S.ap, 'AP', true);
+      const cw = Math.min(420, W * .32), cx = W / 2 - cw / 2, head = (window.__wrMouse.x / W * 360 + t / 400) % 360;
+      ctx.globalAlpha = .5; ctx.fillStyle = '#000000'; ctx.fillRect(cx, y - 12, cw, 22);
+      ctx.globalAlpha = .9; ctx.strokeStyle = col; ctx.strokeRect(cx + .5, y - 11.5, cw, 22);
+      ctx.save(); ctx.beginPath(); ctx.rect(cx, y - 12, cw, 22); ctx.clip();
+      ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.font = 'bold 12px Consolas, monospace';
+      for (let d = -90; d <= 90; d += 15) {
+        const hd = Math.round((head + d) / 15) * 15, x = W / 2 + ((hd - head) / 90) * (cw / 2), lab = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW' }[((hd % 360) + 360) % 360];
+        if (lab) ctx.fillText(lab, x, y + 4); else ctx.fillRect(x, y - 4, 1, 8);
+      }
+      ctx.restore(); ctx.textAlign = 'start'; ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Shelter Blue & Gold: a huge round blast door slowly turning, atomic-age starbursts -----
+  shelter: {
+    fps: 12,
+    init(S) {
+      const { W, H } = S, gold = '#f5c518';
+      S.r = Math.min(W, H) * .38; S.cx = W * .72; S.cy = H * .55;
+      S.door = off(S.r * 2 + 20, S.r * 2 + 20); const d = S.door.getContext('2d'), c = S.r + 10, r = S.r;
+      const metal = d.createRadialGradient(c - r * .3, c - r * .3, r * .1, c, c, r); metal.addColorStop(0, '#3a4a6a'); metal.addColorStop(1, '#141e36');
+      d.fillStyle = metal; d.beginPath(); d.arc(c, c, r, 0, 6.28); d.fill();
+      d.strokeStyle = 'rgba(245,197,24,.55)'; d.lineWidth = 3; d.beginPath(); d.arc(c, c, r - 4, 0, 6.28); d.stroke();
+      d.strokeStyle = 'rgba(255,255,255,.08)'; d.lineWidth = 2; [.82, .55, .3].forEach(k => { d.beginPath(); d.arc(c, c, r * k, 0, 6.28); d.stroke(); });
+      for (let i = 0; i < 16; i++) { const a = i / 16 * 6.28, bx = c + Math.cos(a) * r * .9, by = c + Math.sin(a) * r * .9; d.fillStyle = '#0b1328'; d.beginPath(); d.arc(bx, by, r * .045, 0, 6.28); d.fill(); d.fillStyle = 'rgba(245,197,24,.35)'; d.beginPath(); d.arc(bx - 1, by - 1, r * .02, 0, 6.28); d.fill(); }
+      for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; d.strokeStyle = 'rgba(0,0,0,.45)'; d.lineWidth = r * .06; d.beginPath(); d.moveTo(c + Math.cos(a) * r * .32, c + Math.sin(a) * r * .32); d.lineTo(c + Math.cos(a) * r * .8, c + Math.sin(a) * r * .8); d.stroke(); }
+      d.fillStyle = 'rgba(245,197,24,.18)'; d.font = 'bold ' + Math.round(r * .3) + 'px Arial Black, Arial'; d.textAlign = 'center'; d.textBaseline = 'middle'; d.fillText('07', c, c);
+      S.stars = Array.from({ length: 14 }, () => ({ x: rnd(0, W * .55), y: rnd(0, H), s: rnd(6, 16), ph: rnd(0, 6.28), sp: rnd(.0006, .0016) }));
+      S.gold = gold;
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.clearRect(0, 0, W, H);
+      ctx.save(); ctx.translate(S.cx, S.cy); ctx.rotate(t / 60000 * 6.28); ctx.globalAlpha = .55; ctx.drawImage(S.door, -S.door.width / 2, -S.door.height / 2); ctx.restore();
+      ctx.strokeStyle = S.gold; ctx.lineCap = 'round';
+      S.stars.forEach(st => {                                                              // atomic-age starbursts: 4 long + 4 short points
+        const k = .5 + .5 * Math.sin(t * st.sp + st.ph); ctx.globalAlpha = .25 + .45 * k; ctx.lineWidth = 1.6;
+        ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = i / 8 * 6.28 + t / 30000, L = st.s * (i % 2 ? .45 : 1) * (.8 + .2 * k); ctx.moveTo(st.x, st.y); ctx.lineTo(st.x + Math.cos(a) * L, st.y + Math.sin(a) * L); } ctx.stroke();
+        ctx.fillStyle = S.gold; ctx.beginPath(); ctx.arc(st.x, st.y, 1.6, 0, 6.28); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
     },
   },
   // ----- Synthwave: a teal-green scanner beam sweeping down + a teal waveform along the bottom -----
@@ -1760,7 +1853,7 @@ function startScene() {
     try { sc.draw(ctx, S, t); } catch (e) { console.warn('[Page Themes] effect', name, 'stopped:', e); stopScene(); return; }
     busy(performance.now() - t0);
   }
-  scn = { sig, cv, raf: 0, resize };
+  scn = { sig, cv, raf: 0, resize, S: null };
   window.addEventListener('resize', resize); resize();
   if (!sc.still) scn.raf = requestAnimationFrame(frame);
 }
@@ -1974,7 +2067,7 @@ function render(root) {
   const opts = ['<option value="">Off (site\'s normal look)</option>',
     '<optgroup label="Classic">', ...Object.keys(PRESETS).filter(k => !COLOR_THEORY[k] && !THEMED[k] && !ART[k] && !LAB[k]).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color Lab (animated mesh)">', ...Object.keys(LAB).map(k => `<option value="${k}" title="${esc(LAB[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
-    '<optgroup label="Themed: cyberpunk, space, cars, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
+    '<optgroup label="Themed: cyberpunk, space, games, sports, movies">', ...Object.keys(THEMED).map(k => `<option value="${k}" title="${esc(THEMED[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Art prints (Tidwell, Van Dyke, Grundy inspired)">', ...Object.keys(ART).map(k => `<option value="${k}" title="${esc(ART[k].about)}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
