@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Filter Quick Add
 // @namespace    reconclipboard
-// @version      1.7
+// @version      1.8
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/FILTER_QUICKADD.js
-// @description  PartsTech: hover a part card + press Enter -> adds it to the open Tekion RO (Oil & Filter Change job, else RECON FEES). Oil filters also get the right drain plug gasket for the make.
+// @description  PartsTech: hover a part card + press Enter -> adds it to the open Tekion RO (Oil & Filter Change job, else RECON FEES). Oil filters also get the right drain plug gasket for the make (Lexus = Toyota, Infiniti = Nissan).
 // @match        https://app.partstech.com/*
 // @match        https://app.tekioncloud.com/parts/*
 // @grant        GM_setValue
@@ -27,8 +27,8 @@ const MAX_AGE_MS = 30 * 1000;
 // Drain plug gasket by make (numbers given by Gabe).
 const GASKET_BY_MAKE = [
   { makes: ['SUBARU'], pn: '803916010' },
-  { makes: ['TOYOTA'], pn: '90430-12031' },
-  { makes: ['NISSAN'], pn: '11026-01M02' },
+  { makes: ['TOYOTA', 'LEXUS'], pn: '90430-12031' },   // v1.8: Lexus uses the Toyota gasket
+  { makes: ['NISSAN', 'INFINITI'], pn: '11026-01M02' },   // v1.8: Infiniti uses the Nissan gasket
   { makes: ['HONDA', 'ACURA', 'HYUNDAI', 'KIA', 'MAZDA', 'GENESIS'], pn: '94109-14000' },
 ];
 
@@ -332,5 +332,5 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.7 loaded on', location.hostname);
+log('v1.8 loaded on', location.hostname);
 })();
