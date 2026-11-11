@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1110.2002
+// @version      2026.1111.1208
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -9562,8 +9562,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.6  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.6', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.7  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.7', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9935,7 +9935,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
   //   Primary Bin: #primaryBinId, control data-test-id="@tekion-parts-modals-fields-primaryBin"
   //   current value shows in [class*="singleValue"], e.g. "100 - STANDARD (246A)"
   const SOURCE_BTNS_ID = 'rv-source-code-btns';
-  const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
+  const SOURCE_CODES = ['100', '300', '333', '336', '337', '338'];   // v3.7: numerical order
   const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
 
   // v3.5: the window comes in more than one version (Submit / "Do In & Out Sale"), so find it by its
