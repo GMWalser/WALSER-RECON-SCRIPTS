@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.5
+// @version      6.6
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -473,7 +473,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.5: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.6: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1669,7 +1669,6 @@ const SCENES = {
         '> DOOR SEAL INTEGRITY ...... 100%', '> HAVE A PRODUCTIVE DAY, WANDERER', '> RADIATION SUIT: CLEAN', '> NEW HOLOTAPE RECEIVED', '> AIR FILTERS: REPLACE IN 30 DAYS', '> CHECKING SUPPLY CRATES ...',
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
-      if (!window.__wrInputHook) { window.__wrInputHook = true; ['mousedown', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, () => { window.__wrLastInput = performance.now(); }, { passive: true, capture: true })); }
       S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
       if (!window.__wrApHook) { window.__wrApHook = true; window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true }); }
     },
@@ -1677,14 +1676,12 @@ const SCENES = {
       const { W, H } = S, col = S.col; scn.S = S;
       ctx.clearRect(0, 0, W, H);
       // v6.5: glitches at random times -- kinds, strength, direction and length all random, sometimes in bursts.
-      // Ones that MOVE the page never happen within 2 s of a click, key press or scroll (no misclicks);
-      // static and tears can come any time.
+      // v6.6: any kind can happen at any time (you are always clicking/typing/scrolling, so a pause rule meant they never came).
       if (t > S.nextJolt) {
         const burst = Math.random() < .25;
         S.nextJolt = t + (burst ? rnd(150, 1200) : rnd(12000, 110000));
         const kinds = ['pull', 'warp', 'roll', 'static', 'tear', 'pull static', 'warp tear', 'roll static', 'pull warp', 'static tear'];
-        let kind = kinds[(Math.random() * kinds.length) | 0];
-        if (/pull|warp|roll/.test(kind) && performance.now() - (window.__wrLastInput || 0) < 2000) kind = Math.random() < .5 ? 'static' : 'tear';
+        const kind = kinds[(Math.random() * kinds.length) | 0];
         const dur = rnd(120, 650), h = document.documentElement;
         S.glitch = { kind, until: t + dur, amt: rnd(.4, 1) };
         if (/pull|warp|roll/.test(kind)) {
