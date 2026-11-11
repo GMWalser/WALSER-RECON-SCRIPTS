@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1111.1231
+// @version      2026.1111.1837
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v5.9  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '5.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.0  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.0', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -105,11 +105,6 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
 // ---------------------------------------------------------------------------
 
 const PRESETS = {
-  midnight: { name: 'Midnight Blue',  bg: '#0f172a', surface: '#1e293b', text: '#e2e8f0', accent: '#3b82f6', accentText: '#ffffff', link: '#60a5fa', border: '#334155', input: '#0b1222' },
-  dim:      { name: 'Soft Dim',       bg: '#22272e', surface: '#2d333b', text: '#c9d1d9', accent: '#539bf5', accentText: '#ffffff', link: '#6cb6ff', border: '#444c56', input: '#1c2128' },
-  graphite: { name: 'Graphite Green', bg: '#121212', surface: '#1e1e1e', text: '#e6e6e6', accent: '#22c55e', accentText: '#04130a', link: '#4ade80', border: '#333333', input: '#181818' },
-  ember:    { name: 'Ember Orange',   bg: '#1a1210', surface: '#261a16', text: '#f3e9e4', accent: '#f97316', accentText: '#1a0d05', link: '#fb923c', border: '#3d2a22', input: '#1f1512' },
-  purple:   { name: 'Purple Night',   bg: '#151223', surface: '#211c33', text: '#e9e5f5', accent: '#a855f7', accentText: '#ffffff', link: '#c084fc', border: '#352d4f', input: '#1a1629' },
   contrast: { name: 'High Contrast',  bg: '#000000', surface: '#0a0a0a', text: '#ffffff', accent: '#facc15', accentText: '#000000', link: '#ffff00', border: '#777777', input: '#000000' },
 };
 // Built-in wallpapers: pure CSS (no image files), so no site can block them.
@@ -149,9 +144,9 @@ const WALLPAPERS = {
   ct_arctic: { name: "Arctic Night", css: "radial-gradient(circle at 31% 70%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 37% 38%,rgba(255,255,255,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 78% 55%,rgba(255,255,255,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 19% 7%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 35% 67%,rgba(255,255,255,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 7% 77%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 72% 92%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 21% 35%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 92% 14%,rgba(255,255,255,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 3% 64%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 46% 68%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 44% 28%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 44% 89%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 45% 46%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 70% 14%,rgba(255,255,255,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 80% 58%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 76% 23%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 79% 69%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 85% 78%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 49% 80%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 42% 23%,rgba(76,201,240,0.85) 0 1.5px,transparent 2.5px),radial-gradient(circle at 75% 58%,rgba(255,126,182,0.85) 0 1.5px,transparent 2.5px),radial-gradient(ellipse at 70% 30%,rgba(255,126,182,0.25),transparent 50%),linear-gradient(160deg,#0a1018,#121b28)" },
   ct_cabin: { name: "Forest Cabin", css: "radial-gradient(circle at 85% 15%,rgba(224,122,47,0.3),transparent 40%),linear-gradient(135deg,#0f140c 0%,#182014 55%,#0f140c 100%)" },
   ct_reef: { name: "Coral Reef", css: "radial-gradient(ellipse at 20% 25%,rgba(255,127,110,0.4),transparent 45%),radial-gradient(ellipse at 80% 80%,rgba(79,209,197,0.3),transparent 45%),linear-gradient(160deg,#0a1626,#11223a)" },
-  th_neonnoir: { name: "Neon Noir", css: "radial-gradient(ellipse at 10% 90%,rgba(255,46,151,.55),transparent 45%),radial-gradient(ellipse at 90% 10%,rgba(0,245,212,.45),transparent 45%),linear-gradient(135deg,#0a0614,#1a0b2e)" },
+  th_neonnoir: { name: "Neon Noir", css: "radial-gradient(ellipse at 15% 100%,rgba(255,46,151,.22),transparent 45%),radial-gradient(ellipse at 90% 0%,rgba(0,245,212,.16),transparent 45%),linear-gradient(#050509,#0a0a12)" },
   th_nightrain: { name: "Night City Rain", css: "repeating-linear-gradient(100deg,rgba(61,245,255,.10) 0 1px,transparent 1px 9px),radial-gradient(ellipse at 50% 100%,rgba(255,46,151,.45),transparent 55%),linear-gradient(180deg,#05070f,#140a2a)" },
-  th_vaporwave: { name: "Vaporwave", css: "repeating-linear-gradient(0deg,rgba(1,205,254,.25) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,113,206,.25) 0 1px,transparent 1px 40px),linear-gradient(180deg,#1a0b2a 0%,#b967ff 70%,#ff71ce 100%)" },
+  th_vaporwave: { name: "Vaporwave", css: "repeating-linear-gradient(0deg,rgba(1,205,254,.18) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,47,176,.18) 0 1px,transparent 1px 40px),linear-gradient(180deg,#12061f 0%,#3a0f5c 55%,#8a1470 85%,#c2185b 100%)" },
   th_hologrid: { name: "Holo Grid", css: "repeating-linear-gradient(0deg,rgba(46,242,208,.18) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,rgba(46,242,208,.18) 0 1px,transparent 1px 32px),radial-gradient(circle at 75% 25%,rgba(255,62,165,.45),transparent 40%),linear-gradient(#03100f,#03100f)" },
   th_glitch: { name: "Glitch Arcade", css: "linear-gradient(90deg,rgba(0,245,255,.25) 0 2px,transparent 2px),linear-gradient(270deg,rgba(255,46,151,.25) 0 2px,transparent 2px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px),linear-gradient(135deg,#08080c 0%,#1b0a24 50%,#06202a 100%)" },
   th_hyperspace: { name: "Hyperspace", css: "repeating-conic-gradient(from 0deg at 50% 50%,rgba(200,230,255,.18) 0deg .6deg,transparent .6deg 7deg),radial-gradient(circle at 50% 50%,rgba(76,201,240,.35),transparent 35%),linear-gradient(#020308,#020308)" },
@@ -195,7 +190,7 @@ const WALLPAPERS = {
 // Color-theory themes (each comes with a matching wallpaper; set Wallpaper to None to turn it off).
 // Every one passes readability checks: text 7:1+, buttons and links 4.5:1+.
 const COLOR_THEORY = {
-  synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true },
+  synthwave: { name: "Synthwave \u00b7 split-complementary", bg: '#1a0b2e', surface: '#261447', text: '#f5e9ff', accent: '#ff2a9d', accentText: '#1a0b2e', link: '#2de2e6', border: '#4b2a7a', input: '#140824', wp: WALLPAPERS.synthgrid.css, wpDim: 35, wpSee: 30, glow: true , fx: 'scanner' },
   cyberpunk: { name: "Cyberpunk Neon \u00b7 complementary", bg: '#0d0221', surface: '#1b0f3a', text: '#f0f0ff', accent: '#f9f002', accentText: '#0d0221', link: '#00f0ff', border: '#3c2a6e', input: '#090118', wp: WALLPAPERS.neon.css, wpDim: 35, wpSee: 30, glow: true, fx: 'circuit pulse', fxColor: '#00f0ff', fxColors: ["#00f0ff", "#ff2bd6", "#f9f002"] },
   lagoon: { name: "Tropical Lagoon \u00b7 complementary", bg: '#04262b', surface: '#0a3a40', text: '#e6fffb', accent: '#ff6f59', accentText: '#2a0a05', link: '#4fe3d0', border: '#16606a', input: '#032026', wp: WALLPAPERS.lagoon.css, wpDim: 35, wpSee: 30 },
   autumn: { name: "Autumn Harvest \u00b7 analogous", bg: '#1c120b', surface: '#2a1b10', text: '#fbeedd', accent: '#e8a33d', accentText: '#1c120b', link: '#d4e157', border: '#4a3220', input: '#160e08', wp: WALLPAPERS.autumn.css, wpDim: 35, wpSee: 30 },
@@ -231,35 +226,29 @@ const COLOR_THEORY = {
 // Themed looks: cyberpunk, space opera, car, and art-inspired. Original palettes and patterns
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
-  neonnoir: { name: "Neon Noir", about: "cyberpunk teal + pink", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'pulse flicker', fxColor: '#ff2e97' },
+  neonnoir: { name: "Neon Noir", about: 'cyberpunk: dark rainy city, bright neon signs', bg: '#050509', surface: '#0e0e15', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#26263a', input: '#08080d', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'flicker neoncity', fxColor: '#ff2e97' },
   nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
-  vaporwave: { name: "Vaporwave", about: "cyberpunk pink + teal + purple", bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff71ce', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true },
+  vaporwave: { name: "Vaporwave", about: 'cyberpunk pink + teal + purple, moving sine waves', bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff3fb4', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true , fx: 'sine' },
   hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'gridfloor', fxColor: '#2ef2d0' },
-  glitch: { name: "Glitch Arcade", about: "cyberpunk split teal / pink", bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'glitch', fxColor: '#5cf2ff' },
+  glitch: { name: "Glitch Arcade", about: 'cyberpunk split teal / pink with real glitches', bg: '#08080c', surface: '#13131c', text: '#f5f5ff', accent: '#5cf2ff', accentText: '#041a1f', link: '#ff6ec7', border: '#2b2b40', input: '#060609', wp: WALLPAPERS.th_glitch.css, wpDim: 25, wpSee: 30, glow: true, fx: 'glitchfx', fxColor: '#5cf2ff' },
   hyperspace: { name: "Hyperspace", about: "space opera: light-speed streaks", bg: '#020308', surface: '#0b0f1c', text: '#eef3ff', accent: '#4cc9f0', accentText: '#021219', link: '#ffd166', border: '#1f2a44', input: '#010206', wp: WALLPAPERS.th_hyperspace.css, wpDim: 25, wpSee: 30, fx: 'stars', fxColor: '#cfe8ff' },
-  twinsuns: { name: "Twin Suns Desert", about: "space opera: desert planet at dusk", bg: '#1a120a', surface: '#2a1d12', text: '#fbeedb', accent: '#f2a541', accentText: '#1a0f00', link: '#8ecae6', border: '#4a3420', input: '#140d07', wp: WALLPAPERS.th_twinsuns.css, wpDim: 25, wpSee: 30 },
-  darkempire: { name: "Dark Empire", about: "space opera: black, steel and red", bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'searchlight', fxColor: '#ff3b3b' },
+  darkempire: { name: "Dark Empire", about: 'space opera: black, steel and red; a giant ship passes overhead', bg: '#060606', surface: '#121315', text: '#eceef0', accent: '#c8ccd2', accentText: '#060606', link: '#ff4d4d', border: '#2c2f33', input: '#040404', wp: WALLPAPERS.th_darkempire.css, wpDim: 25, wpSee: 30, fx: 'shadowship', fxColor: '#ff3b3b' },
   saberduel: { name: "Saber Duel", about: "space opera: blue vs red glow", bg: '#05060c', surface: '#0f1120', text: '#eef2ff', accent: '#3ea6ff', accentText: '#021426', link: '#ff6b6b', border: '#232845', input: '#030409', wp: WALLPAPERS.th_saberduel.css, wpDim: 25, wpSee: 30, glow: true },
-  typesblue: { name: "TL Type-S Blue Pearl", about: "car: deep blue pearl + Type-S red", bg: '#060c18', surface: '#0d1a33', text: '#eaf1ff', accent: '#2f6fe4', accentText: '#ffffff', link: '#ff5a5a', border: '#1d3a6b', input: '#040914', wp: WALLPAPERS.th_typesblue.css, wpDim: 25, wpSee: 30, fx: 'comet', fxColor: '#ff2a2a' },
-  typescarbon: { name: "TL Type-S Carbon", about: "car: anthracite, carbon fiber, red S", bg: '#0c0d0f', surface: '#17191c', text: '#eceef1', accent: '#c9d1da', accentText: '#0c0d0f', link: '#ff5a5a', border: '#2e3238', input: '#08090a', wp: WALLPAPERS.th_typescarbon.css, wpDim: 25, wpSee: 30, fx: 'tach', fxColor: '#ff2a2a' },
-  screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: WALLPAPERS.th_screenprint.css, wpDim: 25, wpSee: 30, wpFit: 'tile', wpTile: '9px 9px' },
+  screenprint: { name: "Screenprint Poster", about: "art: vintage limited-ink screen print (Tidwell-inspired)", bg: '#17120d', surface: '#231b13', text: '#f3e6c8', accent: '#c9a227', accentText: '#17120d', link: '#7cc3b6', border: '#4a3a26', input: '#120e0a', wp: 'linear-gradient(#17120d,#17120d)', wpDim: 25, wpSee: 30, wpFit: 'cover', wpTile: '9px 9px' , fx: 'halftone' },
   inkbone: { name: "Ink & Bone", about: "art: stark pen and ink, one red spot color (Van Dyke-inspired)", bg: '#070707', surface: '#121212', text: '#efe9dc', accent: '#efe9dc', accentText: '#070707', link: '#ff4d5e', border: '#3a3a3a', input: '#050505', wp: WALLPAPERS.th_inkbone.css, wpDim: 25, wpSee: 30 },
   bmx80s: { name: "80s Haro Green", about: "80s freestyle BMX: green frame color sampled from photos, blue/light-blue/coral decal stripes", bg: '#050a06', surface: '#0e1810', text: '#f2fff4', accent: '#10e156', accentText: '#02160a', link: '#4fc3ff', border: '#1f4a2a', input: '#040805', wp: WALLPAPERS.th_bmx80s.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#10e156' },
   bmx80sblue: { name: "80s Haro Blue", about: "80s freestyle BMX: teal/aqua frame color sampled from photos, white stripes, coral accents", bg: '#041314', surface: '#0a2224', text: '#effefe', accent: '#1ccacb', accentText: '#021a1a', link: '#ff8a7a', border: '#1a4547', input: '#030e0f', wp: WALLPAPERS.th_bmx80sblue.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#1ccacb' },
   crawl: { name: "Opening Crawl", about: "space opera: yellow title text on a drifting starfield", bg: '#000000', surface: '#07080d', text: '#ffe81f', accent: '#ffe81f', accentText: '#000000', link: '#9fd8ff', border: '#2a2a18', input: '#000000', wp: WALLPAPERS.th_crawl.css, wpDim: 20, wpSee: 30, glow: false, fx: 'stars', fxColor: '#ffffff' },
-  iceplanet: { name: "Ice Planet Outpost", about: "space opera: frozen rebel-style base, falling snow", bg: '#0a121a', surface: '#122030', text: '#eef6ff', accent: '#9ad7ff', accentText: '#06202f', link: '#ffb36b', border: '#27405a', input: '#08101a', wp: WALLPAPERS.th_iceplanet.css, wpDim: 20, wpSee: 30, glow: false, fx: 'snow', fxColor: '#ffffff' },
-  forestmoon: { name: "Forest Moon", about: "space opera: giant redwood forest moon, fireflies", bg: '#0a1108', surface: '#132010', text: '#eef7e4', accent: '#d4a373', accentText: '#1a0f05', link: '#9bdb70', border: '#2d4224', input: '#070d06', wp: WALLPAPERS.th_forestmoon.css, wpDim: 20, wpSee: 30, glow: false, fx: 'fireflies', fxColor: '#d9ff8a' },
-  cloudcity: { name: "Cloud City Sunset", about: "space opera: city above the clouds at sunset", bg: '#1c1020', surface: '#2a1830', text: '#fff1ea', accent: '#ffb38a', accentText: '#2a0f05', link: '#f5d0fe', border: '#4b2d52', input: '#160c19', wp: WALLPAPERS.th_cloudcity.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '#ff9a76', mesh: ["#ff9a76", "#b24a7a", "#2b1450", "#ffc48a"] },
-  imperialbridge: { name: "Imperial Bridge", about: "space opera: dark command bridge, red and green console lights", bg: '#0b0c0e', surface: '#16181c', text: '#e9ecef', accent: '#c8ccd2', accentText: '#0b0c0e', link: '#7dff9a', border: '#30343a', input: '#08090a', wp: WALLPAPERS.th_imperialbridge.css, wpDim: 20, wpSee: 30, glow: false, fx: 'warpside', fxColor: '#dfe8ff' },
+  cloudcity: { name: "Cloud City Sunset", about: 'space opera: floating city above the clouds at sunset, ships passing', bg: '#1c1020', surface: '#2a1830', text: '#fff1ea', accent: '#ffb38a', accentText: '#2a0f05', link: '#f5d0fe', border: '#4b2d52', input: '#160c19', wp: WALLPAPERS.th_cloudcity.css, wpDim: 20, wpSee: 30, glow: false, fx: 'cloudcity', fxColor: '#ff9a76', mesh: ["#ff9a76", "#b24a7a", "#2b1450", "#ffc48a"] },
   crimsonsaber: { name: "Crimson Saber", about: "space opera: dark side red glow", bg: '#070203', surface: '#140608', text: '#ffeef0', accent: '#ffd6da', accentText: '#3a0008', link: '#ff6b7a', border: '#3a1218', input: '#050102', wp: WALLPAPERS.th_crimsonsaber.css, wpDim: 20, wpSee: 30, glow: true, fx: 'pulse', fxColor: '#ff1a2e' },
   digitalrain: { name: "Digital Rain", about: "Matrix-style falling green code", bg: '#000300', surface: '#020d04', text: '#c2ffcf', accent: '#00ff41', accentText: '#001a07', link: '#8dff9f', border: '#0d3314', input: '#000200', wp: WALLPAPERS.th_digitalrain.css, wpDim: 20, wpSee: 30, glow: true, fx: 'code', fxColor: '#00ff41' },
-  mainframe: { name: "Mainframe", about: "Matrix-style green phosphor CRT with scanlines", bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'terminal', fxColor: '#33ff33' },
+  mainframe: { name: "Mainframe", about: '60s green-screen terminal: black and green only, scanlines', bg: '#010801', surface: '#041204', text: '#9cff9c', accent: '#33ff33', accentText: '#001a00', link: '#d4ffd4', border: '#0f3a0f', input: '#010601', wp: WALLPAPERS.th_mainframe.css, wpDim: 20, wpSee: 30, glow: true, fx: 'terminal crt', fxColor: '#33ff33' , mono: 120 },
   vikings: { name: "Vikings Purple & Gold", about: "sports: Minnesota Vikings team colors (purple #4F2683, gold #FFC62F)", bg: '#12081f', surface: '#1e1033', text: '#f6f0ff', accent: '#ffc62f', accentText: '#1a0f00', link: '#d0b0ff', border: '#4f2683', input: '#0e0618', wp: WALLPAPERS.th_vikings.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#ffc62f' },
   wolves: { name: "Timberwolves Blue & Green", about: "sports: Minnesota Timberwolves colors (midnight blue, lake blue, aurora green, moonlight grey)", bg: '#07111f', surface: '#0c2340', text: '#eef5ff', accent: '#78be20', accentText: '#0a1a00', link: '#8fc4ff', border: '#236192', input: '#050d18', wp: WALLPAPERS.th_wolves.css, wpDim: 20, wpSee: 30, glow: false, fx: '', fxColor: '#78be20', mesh: ["#78be20", "#236192", "#0c2340", "#5f9e2a"] },
-  thermal: { name: "Thermal Vision", about: "movie-inspired: alien hunter heat vision", bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: WALLPAPERS.th_thermal.css, wpDim: 20, wpSee: 30, glow: true, fx: 'flir', fxColor: '#ff3b1f' },
-  hunter: { name: "Jungle Hunter", about: "movie-inspired: jungle canopy with a three-dot laser sight", bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser', fxColor: '#ff2020' },
-  xenohive: { name: "Xeno Hive", about: "movie-inspired: ribbed black biomechanical hive, acid green", bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: '', fxColor: '#9cff2e' },
-  tracker: { name: "Motion Tracker", about: "movie-inspired: green radar motion tracker with rotating sweep", bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'sweep', fxColor: '#39ff88' },
+  thermal: { name: "Thermal Vision", about: 'movie-inspired: heat vision, slow lava-lamp heat blobs', bg: '#05030f', surface: '#0e0a24', text: '#fff4e8', accent: '#ffb000', accentText: '#1a0d00', link: '#5ad1ff', border: '#2a2050', input: '#04020b', wp: 'linear-gradient(#05030f,#05030f)', wpDim: 20, wpSee: 30, glow: true, fx: 'lavalamp', fxColor: '#ff3b1f' },
+  hunter: { name: "Jungle Hunter", about: 'movie-inspired: jungle canopy, three-dot laser, alien glyphs and a closing three-bar sight', bg: '#050c06', surface: '#0d1a0e', text: '#e9f5e4', accent: '#8fbf5a', accentText: '#0b1a04', link: '#ff6a5c', border: '#23401f', input: '#040a05', wp: WALLPAPERS.th_hunter.css, wpDim: 20, wpSee: 30, glow: false, fx: 'laser hunterhud', fxColor: '#ff2020' },
+  xenohive: { name: "Xeno Hive", about: 'movie-inspired: ribbed biomechanical hive, acid green pulses', bg: '#050607', surface: '#101315', text: '#e6ece9', accent: '#9cff2e', accentText: '#0d1a00', link: '#b6c6c0', border: '#2a3133', input: '#040505', wp: WALLPAPERS.th_xenohive.css, wpDim: 20, wpSee: 30, glow: true, fx: 'biomech', fxColor: '#9cff2e' },
+  tracker: { name: "Motion Tracker", about: 'movie-inspired: motion tracker sweep with contacts closing in', bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'radar', fxColor: '#39ff88' },
   marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan hud', fxColor: '#f2a900' },
 };
 Object.assign(PRESETS, COLOR_THEORY);
@@ -287,13 +276,13 @@ const LAB = {
   lab_split: { name: "Split Signal \u00b7 split-complementary", about: "color lab: split-complementary", bg: '#03191c', surface: '#082a2e', text: '#eafcfb', accent: '#ff7a5c', accentText: '#1f0700', link: '#ff8fb4', border: '#16474c', input: '#021316', wp: 'linear-gradient(#03191c,#03191c)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#0e7f86", "#ff6b57", "#ff3d7f", "#06363b"], hover: 'laser', hoverColor: '#3be0d4' },
   lab_triad: { name: "Triad Pulse \u00b7 triadic", about: "color lab: triadic", bg: '#0a0716', surface: '#141029', text: '#f3f0ff', accent: '#a78bfa', accentText: '#120a2e', link: '#fbbf24', border: '#2d2552', input: '#07050f', wp: 'linear-gradient(#0a0716,#0a0716)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#7c3aed", "#14b8a6", "#f59e0b", "#1e1145"], hover: 'laser', hoverColor: '#fbbf24' },
   lab_tetrad: { name: "Tetrad Bloom \u00b7 tetradic (square)", about: "color lab: tetradic (square)", bg: '#0b0b12', surface: '#15151f', text: '#f7f7fb', accent: '#d4ff3a', accentText: '#141f00', link: '#5ee8ff', border: '#2e2e44', input: '#08080d', wp: 'linear-gradient(#0b0b12,#0b0b12)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#ff2fb3", "#b6ff2a", "#22d3ee", "#ff8a1f"], hover: 'laser', hoverColor: '#ff2fb3' },
-  lab_ember: { name: "Analog Ember \u00b7 analogous warm", about: "color lab: analogous warm", bg: '#140806', surface: '#22100b', text: '#fff0e8', accent: '#ffb020', accentText: '#1f1000', link: '#ffd27a', border: '#4a2418', input: '#0f0604', wp: 'linear-gradient(#140806,#140806)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh bokeh', fxColor: '#ffb020', fxColors: ["#ffb020", "#ff5a1f", "#ffd27a"], mesh: ["#b4141e", "#ff5a1f", "#ffb020", "#3a0a08"], hover: 'laser', hoverColor: '#20c8ff' },
-  lab_abyss: { name: "Analog Abyss \u00b7 analogous cool", about: "color lab: analogous cool", bg: '#04061a', surface: '#0a0f2e', text: '#eaf2ff', accent: '#38bdf8', accentText: '#021523', link: '#a5b4fc', border: '#1e2a5e', input: '#030414', wp: 'linear-gradient(#04061a,#04061a)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#a5b4fc", "#67e8f9"], mesh: ["#3730a3", "#1d4ed8", "#06b6d4", "#0b0b3a"], hover: 'laser', hoverColor: '#ffb020' },
+  lab_ember: { name: "Analog Ember \u00b7 analogous warm", about: 'color lab: analogous warm - embers on a dark night', bg: '#07080f', surface: '#12131d', text: '#fff0e8', accent: '#ffb020', accentText: '#1f1000', link: '#ffd27a', border: '#2a2a3c', input: '#05060b', wp: 'linear-gradient(#07080f,#07080f)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh embers', fxColor: '#ffb020', fxColors: ["#ffb020", "#ff5a1f", "#ffd27a"], mesh: ["#0b1230", "#2a0e0a", "#141a3a", "#05060f"], hover: 'laser', hoverColor: '#20c8ff' },
+  lab_abyss: { name: "Analog Abyss \u00b7 analogous cool", about: 'color lab: analogous cool - the deep ocean', bg: '#010a0f', surface: '#05161d', text: '#eaf2ff', accent: '#38bdf8', accentText: '#021523', link: '#a5b4fc', border: '#0f3340', input: '#01070a', wp: 'linear-gradient(#010a0f,#010a0f)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh deepsea', fxColor: '#ffffff', fxColors: ["#ffffff", "#a5b4fc", "#67e8f9"], mesh: ["#04222e", "#021019", "#063040", "#000206"], hover: 'laser', hoverColor: '#ffb020' },
   lab_cobalt: { name: "Cobalt Mono \u00b7 monochromatic", about: "color lab: monochromatic", bg: '#030b1f', surface: '#081634', text: '#e8f0ff', accent: '#6ea8ff', accentText: '#041228', link: '#b9d3ff', border: '#18306a', input: '#020816', wp: 'linear-gradient(#030b1f,#030b1f)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#0a2a7a", "#1f5fff", "#7fb0ff", "#04102e"], hover: 'laser', hoverColor: '#ffa63d' },
   lab_voltage: { name: "Complement Voltage \u00b7 complementary", about: "color lab: complementary", bg: '#050914', surface: '#0c1428', text: '#f2f6ff', accent: '#ff7a00', accentText: '#1f0d00', link: '#6ea2ff', border: '#1e2e5a', input: '#03060e', wp: 'linear-gradient(#050914,#050914)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh circuit', fxColor: '#2563ff', fxColors: ["#2563ff", "#ff7a00"], mesh: ["#2563ff", "#ff7a00", "#0a1a5a", "#ff3d00"], hover: 'laser', hoverColor: '#2f8bff' },
   lab_acid: { name: "Acid Duotone \u00b7 complementary duotone", about: "color lab: complementary duotone", bg: '#0e0420', surface: '#190a33', text: '#f6f0ff', accent: '#c6ff00', accentText: '#162000', link: '#e0b8ff', border: '#3a1f66', input: '#0a0318', wp: 'linear-gradient(#0e0420,#0e0420)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#5b1fb8", "#c6ff00", "#2a0a5a", "#8a2be2"], hover: 'laser', hoverColor: '#b14dff' },
-  lab_pearl: { name: "Iridescent Pearl \u00b7 analogous pastel", about: "color lab: analogous pastel", bg: '#121218', surface: '#1c1c26', text: '#f8f6ff', accent: '#f0b8ff', accentText: '#25102e', link: '#a8f0e0', border: '#38384c', input: '#0e0e14', wp: 'linear-gradient(#121218,#121218)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh flake', fxColor: '#ffffff', fxColors: ["#ffffff", "#f0b8ff", "#a8f0e0"], mesh: ["#f0b8ff", "#a8d8ff", "#a8f0e0", "#ffe0c8"], hover: 'laser', hoverColor: '#ffe08a' },
-  lab_aurora: { name: "Borealis \u00b7 analogous green-teal-violet", about: "color lab: analogous green-teal-violet", bg: '#020d10', surface: '#081c22', text: '#e8fff8', accent: '#34f5a0', accentText: '#00200f', link: '#c4a6ff', border: '#164a44', input: '#010a0c', wp: 'linear-gradient(#020d10,#020d10)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#10b981", "#06b6d4", "#8b5cf6", "#022c22"], hover: 'laser', hoverColor: '#ff5fa8' },
+  lab_pearl: { name: "Iridescent Pearl \u00b7 analogous pastel", about: 'color lab: analogous pastel - colors shifting like a pearl', bg: '#121218', surface: '#1c1c26', text: '#f8f6ff', accent: '#f0b8ff', accentText: '#25102e', link: '#a8f0e0', border: '#38384c', input: '#0e0e14', wp: 'linear-gradient(#121218,#121218)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh pearl', fxColor: '#ffffff', fxColors: ["#ffffff", "#f0b8ff", "#a8f0e0"], mesh: ["#f0b8ff", "#a8d8ff", "#a8f0e0", "#ffe0c8"], hover: 'laser', hoverColor: '#ffe08a' },
+  lab_aurora: { name: "Borealis \u00b7 analogous green-teal-violet", about: 'color lab: analogous green-teal-violet - moving aurora curtains', bg: '#020d10', surface: '#081c22', text: '#e8fff8', accent: '#34f5a0', accentText: '#00200f', link: '#c4a6ff', border: '#164a44', input: '#010a0c', wp: 'linear-gradient(#020d10,#020d10)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh aurora', fxColor: '', mesh: ["#05302a", "#04202a", "#1a1040", "#010608"], hover: 'laser', hoverColor: '#ff5fa8' },
   lab_infrared: { name: "Infrared \u00b7 analogous red-magenta", about: "color lab: analogous red-magenta", bg: '#14030c', surface: '#230818', text: '#fff0f6', accent: '#ff4fa3', accentText: '#25000f', link: '#ffb27a', border: '#4a1430', input: '#0f0208', wp: 'linear-gradient(#14030c,#14030c)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#e11d48", "#db2777", "#f97316", "#3b0618"], hover: 'laser', hoverColor: '#2fffd0' },
   lab_noir: { name: "Chromatic Noir \u00b7 neutral + single complementary pop", about: "color lab: neutral + single complementary pop", bg: '#08080a', surface: '#121216', text: '#f2f2f4', accent: '#00e5ff', accentText: '#001a1f', link: '#ff8a95', border: '#2c2c34', input: '#060608', wp: 'linear-gradient(#08080a,#08080a)', wpDim: 0, wpSee: 38, glow: true, fx: 'mesh', fxColor: '', mesh: ["#1a1a22", "#ff3b4f", "#00e5ff", "#0d0d12"], hover: 'laser', hoverColor: '#ff3b4f' },
 };
@@ -384,6 +373,9 @@ function setActiveTheme(id) {                    // used by the dropdown and by 
 }
 function skipDaily() { const d = dailyState(); d.on = true; d.date = todayStr(); d.theme = pickRandomTheme(d.theme); save('daily', d); refresh(true); }
 
+// v6.0: these themes were removed; a site still set to one switches to High Contrast (not Off)
+const REMOVED_THEMES = ["midnight", "dim", "graphite", "ember", "purple", "twinsuns", "typesblue", "typescarbon", "iceplanet", "forestmoon", "imperialbridge"];
+if (REMOVED_THEMES.includes(cfg.theme)) { cfg.theme = 'contrast'; saveSiteCfg(cfg); }
 let T = allThemes()[activeThemeId()] || null;     // active theme colors, or null = Off
 
 // ---------- color math ----------
@@ -459,6 +451,7 @@ input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readon
 [data-wr-fg=accentText]{color:var(--wr-accentText) !important}
 [data-wr-fg=tint]{color:var(--wr-fgtint) !important}
 [data-wr-bd=border]{border-color:var(--wr-border) !important}
+${T.mono != null ? `[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}\nimg,video{filter:grayscale(1) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(3) brightness(.85)}` : ''}
 ::placeholder{color:${mix(T.text, T.bg, 0.45)} !important}
 input,textarea,select,[contenteditable]{caret-color:${T.text}}
 input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
@@ -542,7 +535,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v5.9: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.0: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -564,6 +557,7 @@ function ruleSelector() { return (cfg.rules || []).map(r => r.sel).join(','); }
 function decide(el, cs, picked) {
   const d = {};
   if (picked && (() => { try { return el.matches(picked); } catch (e) { return false; } })()) return d;
+  if (T.mono != null) return decideMono(el, cs, d);
   const bg = parseColor(cs.backgroundColor);
   if (bg && bg.a > 0.3 && cs.backgroundImage === 'none') {
     const L = lum(bg), H = hsl(bg);
@@ -590,6 +584,30 @@ function decide(el, cs, picked) {
     const b = parseColor(cs['border' + side + 'Color']);
     if (b && b.a > 0.3 && lum(b) > 0.4 && hsl(b).s < 0.3) d.bd = 'border';
   }
+  return d;
+}
+// v6.0: one-color screens (Mainframe): grey and colored bars, grey text and every border go to the theme color
+function decideMono(el, cs, d) {
+  const bg = parseColor(cs.backgroundColor), img = cs.backgroundImage;
+  if (bg && bg.a > 0.3 && (img === 'none' || (/gradient\(/.test(img) && !/url\(/.test(img)))) {
+    const L = lum(bg), H = hsl(bg);
+    if (el === document.documentElement || el === document.body) d.bg = 'page';
+    else if (cfg.buttons && isButtonLike(el) && H.s > 0.35 && L < 0.75) { d.bg = 'accent'; d.fg = 'accentText'; return d; }
+    else if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) d.bg = 'input';
+    else if (H.s >= 0.3) { d.bg = 'tint'; d.tint = `hsla(${T.mono}, 70%, ${Math.round(14 + L * 40)}%, var(--wr-alpha, 1))`; }   // colored bars: brighter green, still visible
+    else if (L >= 0.02) {
+      const floating = cs.position === 'fixed' || cs.position === 'sticky' || (cs.position === 'absolute' && (parseInt(cs.zIndex, 10) || 0) >= 10);
+      d.bg = L >= 0.85 ? (floating ? 'solid' : 'surface') : (floating ? 'solid2' : 'surface2');
+    }
+  }
+  const c = parseColor(cs.color);
+  if (c && c.a > 0.3) {
+    const L = lum(c);
+    if (el.tagName === 'A' && hsl(c).s > 0.4) d.fg = 'link';
+    else d.fg = L >= 0.25 && L < 0.55 ? 'dim' : 'text';
+  }
+  const side = ['Top', 'Bottom', 'Left', 'Right'].find(s => parseFloat(cs['border' + s + 'Width']) > 0);
+  if (side) { const b = parseColor(cs['border' + side + 'Color']); if (b && b.a > 0.3) d.bd = 'border'; }
   return d;
 }
 function clearEl(el) {
@@ -743,6 +761,9 @@ a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
   if (hasFx('flicker')) css += `
 @keyframes wrNeon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite,wrNeon 6.5s steps(1) infinite !important}`;
+  if (hasFx('crt')) css += `
+@keyframes wrCrt{0%,100%{opacity:.85}50%{opacity:1}}
+html::after{content:'';position:fixed;inset:0;z-index:2147483500;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.5) 100%);animation:wrCrt 3.2s ease-in-out infinite}`;
   // ---- background effects drawn with CSS (html::before) ----
   if (hasFx('pulse')) css += `
 @keyframes wrPulse{0%,100%{opacity:.25}50%{opacity:.75}}
@@ -839,7 +860,7 @@ function leaveLite() {
 }
 function goLite(share) {
   liteMode = true;
-  if (share > FX_OFF_SHARE) { fxOff = true; stopFx(); stopMesh(); }
+  if (share > FX_OFF_SHARE) { fxOff = true; stopFx(); stopMesh(); stopScene(); }
   document.documentElement.setAttribute('data-wr-lite', Math.round(share * 100) + (fxOff ? ' fx-off' : ''));
   console.warn('[Page Themes] lite mode on this page: theme used ' + Math.round(share * 100) + '% of the time - page changes checked once a second' + (fxOff ? ', effects off' : ', effects kept on'));
 }
@@ -849,6 +870,7 @@ function stopFx() {
 }
 const CANVAS_FX = ['code', 'rain', 'snow', 'stars', 'fireflies', 'circuit', 'petals', 'leaves', 'bubbles', 'flake', 'lightning', 'fog', 'bokeh', 'arc', 'comet', 'gridfloor', 'glitch', 'searchlight', 'terminal', 'saucer', 'warpside', 'hud', 'tach', 'flir'];
 function startFx() {
+  startScene();
   const mode = T && animOn() && !fxOff ? CANVAS_FX.find(m => hasFx(m)) || '' : '';
   if (!mode || window.top !== window) { stopFx(); return; }
   const sig = mode + '|' + T.fxColor + '|' + JSON.stringify(T.fxColors || '');
@@ -1211,6 +1233,538 @@ function startMesh() {
   if (moving) meshFx.raf = requestAnimationFrame(frame);
 }
 
+// ---------- v6.0 SCENES: one animated picture per theme (its own canvas) ----------
+// A theme names its scene in fx (e.g. fx: 'mesh embers'). Background scenes sit behind the page.
+// "over" scenes sit ON TOP of the page (clicks pass through) and stay light, so they also show in
+// Tekion, whose stacked panels hide anything faint behind them. Same rules as every effect:
+// ~20 fps or less, only in the window you are using, and the time is counted by the brake.
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+function glowSprite(hex, size) {                       // soft round glow, drawn once
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d'), g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0, rgba(hex, 1)); g.addColorStop(.25, rgba(hex, .55)); g.addColorStop(1, rgba(hex, 0));
+  x.fillStyle = g; x.fillRect(0, 0, size, size); return c;
+}
+function lutFrom(stops) {                              // 256-step color ramp from [[pos, '#hex'], ...]
+  const L = [];
+  for (let i = 0; i < 256; i++) {
+    const v = i / 255; let k = 0; while (k < stops.length - 2 && v > stops[k + 1][0]) k++;
+    const a = stops[k], b = stops[k + 1], f = clamp01((v - a[0]) / ((b[0] - a[0]) || 1)), A = hexToRgb(a[1]), B = hexToRgb(b[1]);
+    L.push([A.r + (B.r - A.r) * f, A.g + (B.g - A.g) * f, A.b + (B.b - A.b) * f]);
+  }
+  return L;
+}
+function off(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, w | 0); c.height = Math.max(1, h | 0); return c; }
+
+const SCENES = {
+  // ----- Analog Ember: a dark starry night; embers drift in a shifting breeze, flare in gusts, burn out -----
+  embers: {
+    init(S) {
+      const { W, H } = S;
+      S.spr = ['#fff3c4', '#ffb347', '#ff6a1f', '#a8240c'].map(c => glowSprite(c, 32));
+      S.stars = Array.from({ length: Math.round(W * H / 9000) }, () => [rnd(0, W), rnd(0, H * .6), rnd(.3, 1.1), rnd(.15, .5)]);
+      S.night = off(W, H); const n = S.night.getContext('2d');
+      const sky = n.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#03040c'); sky.addColorStop(.7, '#070a1c'); sky.addColorStop(1, '#170a0c');
+      n.fillStyle = sky; n.fillRect(0, 0, W, H);
+      S.stars.forEach(([x, y, r, a]) => { n.globalAlpha = a; n.fillStyle = '#dfe6ff'; n.beginPath(); n.arc(x, y, r, 0, 6.28); n.fill(); });
+      n.globalAlpha = .8; const mg = n.createRadialGradient(W * .82, H * .16, 0, W * .82, H * .16, 60); mg.addColorStop(0, 'rgba(230,236,255,.9)'); mg.addColorStop(.35, 'rgba(200,210,255,.25)'); mg.addColorStop(1, 'rgba(200,210,255,0)');
+      n.fillStyle = mg; n.fillRect(W * .82 - 60, H * .16 - 60, 120, 120);
+      n.globalAlpha = 1; const fire = n.createRadialGradient(W * .45, H * 1.05, 0, W * .45, H * 1.05, H * .45); fire.addColorStop(0, 'rgba(255,110,30,.35)'); fire.addColorStop(1, 'rgba(255,110,30,0)');
+      n.fillStyle = fire; n.fillRect(0, H * .5, W, H * .5);
+      n.fillStyle = '#020306'; n.beginPath(); n.moveTo(0, H);           // dark pine tree line
+      for (let x = 0; x <= W + 30; x += 18) { const h = H * (.1 + Math.random() * .09); n.lineTo(x, H - h * .55); n.lineTo(x + 9, H - h); n.lineTo(x + 18, H - h * .55); }
+      n.lineTo(W, H); n.closePath(); n.fill();
+      S.P = []; S.wind = 0; S.gust = 0; S.gustT = 0;
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(S.night, 0, 0);
+      if (t > S.gustT) { S.gustT = t + rnd(3500, 9000); S.gustTo = rnd(.4, 1); S.gustDir = Math.random() < .5 ? -1 : 1; }
+      S.gust += ((t < S.gustT - 2000 ? S.gustTo : 0) - S.gust) * .03;                  // gusts build and calm down
+      S.wind = Math.sin(t / 7000) * .6 + Math.sin(t / 2300) * .25 + S.gust * S.gustDir * 1.6;
+      if (S.P.length < 90 && Math.random() < .6) S.P.push({ x: rnd(W * .15, W * .8), y: H + 5, vx: rnd(-.4, .4), vy: rnd(-1.6, -.7), life: 0, max: rnd(140, 420), s: rnd(3, 7), ph: rnd(0, 6.28), heat: rnd(.6, 1) });
+      ctx.globalCompositeOperation = 'lighter';
+      S.P = S.P.filter(p => {
+        p.life++; const k = p.life / p.max; if (k >= 1 || p.y < -20 || p.x < -40 || p.x > W + 40) return false;
+        p.vx += (S.wind - p.vx) * .02 + Math.sin(p.life / 23 + p.ph) * .05; p.vy += (-.9 - p.vy) * .01 + Math.cos(p.life / 31 + p.ph) * .03;
+        p.x += p.vx; p.y += p.vy;
+        const flare = 1 + S.gust * 1.2, flick = .75 + .25 * Math.sin(p.life * .7 + p.ph);
+        const b = p.heat * (1 - k * k) * flick * flare;                                     // cools as it rises; gusts make it glow
+        const spr = S.spr[b > 1.1 ? 0 : b > .7 ? 1 : b > .35 ? 2 : 3];
+        const sz = p.s * (.6 + Math.min(1.2, b) * .6);
+        ctx.globalAlpha = clamp01(b * .9); ctx.drawImage(spr, p.x - sz, p.y - sz, sz * 2, sz * 2);
+        return true;
+      });
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Analog Abyss: the deep -- faint light from far above, falling marine snow, lonely glowing things -----
+  deepsea: {
+    init(S) {
+      const { W, H } = S;
+      S.base = off(W, H); const b = S.base.getContext('2d'), g = b.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#05202c'); g.addColorStop(.35, '#021019'); g.addColorStop(1, '#000206'); b.fillStyle = g; b.fillRect(0, 0, W, H);
+      S.snow = Array.from({ length: Math.round(W * H / 6000) }, () => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(.4, 1.6), s: rnd(.08, .35), a: rnd(.15, .5), ph: rnd(0, 6.28) }));
+      S.glow = glowSprite('#5ff6ff', 64); S.glow2 = glowSprite('#9b7bff', 64);
+      S.lights = []; S.nextLight = 0; S.shadow = null; S.nextShadow = performance.now() + rnd(15000, 30000);
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.globalAlpha = 1; ctx.drawImage(S.base, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';                                           // light shafts from the far surface, swaying
+      for (let i = 0; i < 4; i++) {
+        const x = W * (.2 + i * .22) + Math.sin(t / 9000 + i * 1.7) * W * .05, w = W * .07;
+        const g = ctx.createLinearGradient(0, 0, 0, H * .75); g.addColorStop(0, `rgba(120,200,230,${.06 + .03 * Math.sin(t / 4000 + i)})`); g.addColorStop(1, 'rgba(120,200,230,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w * .3, 0); ctx.lineTo(x + w * .3, 0); ctx.lineTo(x + w * 1.4, H * .75); ctx.lineTo(x - w * 1.4, H * .75); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#b9e6f0';
+      S.snow.forEach(p => { p.y += p.s; p.x += Math.sin(t / 3000 + p.ph) * .12; if (p.y > H) { p.y = -3; p.x = rnd(0, W); } ctx.globalAlpha = p.a; ctx.fillRect(p.x, p.y, p.r, p.r); });
+      if (t > S.nextLight && S.lights.length < 3) { S.nextLight = t + rnd(4000, 12000); S.lights.push({ x: rnd(W * .1, W * .9), y: rnd(H * .35, H * .95), vx: rnd(-.25, .25), born: t, life: rnd(9000, 20000), ph: rnd(0, 6.28), spr: Math.random() < .6 ? S.glow : S.glow2, sz: rnd(10, 26) }); }
+      S.lights = S.lights.filter(l => {
+        const k = (t - l.born) / l.life; if (k > 1) return false;
+        l.x += l.vx; l.y += Math.sin(t / 1800 + l.ph) * .15;
+        const a = Math.sin(Math.PI * k) * (.55 + .45 * Math.sin(t / 700 + l.ph));          // slow eerie pulse
+        ctx.globalAlpha = a; ctx.drawImage(l.spr, l.x - l.sz, l.y - l.sz, l.sz * 2, l.sz * 2);
+        ctx.globalAlpha = a * .5; ctx.drawImage(l.spr, l.x - 2, l.y - 2, 4, 4);
+        return true;
+      });
+      ctx.globalCompositeOperation = 'source-over';
+      if (!S.shadow && t > S.nextShadow) S.shadow = { born: t, y: rnd(H * .3, H * .7), dir: Math.random() < .5 ? -1 : 1, len: rnd(W * .5, W * .9) };
+      if (S.shadow) {                                                                     // something huge passes in the dark
+        const k = (t - S.shadow.born) / 26000;
+        if (k > 1) { S.shadow = null; S.nextShadow = t + rnd(40000, 80000); }
+        else {
+          const x = S.shadow.dir > 0 ? -S.shadow.len + (W + S.shadow.len * 2) * k : W + S.shadow.len - (W + S.shadow.len * 2) * k, y = S.shadow.y + Math.sin(k * 6) * 10;
+          ctx.globalAlpha = .55 * Math.sin(Math.PI * k); ctx.fillStyle = '#000000';
+          ctx.beginPath(); ctx.ellipse(x, y, S.shadow.len / 2, S.shadow.len * .09, 0, 0, 6.28); ctx.fill();
+          ctx.beginPath(); const tx = x - S.shadow.dir * S.shadow.len * .5; ctx.moveTo(tx, y); ctx.lineTo(tx - S.shadow.dir * S.shadow.len * .16, y - S.shadow.len * .1); ctx.lineTo(tx - S.shadow.dir * S.shadow.len * .16, y + S.shadow.len * .1); ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Iridescent Pearl: soft pastel colors that slide and shift like the surface of a pearl -----
+  pearl: {
+    fps: 15,
+    init(S) {
+      S.sw = Math.max(32, Math.round(S.W / 12)); S.sh = Math.max(18, Math.round(S.H / 12));
+      S.c = off(S.sw, S.sh); S.x = S.c.getContext('2d'); S.img = S.x.createImageData(S.sw, S.sh);
+      S.lut = lutFrom([[0, '#f6c6ff'], [.2, '#c9b8ff'], [.4, '#a8d8ff'], [.6, '#a8f0e0'], [.8, '#ffe0c8'], [1, '#f6c6ff']]);
+    },
+    draw(ctx, S, t) {
+      const { sw, sh } = S, d = S.img.data, a = t / 9000, b = t / 13000;
+      for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+        const u = x / sw, v = y / sh;
+        let h = .5 + .25 * Math.sin(u * 5.2 + v * 3.1 + a * 6) + .15 * Math.sin(u * 9 - v * 7 + b * 9) + .1 * Math.sin((u + v) * 14 - a * 11);
+        h = h - Math.floor(h);
+        const c = S.lut[(h * 255) | 0], o = (y * sw + x) * 4, sheen = .55 + .45 * Math.sin(u * 4 - v * 2 + a * 4);
+        d[o] = c[0] * sheen; d[o + 1] = c[1] * sheen; d[o + 2] = c[2] * sheen; d[o + 3] = 255;
+      }
+      S.x.putImageData(S.img, 0, 0);
+      ctx.clearRect(0, 0, S.W, S.H); ctx.globalAlpha = .42; ctx.imageSmoothingEnabled = true; ctx.drawImage(S.c, 0, 0, S.W, S.H); ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Borealis: shimmering curtains of light rippling across the sky -----
+  aurora: {
+    fps: 12,                                             // v6.0: slow curtains need few frames; small picture, stretched
+    init(S) {
+      S.sw = Math.max(60, Math.round(S.W / 9)); S.sh = Math.max(40, Math.round(S.H / 9));
+      S.c = off(S.sw, S.sh); S.x = S.c.getContext('2d');
+      S.rays = ['#34f5a0', '#22d3ee', '#a78bfa'].map(col => {          // one vertical ray picture per color: bright at the bottom edge, fading up
+        const r = off(1, 64), x = r.getContext('2d'), g = x.createLinearGradient(0, 64, 0, 0);
+        g.addColorStop(0, rgba(col, 0)); g.addColorStop(.08, rgba(col, 1)); g.addColorStop(.35, rgba(col, .5)); g.addColorStop(1, rgba(col, 0)); x.fillStyle = g; x.fillRect(0, 0, 1, 64); return r;
+      });
+      S.bands = [{ y: .42, amp: .08, f: 2.2, s: .00011, ray: 0, h: .32 }, { y: .3, amp: .06, f: 3.1, s: -.00008, ray: 1, h: .26 }, { y: .22, amp: .05, f: 1.6, s: .00006, ray: 2, h: .2 }];
+    },
+    draw(ctx, S, t) {
+      const { sw, sh } = S, x = S.x;
+      x.clearRect(0, 0, sw, sh); x.globalCompositeOperation = 'lighter';
+      S.bands.forEach((bd, i) => {
+        for (let c = 0; c < sw; c += 1) {
+          const u = c / sw;
+          const yb = (bd.y + Math.sin(u * bd.f * 6.28 + t * bd.s * 6.28) * bd.amp + Math.sin(u * 11 + t * .0004 + i) * .015) * sh;
+          const shimmer = .35 + .65 * Math.pow(.5 + .5 * Math.sin(u * 47 + t * .0021 * (i + 1) + Math.sin(u * 9 + t * .0007) * 3), 2);
+          const fade = Math.sin(Math.PI * clamp01((u - .02) / .96));
+          x.globalAlpha = shimmer * fade * .8;
+          const hgt = bd.h * sh * (.7 + .3 * Math.sin(u * 13 + t * .0011));
+          x.drawImage(S.rays[bd.ray], c, yb - hgt, 1.3, hgt + 2);
+        }
+      });
+      x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+      ctx.clearRect(0, 0, S.W, S.H); ctx.imageSmoothingEnabled = true; ctx.globalAlpha = .9; ctx.drawImage(S.c, 0, 0, S.W, S.H); ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Neon Noir: a dark city in the rain; bright neon signs, mostly darkness, some buzzing and flickering -----
+  neoncity: {
+    init(S) {
+      const { W, H } = S, cols = ['#ff2e97', '#00f5d4', '#ffe14d', '#7a5cff', '#ff5f2e'];
+      S.city = off(W, H); const c = S.city.getContext('2d');
+      const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#030308'); sky.addColorStop(.75, '#0b0816'); sky.addColorStop(1, '#050409'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
+      S.signs = [];
+      [[.62, '#08070d', .18], [.72, '#040306', .3]].forEach(([top, fill, wmin], layer) => {
+        let x = -20;
+        while (x < W) {
+          const w = rnd(40, 120), h = H * rnd(wmin, wmin + .3), y = H - h;
+          c.fillStyle = fill; c.fillRect(x, y, w, h);
+          c.fillStyle = 'rgba(255,220,160,.10)';                                           // a few dim windows
+          for (let wy = y + 8; wy < H - 6; wy += 9) for (let wx = x + 5; wx < x + w - 5; wx += 8) if (Math.random() < .07) c.fillRect(wx, wy, 3, 4);
+          if (Math.random() < (layer ? .55 : .3)) {                                         // a neon sign on this building
+            const col = cols[(Math.random() * cols.length) | 0], vert = Math.random() < .5;
+            const sw = vert ? rnd(7, 12) : rnd(w * .5, w * .9), sh = vert ? rnd(40, 110) : rnd(8, 14);
+            S.signs.push({ x: x + (vert ? w - sw - 4 : (w - sw) / 2), y: y + rnd(10, Math.max(12, h * .4)), w: sw, h: sh, col, dim: layer ? 1 : .55, buzz: Math.random() < .3, ph: rnd(0, 6.28), off: 0 });
+          }
+          x += w + rnd(0, 14);
+        }
+      });
+      S.signs.forEach(s => {                                                                // each sign with its glow, drawn once
+        const pad = 18, cv = off(s.w + pad * 2, s.h + pad * 2), g = cv.getContext('2d');
+        g.shadowColor = s.col; g.shadowBlur = 16; g.strokeStyle = s.col; g.lineWidth = 2.2; g.strokeRect(pad, pad, s.w, s.h);
+        g.shadowBlur = 6; g.fillStyle = rgba(s.col, .55);
+        if (s.h > s.w) for (let k = pad + 6; k < pad + s.h - 4; k += 11) g.fillRect(pad + 2, k, s.w - 4, 5); else g.fillRect(pad + 3, pad + 3, s.w - 6, s.h - 6);
+        s.img = cv; s.pad = pad;
+      });
+      S.rain = Array.from({ length: Math.round(W / 10) }, () => ({ x: rnd(0, W), y: rnd(0, H), l: rnd(8, 20), s: rnd(7, 12) }));
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.globalAlpha = 1; ctx.drawImage(S.city, 0, 0);
+      S.signs.forEach(s => {
+        let a = s.dim * (.8 + .2 * Math.sin(t / 900 + s.ph));
+        if (s.buzz) { if (Math.random() < .03) s.off = (Math.random() * 6) | 0; if (s.off > 0) { s.off--; a *= Math.random() < .5 ? .1 : .5; } }
+        ctx.globalAlpha = a; ctx.drawImage(s.img, s.x - s.pad, s.y - s.pad);
+        ctx.globalAlpha = a * .18; ctx.drawImage(s.img, s.x - s.pad, H - 6 - s.h * .6, s.w + s.pad * 2, s.h * .6 + s.pad);   // wet-street reflection
+      });
+      ctx.globalAlpha = .28; ctx.strokeStyle = '#9fb8ff'; ctx.lineWidth = 1; ctx.beginPath();
+      S.rain.forEach(d => { d.y += d.s; d.x -= d.s * .12; if (d.y > H) { d.y = rnd(-40, 0); d.x = rnd(0, W * 1.1); } ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + d.l * .12, d.y - d.l); });
+      ctx.stroke(); ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Vaporwave: glowing sine waves like a signal generator, morphing between wave shapes -----
+  sine: {
+    init(S) { S.waves = [{ c: '#00e5ff', f: 1.6, s: .0011, y: .62, a: .07 }, { c: '#ff2fb0', f: 2.3, s: -.0008, y: .7, a: .06 }, { c: '#b45cff', f: 3.4, s: .0014, y: .78, a: .045 }]; },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.clearRect(0, 0, W, H);
+      const sun = ctx.createLinearGradient(0, H * .18, 0, H * .52); sun.addColorStop(0, 'rgba(255,90,170,.55)'); sun.addColorStop(1, 'rgba(255,140,60,.35)');
+      ctx.fillStyle = sun; ctx.beginPath(); ctx.arc(W * .5, H * .4, Math.min(W, H) * .16, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#12061f'; const sr = Math.min(W, H) * .16; for (let k = 0; k < 6; k++) { const dy = k * k * 2.2 + k * 6 + 4, half = Math.sqrt(Math.max(0, sr * sr - dy * dy)) + 1; ctx.fillRect(W * .5 - half, H * .4 + dy, half * 2, 2 + k * .8); }
+      S.waves.forEach((w, i) => {
+        const morph = .5 + .5 * Math.sin(t / 6000 + i * 2);                                // sine -> squarer wave and back
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 4) {
+          const p = x / W * w.f * 6.28 + t * w.s * 6.28;
+          let v = Math.sin(p) + morph * (Math.sin(3 * p) / 3 + Math.sin(5 * p) / 5 * .8);
+          const y = H * w.y + v * H * w.a; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.strokeStyle = w.c; ctx.globalAlpha = .18; ctx.lineWidth = 9; ctx.stroke();
+        ctx.globalAlpha = .9; ctx.lineWidth = 2; ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Glitch Arcade: real glitches every few seconds -- color-split slices, tears and noise blocks -----
+  glitchfx: {
+    over: true, fps: 30,
+    init(S) { S.next = performance.now() + 2500; S.until = 0; },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      if (t > S.next) { S.until = t + rnd(110, 320); S.next = t + rnd(2500, 7000); S.big = Math.random() < .25; }
+      if (t > S.until) { if (S.drawn) { ctx.clearRect(0, 0, W, H); S.drawn = false; } return; }
+      ctx.clearRect(0, 0, W, H); S.drawn = true;
+      const n = S.big ? 9 : 4;
+      for (let i = 0; i < n; i++) {
+        const y = rnd(0, H), h = rnd(3, S.big ? 40 : 18), dx = rnd(-40, 40);
+        ctx.globalAlpha = .32; ctx.fillStyle = '#00f0ff'; ctx.fillRect(dx, y, W, h);
+        ctx.fillStyle = '#ff2fb3'; ctx.fillRect(-dx * .7, y + h * .3, W, h * .6);
+        ctx.globalAlpha = .55; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, y + h * .5, W, 1);
+      }
+      for (let i = 0; i < (S.big ? 26 : 10); i++) {                                       // blocky digital noise
+        ctx.globalAlpha = rnd(.2, .5); ctx.fillStyle = ['#00f0ff', '#ff2fb3', '#ffffff', '#7cff4f', '#000000'][(Math.random() * 5) | 0];
+        ctx.fillRect(rnd(0, W), rnd(0, H), rnd(8, 70), rnd(3, 16));
+      }
+      if (S.big) { ctx.globalAlpha = .08; ctx.fillStyle = '#ffffff'; for (let y = (t / 3) % 4; y < H; y += 4) ctx.fillRect(0, y, W, 1); }
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Dark Empire: now and then an enormous dark ship slides in overhead and its shadow crosses the screen -----
+  shadowship: {
+    over: true,
+    init(S) { S.next = performance.now() + 8000; S.pass = null; },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      if (!S.pass && t > S.next) S.pass = { born: t, dur: 24000, len: H * 2.2, wide: W * 1.25, x: W * rnd(.4, .6) };
+      if (!S.pass) { if (S.drawn) { ctx.clearRect(0, 0, W, H); S.drawn = false; } return; }
+      const k = (t - S.pass.born) / S.pass.dur;
+      if (k > 1) { S.pass = null; S.next = t + rnd(45000, 80000); ctx.clearRect(0, 0, W, H); S.drawn = false; return; }
+      ctx.clearRect(0, 0, W, H); S.drawn = true;
+      const p = S.pass, ease = k * k * (3 - 2 * k), tipY = -p.len * .05 + (H + p.len * 1.05) * ease, sternY = tipY - p.len;
+      const fade = Math.min(1, k * 6, (1 - k) * 6);
+      ctx.globalAlpha = .5 * fade;                                                         // the hull's shadow: a long wedge, tip first
+      const g = ctx.createLinearGradient(0, sternY, 0, tipY); g.addColorStop(0, '#000000'); g.addColorStop(1, '#05060a');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(p.x, tipY); ctx.lineTo(p.x + p.wide / 2, sternY); ctx.lineTo(p.x - p.wide / 2, sternY); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = .16 * fade; ctx.strokeStyle = '#8a929e'; ctx.lineWidth = 1;          // faint panel lines and a central ridge
+      for (let i = 1; i < 9; i++) { const y = tipY - p.len * i / 9, half = p.wide / 2 * i / 9; ctx.beginPath(); ctx.moveTo(p.x - half, y); ctx.lineTo(p.x + half, y); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(p.x, tipY); ctx.lineTo(p.x, sternY); ctx.stroke();
+      ctx.globalAlpha = .7 * fade; ctx.fillStyle = '#ffb0a0';
+      for (let i = 2; i < 9; i += 2) { const y = tipY - p.len * i / 9, half = p.wide / 2 * i / 9; ctx.fillRect(p.x - half * .8, y, 2, 2); ctx.fillRect(p.x + half * .8, y, 2, 2); }
+      if (sternY > -60) {                                                                  // engines glow as it leaves
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = -1; i <= 1; i++) { const ex = p.x + i * p.wide * .18, eg = ctx.createRadialGradient(ex, sternY, 0, ex, sternY, 70); eg.addColorStop(0, 'rgba(170,210,255,.55)'); eg.addColorStop(1, 'rgba(170,210,255,0)'); ctx.globalAlpha = fade; ctx.fillStyle = eg; ctx.fillRect(ex - 70, sternY - 70, 140, 140); }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Screenprint Poster: a real halftone print -- dot size makes the picture, two inks slightly off register -----
+  halftone: {
+    still: true,
+    init(S, ctx) {
+      const { W, H } = S;
+      ctx.clearRect(0, 0, W, H);
+      const tone = (x, y) => {                                                             // the picture: a sun with rays over hills
+        const sx = W * .68, sy = H * .34, r = Math.min(W, H) * .2, d = Math.hypot(x - sx, y - sy);
+        let v = d < r ? 1 : Math.max(0, .55 - (d - r) / (Math.max(W, H) * .9));
+        const ang = Math.atan2(y - sy, x - sx); if (d > r && Math.sin(ang * 14) > .55) v += .18;
+        const hill = H * (.78 + .06 * Math.sin(x / W * 7) + .04 * Math.sin(x / W * 17));
+        if (y > hill) v = .85 - (y - hill) / H * .8;
+        return clamp01(v);
+      };
+      const layer = (col, angle, cell, dx, dy, k) => {
+        ctx.fillStyle = col; const ca = Math.cos(angle), sa = Math.sin(angle), R = Math.hypot(W, H);
+        for (let u = -R; u < R; u += cell) for (let v = -R; v < R; v += cell) {
+          const x = W / 2 + u * ca - v * sa + dx, y = H / 2 + u * sa + v * ca + dy;
+          if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
+          const r = cell * .55 * Math.sqrt(tone(x, y) * k);
+          if (r > .35) { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.28); ctx.fill(); }
+        }
+      };
+      ctx.globalAlpha = .38; layer('#c9a227', .26, 9, 0, 0, 1);
+      ctx.globalAlpha = .30; layer('#c4472b', 1.31, 9, 2.5, 1.5, .8);
+      ctx.globalAlpha = 1;
+    },
+    draw() {},
+  },
+  // ----- Cloud City Sunset: wispy clouds drifting past, a city floating on the clouds, ships flying slowly by -----
+  cloudcity: {
+    init(S) {
+      const { W, H } = S;
+      S.puff = (() => { const c = off(256, 64), x = c.getContext('2d'); for (let i = 0; i < 14; i++) { const px = rnd(30, 226), py = rnd(24, 40), r = rnd(12, 26), g = x.createRadialGradient(px, py, 0, px, py, r); g.addColorStop(0, 'rgba(255,225,215,.55)'); g.addColorStop(1, 'rgba(255,225,215,0)'); x.fillStyle = g; x.fillRect(px - r, py - r, r * 2, r * 2); } return c; })();
+      S.clouds = Array.from({ length: 16 }, (_, i) => ({ x: rnd(-W * .3, W), y: rnd(H * .1, H * .95), w: rnd(W * .25, W * .6), h: rnd(30, 90), s: rnd(.08, .35) * (i % 3 ? 1 : 1.6), a: rnd(.25, .6), front: i % 4 === 0 }));
+      S.city = off(360, 300); const c = S.city.getContext('2d'), cx = 180;
+      c.fillStyle = '#1c0f24';                                                              // the floating city (silhouette)
+      c.beginPath(); c.ellipse(cx, 150, 170, 22, 0, 0, 6.28); c.fill();
+      c.beginPath(); c.moveTo(cx - 40, 165); c.lineTo(cx + 40, 165); c.lineTo(cx + 8, 290); c.lineTo(cx - 8, 290); c.closePath(); c.fill();
+      [[-120, 30], [-95, 55], [-60, 85], [-30, 120], [0, 140], [28, 105], [60, 75], [92, 50], [122, 28]].forEach(([dx, h]) => { c.fillRect(cx + dx - 10, 150 - h, 20, h); c.beginPath(); c.ellipse(cx + dx, 150 - h, 10, 4, 0, 0, 6.28); c.fill(); });
+      c.fillStyle = 'rgba(255,200,140,.85)';
+      for (let i = 0; i < 70; i++) c.fillRect(cx + rnd(-130, 130), rnd(20, 145), 2, 2);
+      S.ships = []; S.nextShip = performance.now() + 3000;
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.clearRect(0, 0, W, H);
+      const drawClouds = front => S.clouds.forEach(c => { if (c.front !== front) return; c.x += c.s; if (c.x > W + 20) { c.x = -c.w - rnd(0, W * .3); c.y = rnd(H * .1, H * .95); } ctx.globalAlpha = c.a; ctx.drawImage(S.puff, c.x, c.y, c.w, c.h); });
+      drawClouds(false);
+      const bob = Math.sin(t / 4000) * 6, cw = Math.min(W * .32, 360), ch = cw * 300 / 360;
+      ctx.globalAlpha = .85; ctx.drawImage(S.city, W * .62, H * .3 + bob, cw, ch);
+      if (t > S.nextShip && S.ships.length < 4) {
+        S.nextShip = t + rnd(5000, 14000); const dir = Math.random() < .5 ? 1 : -1;
+        S.ships.push({ x: dir > 0 ? -60 : W + 60, y: rnd(H * .12, H * .75), dir, s: rnd(.4, 1.1), sz: rnd(.6, 1.4), kind: (Math.random() * 3) | 0 });
+      }
+      S.ships = S.ships.filter(sp => {
+        sp.x += sp.dir * sp.s; if (sp.x < -80 || sp.x > W + 80) return false;
+        ctx.save(); ctx.translate(sp.x, sp.y + Math.sin(t / 900 + sp.x / 50) * 2); ctx.scale(sp.dir * sp.sz, sp.sz);
+        ctx.globalAlpha = .9; ctx.fillStyle = '#20122b'; ctx.beginPath();
+        if (sp.kind === 0) { ctx.ellipse(0, 0, 16, 5, 0, 0, 6.28); ctx.moveTo(-12, 0); ctx.lineTo(-20, -6); ctx.lineTo(-8, -2); }     // little cloud car
+        else if (sp.kind === 1) { ctx.moveTo(18, 0); ctx.lineTo(-14, -7); ctx.lineTo(-10, 0); ctx.lineTo(-14, 7); ctx.closePath(); } // dart
+        else { ctx.ellipse(0, 0, 11, 11, 0, 0, 6.28); ctx.rect(-26, -1.5, 52, 3); }                                                   // round freighter
+        ctx.fill();
+        ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,170,110,.9)'; ctx.fillRect(-20, -1, 4, 2);                    // engine glow
+        ctx.restore(); return true;
+      });
+      drawClouds(true); ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Thermal Vision: slow heat blobs rising, merging and sinking like a lava lamp (kept dim) -----
+  lavalamp: {
+    fps: 12,
+    init(S) {
+      S.sw = Math.max(32, Math.round(S.W / 10)); S.sh = Math.max(18, Math.round(S.H / 10));
+      S.c = off(S.sw, S.sh); S.x = S.c.getContext('2d'); S.img = S.x.createImageData(S.sw, S.sh);
+      S.lut = lutFrom([[0, '#05030f'], [.25, '#1a0a4a'], [.45, '#6a1a8a'], [.6, '#c0207a'], [.72, '#e84a1f'], [.85, '#ffa500'], [.95, '#ffe066'], [1, '#fff6d0']]);
+      S.blobs = Array.from({ length: 7 }, (_, i) => ({ x: rnd(.1, .9), r: rnd(.06, .12), per: rnd(26000, 52000), ph: rnd(0, 6.28), dx: rnd(.02, .06) }));
+    },
+    draw(ctx, S, t) {
+      const { sw, sh } = S, d = S.img.data, asp = sw / sh;
+      const B = S.blobs.map(b => { const y = .5 + .45 * Math.sin(t / b.per * 6.28 + b.ph); return { x: (b.x + Math.sin(t / (b.per * .7) + b.ph) * b.dx) * sw, y: y * sh, r2: Math.pow(b.r * (1 + .25 * Math.sin(t / 5000 + b.ph)) * sh * asp * .6, 2) }; });
+      for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) {
+        let f = 0; for (const b of B) { const dx = x - b.x, dy = y - b.y; f += b.r2 / (dx * dx + dy * dy + 1); }
+        const h = clamp01(.06 + f * .24) * .82, c = S.lut[(h * 255) | 0], o = (y * sw + x) * 4;   // capped below white-hot: dim
+        d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+      }
+      S.x.putImageData(S.img, 0, 0);
+      ctx.globalAlpha = .45; ctx.imageSmoothingEnabled = true; ctx.drawImage(S.c, 0, 0, S.W, S.H); ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Jungle Hunter: alien glyph readout + a three-bar targeting sight that closes in on your mouse pointer -----
+  hunterhud: {
+    over: true, fps: 30,
+    init(S) {
+      S.next = performance.now() + 5000; S.lock = null; S.glyphs = Array.from({ length: 5 }, () => S_glyph()); S.gT = 0;
+      if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S, red = '#ff2020';
+      ctx.clearRect(0, 0, W, H);
+      if (t > S.gT) { S.gT = t + rnd(500, 1400); S.glyphs[(Math.random() * S.glyphs.length) | 0] = S_glyph(); }
+      ctx.strokeStyle = red; ctx.lineCap = 'round';
+      S.glyphs.forEach((g, i) => drawGlyph(ctx, g, 22 + i * 26, H - 64, 10, .7));            // small readout, bottom left
+      if (!S.lock && t > S.next) S.lock = { born: t, x: window.__wrMouse.x, y: window.__wrMouse.y };
+      if (S.lock) {
+        const e = t - S.lock.born;
+        if (e > 3200) { S.lock = null; S.next = t + rnd(11000, 22000); return; }
+        S.lock.x += (window.__wrMouse.x - S.lock.x) * .08; S.lock.y += (window.__wrMouse.y - S.lock.y) * .08;
+        const k = clamp01(e / 1300), r = 18 + 240 * Math.pow(1 - k, 2.2);                   // starts wide, closes in tighter and tighter
+        const blink = e < 1300 ? 1 : (Math.floor((e - 1300) / 160) % 2 ? .35 : 1), fade = e > 2700 ? 1 - (e - 2700) / 500 : 1;
+        const trail = e < 1300 ? 5 : 1;
+        for (let j = trail - 1; j >= 0; j--) {                                              // motion blur: fading copies behind
+          const kk = clamp01((e - j * 45) / 1300), rr = 18 + 240 * Math.pow(1 - kk, 2.2);
+          triBars(ctx, S.lock.x, S.lock.y, rr, (j ? .16 / j : .85) * blink * fade, red);
+        }
+        if (e > 1300) { ctx.globalAlpha = .8 * fade; ctx.fillStyle = red; ctx.font = 'bold 11px monospace'; ctx.fillText('LOCK', S.lock.x + r + 10, S.lock.y + 4); }
+      }
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Xeno Hive: ribbed spines, ribs and hoses; acid-green pulses flow through the tubes, slime drips -----
+  biomech: {
+    init(S) {
+      const { W, H } = S;
+      S.base = off(W, H); const c = S.base.getContext('2d');
+      c.fillStyle = '#050607'; c.fillRect(0, 0, W, H);
+      S.tubes = [];
+      const spines = Math.max(3, Math.round(W / 420));
+      for (let s = 0; s < spines; s++) {
+        const x = W * (s + .5) / spines + rnd(-40, 40), seg = rnd(16, 22);
+        for (let y = -10; y < H + 20; y += seg) {                                           // vertebrae
+          const w = 26 + Math.sin(y / 40) * 6, g = c.createLinearGradient(x - w, 0, x + w, 0);
+          g.addColorStop(0, '#0b0e0f'); g.addColorStop(.5, '#2a3230'); g.addColorStop(1, '#0b0e0f');
+          c.fillStyle = g; c.beginPath(); c.ellipse(x, y, w, seg * .42, 0, 0, 6.28); c.fill();
+          c.strokeStyle = 'rgba(150,170,160,.12)'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y - 2, w * .8, seg * .25, 0, 3.4, 6.0); c.stroke();
+          if ((y / seg | 0) % 3 === 0) for (const dir of [-1, 1]) {                         // ribs curving out
+            c.strokeStyle = '#141917'; c.lineWidth = 7; c.beginPath(); c.moveTo(x + dir * w * .8, y); c.bezierCurveTo(x + dir * 120, y - 30, x + dir * 170, y + 40, x + dir * 150, y + 90); c.stroke();
+            c.strokeStyle = 'rgba(160,180,170,.10)'; c.lineWidth = 1.5; c.stroke();
+          }
+        }
+      }
+      for (let i = 0; i < Math.max(4, Math.round(W / 300)); i++) {                         // hoses
+        const p = [rnd(0, W), -20, rnd(0, W), rnd(H * .2, H * .8), rnd(0, W), rnd(H * .2, H * .8), rnd(0, W), H + 20];
+        S.tubes.push(p);
+        c.strokeStyle = '#101413'; c.lineWidth = 12; c.beginPath(); c.moveTo(p[0], p[1]); c.bezierCurveTo(p[2], p[3], p[4], p[5], p[6], p[7]); c.stroke();
+        c.strokeStyle = '#2b3331'; c.lineWidth = 12; c.setLineDash([2, 6]); c.stroke(); c.setLineDash([]);   // ribbed hose rings
+      }
+      S.drips = [];
+    },
+    draw(ctx, S, t) {
+      const { W, H } = S;
+      ctx.globalAlpha = 1; ctx.drawImage(S.base, 0, 0);
+      ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#9cff2e'; ctx.lineWidth = 4; ctx.setLineDash([26, 240]);
+      S.tubes.forEach((p, i) => { ctx.lineDashOffset = -(t / 40 + i * 70); ctx.globalAlpha = .35 + .2 * Math.sin(t / 1500 + i); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.bezierCurveTo(p[2], p[3], p[4], p[5], p[6], p[7]); ctx.stroke(); });
+      ctx.setLineDash([]); ctx.globalCompositeOperation = 'source-over';
+      if (S.drips.length < 3 && Math.random() < .01) S.drips.push({ x: rnd(0, W), y: 0, len: 0, v: 0, hang: rnd(30, 90) });
+      ctx.fillStyle = '#9cff2e';
+      S.drips = S.drips.filter(d => {
+        if (d.len < d.hang) d.len += .4; else { d.v += .25; d.y += d.v; }
+        ctx.globalAlpha = .45; ctx.fillRect(d.x - 1, d.y, 2, d.len); ctx.beginPath(); ctx.arc(d.x, d.y + d.len, 3, 0, 6.28); ctx.fill();
+        return d.y < H;
+      });
+      ctx.globalAlpha = 1;
+    },
+  },
+  // ----- Motion Tracker: the sweep turns; now and then contacts ping -- and they get closer -----
+  radar: {
+    fps: 15,
+    init(S) { S.contacts = []; S.nextC = performance.now() + 4000; S.prevA = 0; },
+    draw(ctx, S, t) {
+      const { W, H } = S, cx = W / 2, cy = H / 2, R = Math.hypot(W, H) / 2, a = (t / 4000 % 1) * 6.28, col = '#39ff88';
+      ctx.clearRect(0, 0, W, H);
+      const g = ctx.createConicGradient ? ctx.createConicGradient(a - 1.1, cx, cy) : null;
+      if (g) { g.addColorStop(0, 'rgba(57,255,136,0)'); g.addColorStop(.17, 'rgba(57,255,136,.22)'); g.addColorStop(.175, 'rgba(57,255,136,0)'); g.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+      ctx.strokeStyle = 'rgba(57,255,136,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
+      if (t > S.nextC) { S.nextC = t + rnd(9000, 22000); const n = Math.random() < .3 ? (2 + (Math.random() * 3 | 0)) : 1, ang = rnd(0, 6.28); for (let i = 0; i < n; i++) S.contacts.push({ ang: ang + rnd(-.35, .35), r: rnd(.75, .95) * Math.min(W, H) / 2, v: rnd(.15, .45), ping: 0 }); }
+      const crossed = (from, to, x) => { const f = (from % 6.28 + 6.28) % 6.28, tt = (to % 6.28 + 6.28) % 6.28, xx = (x % 6.28 + 6.28) % 6.28; return f <= tt ? (xx > f && xx <= tt) : (xx > f || xx <= tt); };
+      let nearest = 0;
+      S.contacts = S.contacts.filter(c => {
+        c.r -= c.v; c.ang += Math.sin(t / 2000 + c.r) * .002; if (c.r < 25) return false;
+        if (crossed(S.prevA, a, c.ang)) c.ping = t;
+        const age = t - c.ping, al = c.ping ? clamp01(1 - age / 2200) : 0;
+        if (al > 0) { const x = cx + Math.cos(c.ang) * c.r, y = cy + Math.sin(c.ang) * c.r, bg = ctx.createRadialGradient(x, y, 0, x, y, 16); bg.addColorStop(0, `rgba(190,255,210,${al})`); bg.addColorStop(.4, `rgba(57,255,136,${al * .6})`); bg.addColorStop(1, 'rgba(57,255,136,0)'); ctx.fillStyle = bg; ctx.fillRect(x - 16, y - 16, 32, 32); }
+        if (!nearest || c.r < nearest) nearest = c.r;
+        return true;
+      });
+      S.prevA = a;
+      if (nearest) { ctx.globalAlpha = .85; ctx.fillStyle = col; ctx.font = 'bold 14px monospace'; ctx.fillText(String(Math.round(nearest / 12)).padStart(2, '0') + 'm', cx - 14, cy + Math.min(W, H) * .42); ctx.globalAlpha = 1; }
+    },
+  },
+  // ----- Synthwave: a teal-green scanner beam sweeping down + a teal waveform along the bottom -----
+  scanner: {
+    draw(ctx, S, t) {
+      const { W, H } = S, y = (t / 7000 % 1) * (H + 120) - 60, col = '#2de2c0';
+      ctx.clearRect(0, 0, W, H);
+      const g = ctx.createLinearGradient(0, y - 90, 0, y); g.addColorStop(0, 'rgba(45,226,192,0)'); g.addColorStop(1, 'rgba(45,226,192,.28)');
+      ctx.fillStyle = g; ctx.fillRect(0, y - 90, W, 90);
+      ctx.globalAlpha = .9; ctx.fillStyle = col; ctx.fillRect(0, y, W, 2);
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 3) {
+        const p = x / W, v = Math.sin(p * 18 + t / 400) * .6 + Math.sin(p * 41 - t / 260) * .25 + Math.sin(p * 7 + t / 1300) * .4;
+        const yy = H * .88 + v * 22 * (.6 + .4 * Math.sin(t / 2000)); x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
+      }
+      ctx.strokeStyle = col; ctx.globalAlpha = .2; ctx.lineWidth = 8; ctx.stroke(); ctx.globalAlpha = .85; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.globalAlpha = 1;
+    },
+    init() {},
+  },
+};
+// alien glyphs for the hunter readout: strokes on two stacked eight-point stars, made up at random
+function S_glyph() { const g = []; for (let n = 0; n < 2; n++) { const k = 2 + ((Math.random() * 3) | 0); const pick = new Set(); while (pick.size < k) pick.add((Math.random() * 8) | 0); pick.forEach(d => g.push([n, d])); } return g; }
+function drawGlyph(ctx, g, x, y, s, a) {
+  ctx.globalAlpha = a; ctx.lineWidth = 2.2;
+  g.forEach(([n, d]) => { const cy = y + n * s * 2.1, ang = d * Math.PI / 4 - Math.PI / 2; ctx.beginPath(); ctx.moveTo(x + Math.cos(ang) * s * .25, cy + Math.sin(ang) * s * .25); ctx.lineTo(x + Math.cos(ang) * s, cy + Math.sin(ang) * s); ctx.stroke(); });
+}
+function triBars(ctx, x, y, r, a, col) {                // three bars that form a triangle around (x, y)
+  ctx.globalAlpha = a; ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, r / 14); ctx.lineCap = 'butt';
+  const p = [0, 1, 2].map(i => [x + Math.cos(-Math.PI / 2 + i * 2.094) * r, y + Math.sin(-Math.PI / 2 + i * 2.094) * r]);
+  for (let i = 0; i < 3; i++) { const A = p[i], B = p[(i + 1) % 3], m = .18; ctx.beginPath(); ctx.moveTo(A[0] + (B[0] - A[0]) * m, A[1] + (B[1] - A[1]) * m); ctx.lineTo(A[0] + (B[0] - A[0]) * (1 - m), A[1] + (B[1] - A[1]) * (1 - m)); ctx.stroke(); }
+}
+let scn = null;
+function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } }
+function startScene() {
+  const name = T && animOn() && !fxOff && window.top === window ? Object.keys(SCENES).find(n => hasFx(n)) || '' : '';
+  if (!name) { stopScene(); return; }
+  const sig = name + '|' + T.name;
+  if (scn && scn.sig === sig) return;
+  stopScene();
+  const sc = SCENES[name], cv = document.createElement('canvas');
+  cv.id = OUR + '-scene';
+  cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:' + (sc.over ? 2147483600 : -1);
+  document.documentElement.appendChild(cv);
+  const ctx = cv.getContext('2d'), step = 1000 / (sc.fps || 20);
+  let S = {}, last = 0;
+  function resize() { const t0 = performance.now(); cv.width = innerWidth; cv.height = innerHeight; S = { W: cv.width, H: cv.height }; try { sc.init(S, ctx); } catch (e) { console.warn('[Page Themes] effect', name, e); } busy(performance.now() - t0); }
+  function frame(t) {
+    scn.raf = requestAnimationFrame(frame);
+    if (!viewing()) { if (sc.over && !S.cleared) { ctx.clearRect(0, 0, S.W, S.H); S.cleared = true; S.drawn = false; } return; }   // never leave a glitch frozen on screen
+    if (t - last < step) return;
+    last = t; S.cleared = false;
+    const t0 = performance.now();
+    try { sc.draw(ctx, S, t); } catch (e) { console.warn('[Page Themes] effect', name, 'stopped:', e); stopScene(); return; }
+    busy(performance.now() - t0);
+  }
+  scn = { sig, cv, raf: 0, resize };
+  window.addEventListener('resize', resize); resize();
+  if (!sc.still) scn.raf = requestAnimationFrame(frame);
+}
+
 // ---------- HUD readout (Colonial Marine): live info from the page you are on ----------
 // Reads only what is already on screen: RO number, vehicle, VIN. Clicks pass through it.
 let hudEl = null, hudTimer = 0, hudClock = 0;
@@ -1425,7 +1979,7 @@ function render(root) {
     '<optgroup label="Color theory (with wallpaper)">', ...Object.keys(COLOR_THEORY).map(k => `<option value="${k}">${esc(PRESETS[k].name)}</option>`), '</optgroup>',
     Object.keys(custom).length ? '<optgroup label="My themes">' + Object.keys(custom).map(k => `<option value="${esc(k)}">★ ${esc(custom[k].name)}</option>`).join('') + '</optgroup>' : ''
   ].join('');
-  const base = cur || PRESETS.midnight;
+  const base = cur || PRESETS.contrast;
   setHTML(root, `
 <style>
   *{box-sizing:border-box;font:13px "Segoe UI",Arial,sans-serif}
