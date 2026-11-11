@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.4
+// @version      6.5
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -473,7 +473,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.4: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.5: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -699,6 +699,13 @@ a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
   if (hasFx('flicker')) css += `
 @keyframes wrNeon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
 [data-wr-bg=accent]{animation:wrGlow 2.6s ease-in-out infinite,wrNeon 6.5s steps(1) infinite !important}`;
+  if (hasFx('pipterm')) css += `
+@keyframes wrPull{0%{transform:none}12%{transform:translateX(var(--wr-jx))}30%{transform:translateX(calc(var(--wr-jx) * -.6))}50%{transform:translateX(calc(var(--wr-jx) * .35))}72%{transform:translateX(calc(var(--wr-jx) * -.15))}100%{transform:none}}
+@keyframes wrWarp{0%{transform:none}20%{transform:skewX(var(--wr-js)) scaleY(1.015)}40%{transform:skewX(calc(var(--wr-js) * -.7)) translateX(calc(var(--wr-jx) * .4))}65%{transform:skewX(calc(var(--wr-js) * .3)) scaleY(.995)}100%{transform:none}}
+@keyframes wrRoll{0%{transform:none}25%{transform:translateY(var(--wr-jy))}45%{transform:translateY(calc(var(--wr-jy) * -.4)) translateX(calc(var(--wr-jx) * .3))}70%{transform:translateY(calc(var(--wr-jy) * .15))}100%{transform:none}}
+html[data-wr-jolt~=pull] body{animation:wrPull var(--wr-jd) steps(6) 1}
+html[data-wr-jolt~=warp] body{animation:wrWarp var(--wr-jd) linear 1}
+html[data-wr-jolt~=roll] body{animation:wrRoll var(--wr-jd) steps(5) 1}`;
   if (hasFx('crt')) css += `
 @keyframes wrCrt{0%,100%{opacity:.85}50%{opacity:1}}
 html::after{content:'';position:fixed;inset:0;z-index:2147483500;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.5) 100%);animation:wrCrt 3.2s ease-in-out infinite}`;
@@ -1662,13 +1669,44 @@ const SCENES = {
         '> DOOR SEAL INTEGRITY ...... 100%', '> HAVE A PRODUCTIVE DAY, WANDERER', '> RADIATION SUIT: CLEAN', '> NEW HOLOTAPE RECEIVED', '> AIR FILTERS: REPLACE IN 30 DAYS', '> CHECKING SUPPLY CRATES ...',
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
+      if (!window.__wrInputHook) { window.__wrInputHook = true; ['mousedown', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, () => { window.__wrLastInput = performance.now(); }, { passive: true, capture: true })); }
+      S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
       if (!window.__wrApHook) { window.__wrApHook = true; window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true }); }
     },
     draw(ctx, S, t) {
       const { W, H } = S, col = S.col; scn.S = S;
       ctx.clearRect(0, 0, W, H);
-      const by = (t / 9000 % 1) * (H + 240) - 120, g = ctx.createLinearGradient(0, by - 60, 0, by + 60);   // rolling bright band
-      g.addColorStop(0, rgba(col, 0)); g.addColorStop(.5, rgba(col, .07)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.fillRect(0, by - 60, W, 120);
+      // v6.5: glitches at random times -- kinds, strength, direction and length all random, sometimes in bursts.
+      // Ones that MOVE the page never happen within 2 s of a click, key press or scroll (no misclicks);
+      // static and tears can come any time.
+      if (t > S.nextJolt) {
+        const burst = Math.random() < .25;
+        S.nextJolt = t + (burst ? rnd(150, 1200) : rnd(12000, 110000));
+        const kinds = ['pull', 'warp', 'roll', 'static', 'tear', 'pull static', 'warp tear', 'roll static', 'pull warp', 'static tear'];
+        let kind = kinds[(Math.random() * kinds.length) | 0];
+        if (/pull|warp|roll/.test(kind) && performance.now() - (window.__wrLastInput || 0) < 2000) kind = Math.random() < .5 ? 'static' : 'tear';
+        const dur = rnd(120, 650), h = document.documentElement;
+        S.glitch = { kind, until: t + dur, amt: rnd(.4, 1) };
+        if (/pull|warp|roll/.test(kind)) {
+          const dir = Math.random() < .5 ? -1 : 1;
+          h.style.setProperty('--wr-jx', Math.round(dir * rnd(6, 34)) + 'px'); h.style.setProperty('--wr-js', (dir * rnd(1, 5)).toFixed(1) + 'deg');
+          h.style.setProperty('--wr-jy', Math.round((Math.random() < .5 ? -1 : 1) * rnd(8, 40)) + 'px'); h.style.setProperty('--wr-jd', Math.round(dur) + 'ms');
+          h.setAttribute('data-wr-jolt', kind.split(' ').filter(k => /pull|warp|roll/.test(k)).join(' '));
+          clearTimeout(S.joltT); S.joltT = setTimeout(() => h.removeAttribute('data-wr-jolt'), dur + 30);
+        }
+      }
+      if (S.glitch && S.glitch.until > t) {
+        const g = S.glitch;
+        if (/static/.test(g.kind)) {                                                        // TV snow
+          const nx = S.noise.getContext('2d'), img = nx.createImageData(160, 90), d = img.data;
+          for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = Math.random() < .7 ? 255 : 0; }
+          nx.putImageData(img, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = .12 + .3 * g.amt; ctx.drawImage(S.noise, 0, 0, W, H); ctx.imageSmoothingEnabled = true;
+        }
+        if (/tear|pull|warp|roll/.test(g.kind)) {                                           // bright tear lines
+          for (let i = 0; i < 2 + ((Math.random() * 6) | 0); i++) { const y = rnd(0, H), hh = rnd(2, 24); ctx.globalAlpha = rnd(.1, .3) * g.amt + .05; ctx.fillStyle = col; ctx.fillRect(rnd(-40, 40), y, W, hh); ctx.globalAlpha = .4; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, y + hh / 2, W, 1); }
+        }
+        ctx.globalAlpha = 1;
+      }
       // typing terminal, top right
       if (t > S.nextC) {
         const m = S.msgs[S.mi % S.msgs.length];
