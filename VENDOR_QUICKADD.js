@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.6
+// @version      3.7
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
-// @description  Source Code buttons (336/337/338/333/300/100; 300 also sets Primary Bin TIRE) in Tekion's Add New Part window. Quick-add buttons for the most-used vendors on Tekion's PO Create Miscellaneous Order screen (now including the European OEM dealers and Hyundai/Kia). Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
+// @description  Source Code buttons (100/300/333/336/337/338; 300 also sets Primary Bin TIRE) in Tekion's Add New Part window. Quick-add buttons for the most-used vendors on Tekion's PO Create Miscellaneous Order screen (now including the European OEM dealers and Hyundai/Kia). Selecting a vendor with a known email opens a pre-filled Outlook draft (To/Subject only) using the VIN read directly from Tekion's own RO header.
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle
@@ -380,7 +380,7 @@
   //   Primary Bin: #primaryBinId, control data-test-id="@tekion-parts-modals-fields-primaryBin"
   //   current value shows in [class*="singleValue"], e.g. "100 - STANDARD (246A)"
   const SOURCE_BTNS_ID = 'rv-source-code-btns';
-  const SOURCE_CODES = ['336', '337', '338', '333', '300', '100'];
+  const SOURCE_CODES = ['100', '300', '333', '336', '337', '338'];   // v3.7: numerical order
   const TIRE_SOURCE = '300', TIRE_BIN = 'TIRE';
 
   // v3.5: the window comes in more than one version (Submit / "Do In & Out Sale"), so find it by its
