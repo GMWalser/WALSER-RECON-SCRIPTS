@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.1
+// @version      6.2
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -385,7 +385,7 @@ input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readon
 [data-wr-fg=accentText]{color:var(--wr-accentText) !important}
 [data-wr-fg=tint]{color:var(--wr-fgtint) !important}
 [data-wr-bd=border]{border-color:var(--wr-border) !important}
-${T.mono != null ? `[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}\nimg,video{filter:grayscale(1) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(3) brightness(.85)}` : ''}
+${T.mono != null ? `[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}` : ''}
 ::placeholder{color:${mix(T.text, T.bg, 0.45)} !important}
 input,textarea,select,[contenteditable]{caret-color:${T.text}}
 input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
@@ -469,7 +469,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.1: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.2: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
