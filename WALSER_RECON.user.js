@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1111.1208
+// @version      2026.1111.1214
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -1722,8 +1722,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.05  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.05', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.06  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.06', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -3656,6 +3656,10 @@ if (IS_RECONVISION) {
             isMatch
         ) {
             if (filling) { console.log('[RV Paste] Ignored -- already filling'); return; }
+            // v6.06: only fill an EMPTY part# box. Coming back to the RV window puts the cursor back in the
+            // box you used last (the first part's), which fired this again and replaced the first part with
+            // the second one. A box that already has a part # is never overwritten now.
+            if ((el.value || '').trim()) { console.log('[RV Paste] Skipped -- this part# box already has', JSON.stringify(el.value.trim()), '(never overwritten)'); return; }
             let { part, price } = getSellingClip();
             console.log('[RV Paste] selling slot:', part, price);
             if (!part) {

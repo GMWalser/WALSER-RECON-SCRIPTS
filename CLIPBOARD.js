@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.05
+// @version      6.06
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1948,6 +1948,10 @@ if (IS_RECONVISION) {
             isMatch
         ) {
             if (filling) { console.log('[RV Paste] Ignored -- already filling'); return; }
+            // v6.06: only fill an EMPTY part# box. Coming back to the RV window puts the cursor back in the
+            // box you used last (the first part's), which fired this again and replaced the first part with
+            // the second one. A box that already has a part # is never overwritten now.
+            if ((el.value || '').trim()) { console.log('[RV Paste] Skipped -- this part# box already has', JSON.stringify(el.value.trim()), '(never overwritten)'); return; }
             let { part, price } = getSellingClip();
             console.log('[RV Paste] selling slot:', part, price);
             if (!part) {
