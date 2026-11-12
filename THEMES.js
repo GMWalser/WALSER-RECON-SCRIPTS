@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.19
+// @version      6.20
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -448,12 +448,19 @@ input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
 ::selection{background:${T.accent};color:${T.accentText}}
 *{scrollbar-color:${T.border} ${T.bg}}
 `;
-    // v6.19: RV thumbs-down (rejected line: .checkbox-holder.rejected) stays red with a glow under every theme
-    if (/reconvision/.test(HOST)) css += `
-html .checkbox-holder.rejected,html .checkbox-holder.rejected *{color:#ff3b3b !important}
-html .checkbox-holder.rejected svg,html .checkbox-holder.rejected svg *{fill:#ff3b3b !important}
-html .checkbox-holder.rejected{filter:drop-shadow(0 0 5px rgba(255,40,40,.95)) drop-shadow(0 0 12px rgba(255,40,40,.6)) !important}
+    // v6.20: RV thumbs-down is red ONLY on a line that really is rejected (its "rejected" field is 1) -- 6.19 matched
+    // the holder alone, which RV also has on other lines. Budget Tracker turns red when over budget.
+    if (/reconvision/.test(HOST)) {
+      const R = 'html tr:has(input[name$="[rejected]"][value="1"]) .checkbox-holder.rejected';
+      css += `
+${R},${R} *{color:#ff3b3b !important}
+${R} svg,${R} svg *{fill:#ff3b3b !important}
+${R}{filter:drop-shadow(0 0 5px rgba(255,40,40,.95)) drop-shadow(0 0 12px rgba(255,40,40,.6)) !important}
+html #rv-budget-tracker .rv-bt-val.rv-bt-over{color:#ff3b3b !important;text-shadow:0 0 8px rgba(255,40,40,.8)}
+html #rv-budget-tracker:has(.rv-bt-over){border-color:#ff3b3b !important;box-shadow:0 0 10px rgba(255,40,40,.6) !important}
+html #rv-budget-tracker:has(.rv-bt-over) .rv-bt-label{color:#ff8a8a !important}
 `;
+    }
     if (T.wp) {
       const dim = (T.wpDim == null ? 50 : T.wpDim) / 100;
       const fit = T.wpFit || 'cover';
@@ -536,7 +543,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.19: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.20: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
