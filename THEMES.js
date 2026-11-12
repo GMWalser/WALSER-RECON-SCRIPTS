@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.7
+// @version      6.8
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -474,7 +474,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.7: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.8: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1701,6 +1701,16 @@ const SCENES = {
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
       S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
+      // v6.8: minimize button for the terminal box (it can cover a site's search bar)
+      S.min = !!load('pip_min_' + HOST, false);
+      if (!document.getElementById(OUR + '-pipbtn')) {
+        const b = document.createElement('button'); b.id = OUR + '-pipbtn'; b.type = 'button';
+        b.style.cssText = 'position:fixed;top:12px;right:18px;z-index:2147483601;width:22px;height:20px;padding:0;margin:0;cursor:pointer;font:bold 13px/18px Consolas,monospace;'
+          + 'background:#000;border:1px solid ' + S.col + ';color:' + S.col + ';border-radius:3px;opacity:.85';
+        const label = () => { b.textContent = S.min ? '\u25a2' : '\u2013'; b.title = S.min ? 'Show the status terminal' : 'Minimize the status terminal'; };
+        b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const st = scn && scn.S; if (!st) return; st.min = !st.min; S.min = st.min; save('pip_min_' + HOST, st.min); label(); });
+        label(); document.documentElement.appendChild(b);
+      }
       if (!window.__wrApHook) { window.__wrApHook = true; window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true }); }
     },
     draw(ctx, S, t) {
@@ -1742,10 +1752,12 @@ const SCENES = {
         else { S.lines.push(S.cur); if (S.lines.length > 3) S.lines.shift(); S.cur = ''; S.ci = 0; S.mi++; S.nextC = t + rnd(900, 2200); }
       }
       const bx = W - 360, bw = 346; ctx.font = '12px Consolas, monospace';
+      if (!S.min) {
       ctx.globalAlpha = .55; ctx.fillStyle = '#000000'; ctx.fillRect(bx, 10, bw, 74);
       ctx.globalAlpha = .9; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, 10.5, bw, 74);
       ctx.fillStyle = col; [...S.lines, S.cur].forEach((l, i) => { ctx.globalAlpha = i === S.lines.length ? 1 : .7; ctx.fillText(l, bx + 8, 28 + i * 16); });
       if (Math.floor(t / 450) % 2) { ctx.globalAlpha = 1; ctx.fillRect(bx + 8 + ctx.measureText(S.cur).width + 1, 28 + S.lines.length * 16 - 10, 7, 12); }
+      }
       // bottom HUD: HP (left), compass (center), AP (right)
       S.ap = Math.min(1, S.ap + .004); S.hp = .85 + .1 * Math.sin(t / 20000);
       const y = H - 22, seg = (x, w, v, label, right) => {
@@ -1828,7 +1840,7 @@ function triBars(ctx, x, y, r, a, col) {                // three bars that form 
   for (let i = 0; i < 3; i++) { const A = p[i], B = p[(i + 1) % 3], m = .18; ctx.beginPath(); ctx.moveTo(A[0] + (B[0] - A[0]) * m, A[1] + (B[1] - A[1]) * m); ctx.lineTo(A[0] + (B[0] - A[0]) * (1 - m), A[1] + (B[1] - A[1]) * (1 - m)); ctx.stroke(); }
 }
 let scn = null;
-function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } }
+function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } const pb = document.getElementById(OUR + '-pipbtn'); if (pb) pb.remove(); }
 function startScene() {
   const name = T && animOn() && !fxOff && window.top === window ? Object.keys(SCENES).find(n => hasFx(n)) || '' : '';
   if (!name) { stopScene(); return; }
