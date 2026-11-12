@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.6
+// @version      6.7
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -389,6 +389,7 @@ input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readon
 [data-wr-fg=accentText]{color:var(--wr-accentText) !important}
 [data-wr-fg=tint]{color:var(--wr-fgtint) !important}
 [data-wr-bd=border]{border-color:var(--wr-border) !important}
+[data-wr-notr],[data-wr-notr]::before,[data-wr-notr]::after{transition:none !important}
 ${T.mono != null ? `[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}` + (/photo/i.test(location.pathname) ? '' : `\nimg,video{filter:grayscale(1) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(3) brightness(.85)}\n${PHOTO_VIEW_SEL.map(p => p + ' img,' + p + ' video').join(',')},img[class*="mfp"]{filter:none !important}`) : ''}
 ::placeholder{color:${mix(T.text, T.bg, 0.45)} !important}
 input,textarea,select,[contenteditable]{caret-color:${T.text}}
@@ -473,7 +474,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.6: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.7: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -583,17 +584,47 @@ function collect(root, redo) {
 }
 function scan(roots, redo) {
   if (!T) return;
+  const start = work.length;
   roots.forEach(r => {
     if (!r.isConnected || r.nodeType !== 1) return;
     if (r.closest && r.closest('[id^="' + OUR + '"]')) return;
     if (deferred.has(r) && !isHiddenBox(r)) { deferred.delete(r); collect(r, false); return; }   // a hidden part was just shown
     collect(r, redo);
   });
+  // v6.7: elements the site just CHANGED (class / disabled ...) are re-colored right away, in this same step:
+  // old colors off -> read the site's colors -> new colors on, before the browser draws. Before, the browser
+  // could draw them once in the site's own colors (white flash on USAF buttons), and a change during a running
+  // pass was read with OUR colors still on (the text color drifted pink/purple each time).
+  if (redo) {
+    const mine = work.splice(start), redoNow = mine.filter(x => x.redo);
+    if (redoNow.length <= 600) recolorNow(redoNow); else work.push(...redoNow);
+    work.push(...mine.filter(x => !x.redo));
+  }
   if (!pumping && work.length) {
     pumping = true; cycleStart = performance.now(); clearRedo();
     if (document.readyState !== 'complete' && window.requestIdleCallback) requestIdleCallback(() => requestAnimationFrame(pump), { timeout: 400 });   // v5.8
     else requestAnimationFrame(pump);
   }
+}
+function recolorNow(items) {
+  const els = items.map(x => x.el).filter(el => el.isConnected);
+  if (!els.length) return;
+  const picked = ruleSelector();
+  els.forEach(el => el.setAttribute('data-wr-notr', ''));      // the element's own color fade off while reading
+  els.forEach(clearEl);
+  const dec = els.map(el => [el, decide(el, getComputedStyle(el), picked)]);
+  dec.forEach(([el, d]) => {
+    if (d.bg) el.setAttribute('data-wr-bg', d.bg);
+    if (d.fg) el.setAttribute('data-wr-fg', d.fg);
+    if (d.bd) el.setAttribute('data-wr-bd', d.bd);
+    if (d.tint) el.style.setProperty('--wr-tint', d.tint);
+    if (d.fgtint) el.style.setProperty('--wr-fgtint', d.fgtint);
+    seen.add(el);
+  });
+  // fade back on only after the browser has drawn the new colors once -- else it fades from the
+  // site's colors it saw while we read them (that was a white flash)
+  requestAnimationFrame(() => requestAnimationFrame(() => els.forEach(el => el.removeAttribute('data-wr-notr'))));
+  scanStats.els += els.length;
 }
 function clearRedo() { work.forEach(x => { if (x.redo && x.el.isConnected) clearEl(x.el); }); }   // one change, before reading
 function writeDecisions() {
