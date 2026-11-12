@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.21
+// @version      6.22
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -451,8 +451,9 @@ input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
     // v6.20: RV thumbs-down is red ONLY on a line that really is rejected (its "rejected" field is 1) -- 6.19 matched
     // the holder alone, which RV also has on other lines. Budget Tracker turns red when over budget.
     if (/reconvision/.test(HOST)) {
-      // v6.21: only a TICKED "rejected" checkbox counts (every line carries that checkbox with value 1, ticked or not)
-      const R = 'html tr:has(input[type="checkbox"][name$="[rejected]"]:checked) .checkbox-holder.rejected';
+      // v6.22: from RV's real markup -- every line has .checkbox-holder.rejected; the thumbs-down line is the one
+      // whose icon is <i class="icon-thumb-down"> (thumbs-up: icon-thumb-up)
+      const R = 'html .checkbox-holder .icon-thumb-down';
       css += `
 ${R},${R} *{color:#ff3b3b !important}
 ${R} svg,${R} svg *{fill:#ff3b3b !important}
@@ -544,7 +545,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.21: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.22: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
