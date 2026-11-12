@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Picked Up Filter Order
 // @namespace    reconclipboard
-// @version      1.2
+// @version      1.3
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PICKED_UP_FILTER_ORDER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PICKED_UP_FILTER_ORDER.js
@@ -142,6 +142,15 @@ function initBucket() {
 // WORK ORDER EDIT PAGE: only runs when opened by the Filters button (hash).
 // Same steps as Teams RO Opener's filter flow.
 // =====================================================================
+function banner(msg) {
+  const b = document.createElement('div');
+  b.id = 'wr-theme-pu-banner';                       // Page Themes leaves ids starting "wr-theme" alone
+  b.textContent = '\u26a0 ' + msg + '  (click to close)';
+  b.style.cssText = 'position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:2147483646;background:#7c2d12;color:#fff;border:2px solid #fb923c;border-radius:8px;padding:10px 16px;font:700 14px "Segoe UI",sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.5);cursor:pointer;max-width:80vw';
+  b.addEventListener('click', () => b.remove());
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), 20000);
+}
 async function doFilters() {
   history.replaceState(null, '', location.pathname + location.search);   // run once, clean the URL
   const boxes = await waitFor(() => { const b = document.querySelectorAll('.rv-filter-cb'); return b.length >= 3 ? b : null; }, 15000);
@@ -154,7 +163,12 @@ async function doFilters() {
     else log('Open PartsTech button (#rv-pt-btn) not found -- filters ticked only.');
   } else log('Filter Lookup boxes (.rv-filter-cb) never appeared -- filters not ticked.');
   const tekionBtn = await waitFor(() => document.getElementById('rv-tekion-btn'), 15000);
-  if (!tekionBtn) { log('"Open in Tekion" button (#rv-tekion-btn) never appeared.'); return; }
+  if (!tekionBtn) { log('"Open in Tekion" button (#rv-tekion-btn) never appeared.'); banner('Tekion NOT opened: the Open in Tekion button never appeared on this work order.'); return; }
+  if (tekionBtn.dataset.noRo) {                     // v1.3: no RO number in RV yet -- say so instead of silently stopping
+    log('No RO# in RV yet for this vehicle -- Tekion not opened.');
+    banner('Tekion NOT opened: this vehicle has no RO# in RV yet. Filters were ticked and PartsTech opened.');
+    return;
+  }
   log('Clicking Open in Tekion.');
   tekionBtn.click();
 }
@@ -162,5 +176,5 @@ async function doFilters() {
 if (/^\/departments\/28149/.test(location.pathname)) initBucket();
 else if (/\/work_orders\/\d+\/edit/.test(location.pathname) && location.hash === HASH_KEY) doFilters();
 
-log('v1.2 loaded');
+log('v1.3 loaded');
 })();

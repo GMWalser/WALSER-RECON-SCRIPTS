@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1251
+// @version      2026.1112.1302
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -6692,8 +6692,8 @@ if (location.hostname === 'app.partstech.com') {
 
 });
 
-// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.23  (BUCKET MOVER.js) =====
-WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.23', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.24  (BUCKET MOVER.js) =====
+WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.24', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
@@ -7285,7 +7285,27 @@ function injectTekionButton() {
     const spans = roEl.querySelectorAll('span');
     if (spans.length >= 2) roNumber = spans[spans.length - 1].textContent.trim();
   }
-  if (!roNumber || !roEl) return; // no RO yet on this vehicle, nothing to open
+  if (!roEl) return;
+  // v3.24: RV shows "RO#" with no number until the vehicle has an RO. Before, the button just did not
+  // appear (looked broken). Now a grey "No RO# in RV yet" sits there instead, and is swapped for the real
+  // button as soon as RV shows the number.
+  if (!roNumber) {
+    const ph = document.createElement('button');
+    ph.id = 'rv-tekion-btn'; ph.type = 'button'; ph.disabled = true; ph.dataset.noRo = '1';
+    ph.textContent = '\u26d4 No RO# in RV yet';
+    ph.title = 'This vehicle has no RO number in RV yet, so there is nothing to open in Tekion. The Open in Tekion button appears by itself once RV shows the RO#.';
+    ph.style.cssText = 'opacity:.75;cursor:not-allowed;color:#9ca3af;border-color:#4b5563';
+    const hasRoNow = () => { const sp = roEl.querySelectorAll('span'); return sp.length >= 2 && !!sp[sp.length - 1].textContent.trim(); };
+    ph._stale = () => !roEl.isConnected || hasRoNow();
+    document.body.appendChild(ph);
+    const place = () => {
+      if (!ph.isConnected) { window.removeEventListener('scroll', place); window.removeEventListener('resize', place); return; }
+      const r = roEl.getBoundingClientRect(); ph.style.left = r.left + 'px'; ph.style.top = (r.bottom + 14) + 'px';
+      ph.style.display = (r.bottom < 0 || r.top > window.innerHeight) ? 'none' : 'flex';
+    };
+    place(); window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', place, { passive: true });
+    return;
+  }
 
   const btn = document.createElement('button');
   btn.id = 'rv-tekion-btn';
@@ -8968,8 +8988,8 @@ waitForReady(init);
 
 });
 
-// ===== Picked Up Filter Order v1.2  (PICKED_UP_FILTER_ORDER.js) =====
-WR.add('picked_up_filter', 'Picked Up Filter Order', '1.2', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== Picked Up Filter Order v1.3  (PICKED_UP_FILTER_ORDER.js) =====
+WR.add('picked_up_filter', 'Picked Up Filter Order', '1.3', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9102,6 +9122,15 @@ function initBucket() {
 // WORK ORDER EDIT PAGE: only runs when opened by the Filters button (hash).
 // Same steps as Teams RO Opener's filter flow.
 // =====================================================================
+function banner(msg) {
+  const b = document.createElement('div');
+  b.id = 'wr-theme-pu-banner';                       // Page Themes leaves ids starting "wr-theme" alone
+  b.textContent = '\u26a0 ' + msg + '  (click to close)';
+  b.style.cssText = 'position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:2147483646;background:#7c2d12;color:#fff;border:2px solid #fb923c;border-radius:8px;padding:10px 16px;font:700 14px "Segoe UI",sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.5);cursor:pointer;max-width:80vw';
+  b.addEventListener('click', () => b.remove());
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), 20000);
+}
 async function doFilters() {
   history.replaceState(null, '', location.pathname + location.search);   // run once, clean the URL
   const boxes = await waitFor(() => { const b = document.querySelectorAll('.rv-filter-cb'); return b.length >= 3 ? b : null; }, 15000);
@@ -9114,7 +9143,12 @@ async function doFilters() {
     else log('Open PartsTech button (#rv-pt-btn) not found -- filters ticked only.');
   } else log('Filter Lookup boxes (.rv-filter-cb) never appeared -- filters not ticked.');
   const tekionBtn = await waitFor(() => document.getElementById('rv-tekion-btn'), 15000);
-  if (!tekionBtn) { log('"Open in Tekion" button (#rv-tekion-btn) never appeared.'); return; }
+  if (!tekionBtn) { log('"Open in Tekion" button (#rv-tekion-btn) never appeared.'); banner('Tekion NOT opened: the Open in Tekion button never appeared on this work order.'); return; }
+  if (tekionBtn.dataset.noRo) {                     // v1.3: no RO number in RV yet -- say so instead of silently stopping
+    log('No RO# in RV yet for this vehicle -- Tekion not opened.');
+    banner('Tekion NOT opened: this vehicle has no RO# in RV yet. Filters were ticked and PartsTech opened.');
+    return;
+  }
   log('Clicking Open in Tekion.');
   tekionBtn.click();
 }
@@ -9122,7 +9156,7 @@ async function doFilters() {
 if (/^\/departments\/28149/.test(location.pathname)) initBucket();
 else if (/\/work_orders\/\d+\/edit/.test(location.pathname) && location.hash === HASH_KEY) doFilters();
 
-log('v1.2 loaded');
+log('v1.3 loaded');
 })();
 });
 

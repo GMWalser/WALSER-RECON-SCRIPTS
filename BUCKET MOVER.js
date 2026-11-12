@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel
 // @namespace    reconclipboard
-// @version      3.23
+// @version      3.24
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUCKET%20MOVER.js
@@ -607,7 +607,27 @@ function injectTekionButton() {
     const spans = roEl.querySelectorAll('span');
     if (spans.length >= 2) roNumber = spans[spans.length - 1].textContent.trim();
   }
-  if (!roNumber || !roEl) return; // no RO yet on this vehicle, nothing to open
+  if (!roEl) return;
+  // v3.24: RV shows "RO#" with no number until the vehicle has an RO. Before, the button just did not
+  // appear (looked broken). Now a grey "No RO# in RV yet" sits there instead, and is swapped for the real
+  // button as soon as RV shows the number.
+  if (!roNumber) {
+    const ph = document.createElement('button');
+    ph.id = 'rv-tekion-btn'; ph.type = 'button'; ph.disabled = true; ph.dataset.noRo = '1';
+    ph.textContent = '\u26d4 No RO# in RV yet';
+    ph.title = 'This vehicle has no RO number in RV yet, so there is nothing to open in Tekion. The Open in Tekion button appears by itself once RV shows the RO#.';
+    ph.style.cssText = 'opacity:.75;cursor:not-allowed;color:#9ca3af;border-color:#4b5563';
+    const hasRoNow = () => { const sp = roEl.querySelectorAll('span'); return sp.length >= 2 && !!sp[sp.length - 1].textContent.trim(); };
+    ph._stale = () => !roEl.isConnected || hasRoNow();
+    document.body.appendChild(ph);
+    const place = () => {
+      if (!ph.isConnected) { window.removeEventListener('scroll', place); window.removeEventListener('resize', place); return; }
+      const r = roEl.getBoundingClientRect(); ph.style.left = r.left + 'px'; ph.style.top = (r.bottom + 14) + 'px';
+      ph.style.display = (r.bottom < 0 || r.top > window.innerHeight) ? 'none' : 'flex';
+    };
+    place(); window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', place, { passive: true });
+    return;
+  }
 
   const btn = document.createElement('button');
   btn.id = 'rv-tekion-btn';
