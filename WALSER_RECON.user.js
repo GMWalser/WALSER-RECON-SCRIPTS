@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1321
+// @version      2026.1112.1409
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v6.9  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '6.9', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.10  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.10', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -169,6 +169,11 @@ const WALLPAPERS = {
   th_wasteterm: { name: "Wasteland Terminal", css: "repeating-linear-gradient(0deg,rgba(27,255,128,.05) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,rgba(27,255,128,.16),transparent 65%),linear-gradient(#020a04,#020a04)" },
   th_wasteamber: { name: "Wasteland Amber", css: "radial-gradient(ellipse at 70% 72%,rgba(255,160,40,.35),transparent 45%),url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1600 900%22 preserveAspectRatio=%22none%22><path fill=%22%230a0600%22 d=%22M0 900V690h60v-40h30v60h50V600h20v-30h25v120h40v-80l30-20v100h60V560h15l10-40 10 40h20v150h70v-60h40v-90h30v150h50V520l40-30v220h60v-50h30v-80h20l15 30v100h70V600h20l5-50 5 50h25v120h60v-90h40v110h50V560h30v-30h20v190h70v-70h30v-40h30v130h60V610h30v100h70v-60h30v-20h20v90h60V640h40v80h50V900z%22/><path fill=%22%23140b00%22 d=%22M0 900V760h80v-30h60v50h90v-40h70v60h100v-50h80v40h120v-60h60v70h140v-40h90v50h110v-30h80v40h130v-50h90v60h100v-40h70v40h80V900z%22/></svg>'),linear-gradient(180deg,#120900 0%,#3a2200 62%,#5a3400 100%)" },
   th_shelter: { name: "Shelter Blue & Gold", css: "radial-gradient(ellipse at 50% 40%,rgba(245,197,24,.10),transparent 55%),linear-gradient(180deg,#06122a,#0a1a3a)" },
+  th_nc_classic: { name: "Neon Corners Classic", css: "radial-gradient(ellipse at 10% 90%,rgba(255,46,151,.55),transparent 45%),radial-gradient(ellipse at 90% 10%,rgba(0,245,212,.45),transparent 45%),linear-gradient(135deg,#0a0614,#1a0b2e)" },
+  th_nc_blue: { name: "Neon Corners Dark Blue", css: "radial-gradient(ellipse at 10% 90%,rgba(255,46,151,.5),transparent 45%),radial-gradient(ellipse at 90% 10%,rgba(0,245,212,.42),transparent 45%),linear-gradient(135deg,#050b1c,#0f2148)" },
+  th_nc_swap: { name: "Neon Corners Pink Lead", css: "radial-gradient(ellipse at 90% 10%,rgba(255,46,151,.5),transparent 45%),radial-gradient(ellipse at 10% 90%,rgba(0,245,212,.42),transparent 45%),linear-gradient(135deg,#0a0820,#1a1238)" },
+  th_nc_soft: { name: "Neon Corners Soft", css: "radial-gradient(ellipse at 8% 92%,rgba(255,46,151,.30),transparent 50%),radial-gradient(ellipse at 92% 8%,rgba(0,245,212,.25),transparent 50%),linear-gradient(135deg,#0c1024,#151a35)" },
+  th_nc_triple: { name: "Neon Corners Triple", css: "radial-gradient(ellipse at 10% 90%,rgba(255,46,151,.5),transparent 42%),radial-gradient(ellipse at 90% 10%,rgba(0,245,212,.42),transparent 42%),radial-gradient(ellipse at 55% 50%,rgba(37,99,235,.35),transparent 55%),linear-gradient(135deg,#050818,#0b1533)" },
   th_mainframe: { name: "Mainframe", css: "repeating-linear-gradient(0deg,rgba(51,255,51,.06) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,rgba(51,255,51,.14),transparent 70%),linear-gradient(#010801,#010801)" },
   ar_tw_mask: { name: "Skull Mask Inks", css: "repeating-radial-gradient(circle at 50% 40%,rgba(91,74,110,.45) 0 2px,transparent 2px 9px),radial-gradient(circle at 50% 40%,rgba(240,138,42,.35),transparent 35%),linear-gradient(#120d14,#120d14)" },
   ar_tw_teal: { name: "Teal & Burnt Orange", css: "repeating-radial-gradient(circle at 50% 35%,rgba(111,154,160,.35) 0 2px,transparent 2px 10px),radial-gradient(circle at 50% 35%,rgba(226,98,42,.35),transparent 35%),linear-gradient(#0d1416,#0d1416)" },
@@ -230,6 +235,11 @@ const COLOR_THEORY = {
 // (no logos, characters or artwork copied). All pass the same readability checks.
 const THEMED = {
   neonnoir: { name: "Neon Noir", about: 'cyberpunk: dark rainy city, bright neon signs', bg: '#050509', surface: '#0e0e15', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#26263a', input: '#08080d', wp: WALLPAPERS.th_neonnoir.css, wpDim: 25, wpSee: 30, glow: true, fx: 'flicker neoncity', fxColor: '#ff2e97' },
+  nc_classic: { name: "Neon Corners Classic", about: "the original Neon Noir: hot pink + teal corner glows on dark blue-purple, no animations", bg: '#0a0614', surface: '#160c26', text: '#f2f0ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#33205a', input: '#07040f', wp: WALLPAPERS.th_nc_classic.css, wpDim: 25, wpSee: 30, glow: false, fx: '' },
+  nc_blue: { name: "Neon Corners Dark Blue", about: "hot pink + teal corner glows on dark navy blue, no animations", bg: '#071226', surface: '#0d1d3a', text: '#eef4ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#1f3a66', input: '#050d1c', wp: WALLPAPERS.th_nc_blue.css, wpDim: 25, wpSee: 30, glow: false, fx: '' },
+  nc_swap: { name: "Neon Corners Pink Lead", about: "hot pink buttons, teal links, glows swapped, no animations", bg: '#0a0820', surface: '#16123a', text: '#f5f0ff', accent: '#ff2e97', accentText: '#1a0010', link: '#2ef2e0', border: '#33285e', input: '#07061a', wp: WALLPAPERS.th_nc_swap.css, wpDim: 25, wpSee: 30, glow: false, fx: '' },
+  nc_soft: { name: "Neon Corners Soft", about: "gentler pink + teal glows on slate blue, no animations", bg: '#0c1024', surface: '#151a35', text: '#eef0ff', accent: '#2ee6c9', accentText: '#04201b', link: '#ff7ab8', border: '#2a3158', input: '#090c1c', wp: WALLPAPERS.th_nc_soft.css, wpDim: 25, wpSee: 30, glow: false, fx: '' },
+  nc_triple: { name: "Neon Corners Triple", about: "hot pink, teal and a dark blue glow, no animations", bg: '#050818', surface: '#0d1633', text: '#eef3ff', accent: '#00f5d4', accentText: '#04201b', link: '#ff5fae', border: '#1f3466', input: '#040714', wp: WALLPAPERS.th_nc_triple.css, wpDim: 25, wpSee: 30, glow: false, fx: '' },
   nightrain: { name: "Night City Rain", about: "cyberpunk cyan + magenta", bg: '#05070f', surface: '#0d1224', text: '#eaf6ff', accent: '#ff2e97', accentText: '#1a0010', link: '#3df5ff', border: '#22305a', input: '#04050b', wp: WALLPAPERS.th_nightrain.css, wpDim: 25, wpSee: 30, glow: true, fx: 'rain', fxColor: '#3df5ff' },
   vaporwave: { name: "Vaporwave", about: 'cyberpunk pink + teal + purple, moving sine waves', bg: '#1a0b2a', surface: '#2a1342', text: '#fff0fb', accent: '#01cdfe', accentText: '#08142a', link: '#ff3fb4', border: '#4b2a6e', input: '#13081f', wp: WALLPAPERS.th_vaporwave.css, wpDim: 25, wpSee: 30, glow: true , fx: 'sine' },
   hologrid: { name: "Holo Grid", about: "cyberpunk teal grid + magenta", bg: '#03100f', surface: '#08201e', text: '#e6fffb', accent: '#ff3ea5', accentText: '#25001a', link: '#2ef2d0', border: '#134540', input: '#020b0a', wp: WALLPAPERS.th_hologrid.css, wpDim: 25, wpSee: 30, glow: true, fx: 'gridfloor', fxColor: '#2ef2d0' },
@@ -546,7 +556,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.9: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.10: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
