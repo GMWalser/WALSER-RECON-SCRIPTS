@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         RV Quick Assign
 // @namespace    reconclipboard
-// @version      1.3
+// @version      1.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/RV_QUICK_ASSIGN.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/RV_QUICK_ASSIGN.js
-// @description  Adds "assign to me" and "unassign" buttons next to the assign-technician icon on every RO in RV department buckets.
+// @description  Adds "assign to me" and "unassign" buttons next to the assign-technician icon on every RO in RV department buckets. Hover a car's notes button to read its notes without opening them.
 // @match        https://app.reconvision.com/departments/*
 // @grant        none
 // @run-at       document-idle
@@ -192,5 +192,74 @@ setInterval(injectButtons, 1500);
 injectButtons();
 new MutationObserver(injectButtons).observe(document.body, { childList: true, subtree: true });
 
-log('v1.3 loaded');
+// =====================================================================
+// v1.4 HOVER NOTES: rest the mouse on a car's notes button -> its notes in a small pop-up.
+// Same request RV makes when you open the notes (GET /work_orders/<id>/get_comments, answer
+// {"modal": "<html of the notes window>"}); only the notes text is shown, the typing box and buttons left out.
+// Cached 30 s. The pop-up's id starts "wr-theme-" so Page Themes leaves its colors alone.
+// =====================================================================
+const NOTE_CACHE = {};
+let tip = null, hoverT = 0, hideT = 0, curWo = '';
+function notesTip() {
+  if (tip && tip.isConnected) return tip;
+  tip = document.createElement('div');
+  tip.id = 'wr-theme-notes-tip';
+  tip.style.cssText = 'position:fixed;z-index:2147483645;max-width:440px;min-width:200px;max-height:340px;overflow:auto;background:#111827;color:#f3f4f6;'
+    + 'border:1px solid #6b7280;border-radius:8px;padding:8px 10px;font:12.5px/1.45 "Segoe UI",Arial,sans-serif;white-space:pre-wrap;box-shadow:0 6px 24px rgba(0,0,0,.55);display:none';
+  tip.addEventListener('mouseenter', () => clearTimeout(hideT));
+  tip.addEventListener('mouseleave', () => { hideT = setTimeout(hideTip, 250); });
+  document.body.appendChild(tip);
+  return tip;
+}
+function hideTip() { if (tip) tip.style.display = 'none'; curWo = ''; }
+function placeTip(btn) {
+  const r = btn.getBoundingClientRect(), t = notesTip();
+  t.style.display = 'block';
+  const w = t.offsetWidth, h = t.offsetHeight;
+  let x = r.right + 8, y = r.top - 4;
+  if (x + w > innerWidth - 8) x = Math.max(8, r.left - w - 8);
+  if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+  t.style.left = x + 'px'; t.style.top = y + 'px';
+}
+function notesFromModal(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const root = doc.querySelector('.modal-body') || doc.body;
+  root.querySelectorAll('form, textarea, input, select, button, script, style, .modal-header, .modal-footer').forEach(e => e.remove());
+  root.querySelectorAll('div, p, li, tr, br, h1, h2, h3, h4, h5, h6').forEach(e => e.after(doc.createTextNode('\n')));
+  const lines = root.textContent.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return lines.filter((l, i) => l !== lines[i - 1]).join('\n');
+}
+async function loadNotes(wo) {
+  const c = NOTE_CACHE[wo];
+  if (c && Date.now() - c.at < 30000) return c.text;
+  const r = await fetch('/work_orders/' + wo + '/get_comments', { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+  if (!r.ok) throw new Error('RV answered ' + r.status);
+  const j = await r.json();
+  const text = notesFromModal(j.modal || '') || '(no notes)';
+  NOTE_CACHE[wo] = { at: Date.now(), text };
+  return text;
+}
+document.addEventListener('mouseover', e => {
+  const btn = e.target.closest && e.target.closest('.info-bar__notes-button');
+  if (!btn) return;
+  const wo = btn.getAttribute('data-wo-id'); if (!wo) return;
+  clearTimeout(hideT);
+  if (curWo === wo) return;
+  clearTimeout(hoverT);
+  hoverT = setTimeout(async () => {
+    curWo = wo; const t = notesTip();
+    t.textContent = 'Loading notes\u2026'; placeTip(btn);
+    try { const text = await loadNotes(wo); if (curWo === wo) { t.textContent = text; placeTip(btn); } }
+    catch (err) { if (curWo === wo) { t.textContent = 'Could not load the notes (' + err.message + ')'; placeTip(btn); } }
+  }, 350);
+}, true);
+document.addEventListener('mouseout', e => {
+  const btn = e.target.closest && e.target.closest('.info-bar__notes-button');
+  if (!btn || (e.relatedTarget && btn.contains(e.relatedTarget))) return;
+  clearTimeout(hoverT);
+  hideT = setTimeout(hideTip, 250);
+}, true);
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.info-bar__notes-button')) { hideTip(); const b = e.target.closest('.info-bar__notes-button'); delete NOTE_CACHE[b.getAttribute('data-wo-id')]; } }, true);
+
+log('v1.4 loaded');
 })();
