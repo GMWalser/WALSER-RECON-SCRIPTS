@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1415
+// @version      2026.1112.1442
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v6.11  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '6.11', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.12  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.12', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -393,6 +393,9 @@ function skipDaily() { const d = dailyState(); d.on = true; d.date = todayStr();
 const REMOVED_THEMES = ["midnight", "dim", "graphite", "ember", "purple", "twinsuns", "typesblue", "typescarbon", "iceplanet", "forestmoon", "imperialbridge"];
 if (REMOVED_THEMES.includes(cfg.theme)) { cfg.theme = 'contrast'; saveSiteCfg(cfg); }
 let T = allThemes()[activeThemeId()] || null;     // active theme colors, or null = Off
+let monoPreview = !!(T && T.mono != null);          // v6.12: quick filter until the first full pass is done
+function endPreview() { if (!monoPreview) return; monoPreview = false; pushCss(cssText()); if (document.body) startFx(); }   // scanlines + HUD come on with the exact colors
+if (monoPreview) setTimeout(endPreview, 6000);       // never longer than 6 s
 
 // ---------- color math ----------
 function parseColor(s) {
@@ -491,6 +494,12 @@ body,[data-wr-bg=page]{background-color:transparent !important}
 `;
     }
     if (T.mesh) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
+    // v6.12: one-color themes -- from the very first paint, a screen-wide color filter (done by the graphics
+    // chip, no per-element work) shows the page dark with green/amber text, until the exact colors are on.
+    // Before, the page showed in its own colors (white panels, blue buttons) for a second or two first.
+    if (T.mono != null && monoPreview) css += `
+html,body{background-color:#ffffff !important;background-image:none !important}
+html{filter:invert(1) hue-rotate(180deg) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(2.4) brightness(.92) !important}`;
     if (animOn()) css += animCss();
   }
   if (T && IS_TEAMS) {
@@ -556,7 +565,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.11: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.12: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -679,7 +688,7 @@ function scan(roots, redo) {
   // pass was read with OUR colors still on (the text color drifted pink/purple each time).
   if (redo) {
     const mine = work.splice(start), redoNow = mine.filter(x => x.redo);
-    if (redoNow.length <= 600) recolorNow(redoNow); else work.push(...redoNow);
+    if (redoNow.length <= 600 && !monoPreview) recolorNow(redoNow); else work.push(...redoNow);
     work.push(...mine.filter(x => !x.redo));
   }
   if (!pumping && work.length) {
@@ -742,7 +751,8 @@ function pump() {
     scanStats.els += batch.length;
   }
   // WRITE once: when finished, or every ~300 ms on very big pages so it visibly progresses
-  if (!work.length || performance.now() - cycleStart > 300) { writeDecisions(); cycleStart = performance.now(); }
+  if (!work.length || (!monoPreview && performance.now() - cycleStart > 300)) { writeDecisions(); cycleStart = performance.now(); }
+  if (!work.length && monoPreview) endPreview();      // exact colors and filter off in the same step: one switch
   scanStats.ms += performance.now() - t0;
   busy(performance.now() - t0);
   if (work.length && T) requestAnimationFrame(pump); else { pumping = false; if (!T) { work = []; pendingDecisions = []; } }
@@ -819,7 +829,7 @@ a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
 html[data-wr-jolt~=pull] body{animation:wrPull var(--wr-jd) steps(6) 1}
 html[data-wr-jolt~=warp] body{animation:wrWarp var(--wr-jd) linear 1}
 html[data-wr-jolt~=roll] body{animation:wrRoll var(--wr-jd) steps(5) 1}`;
-  if (hasFx('crt')) css += `
+  if (hasFx('crt') && !monoPreview) css += `
 @keyframes wrCrt{0%,100%{opacity:.85}50%{opacity:1}}
 html::after{content:'';position:fixed;inset:0;z-index:2147483500;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.5) 100%);animation:wrCrt 3.2s ease-in-out infinite}`;
   // ---- background effects drawn with CSS (html::before) ----
@@ -1783,7 +1793,10 @@ const SCENES = {
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
       S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
-      S.nextCurve = performance.now() + rnd(60000, 240000); S.curveImg = null;   // v6.11 curved-tube look
+      S.curveImg = null;   // v6.11 curved-tube look; v6.12: time kept across page loads (switching ROs no longer restarts it)
+      { let due = 0; try { due = +localStorage.getItem('wr_curve_next') || 0; } catch (e) {}
+        if (!due || due < Date.now() - 600000) { due = Date.now() + rnd(15000, 60000); try { localStorage.setItem('wr_curve_next', String(due)); } catch (e) {} }
+        S.nextCurve = performance.now() + Math.max(0, due - Date.now()); }
       // v6.8: minimize button for the terminal box (it can cover a site's search bar)
       S.min = !!load('pip_min_' + HOST, false);
       if (!document.getElementById(OUR + '-pipbtn')) {
@@ -1867,7 +1880,7 @@ const SCENES = {
       if (!S.curve && t > S.nextCurve) S.curve = { start: t, dur: 30000 };
       if (S.curve) {
         const e = t - S.curve.start;
-        if (e > S.curve.dur) { S.curve = null; S.nextCurve = t + rnd(180000, 480000); }
+        if (e > S.curve.dur) { S.curve = null; const gap = rnd(40000, 150000); S.nextCurve = t + gap; try { localStorage.setItem('wr_curve_next', String(Date.now() + gap)); } catch (e) {} }
         else {
           if (!S.curveImg) S.curveImg = curvedTube(W, H, col);
           ctx.globalAlpha = Math.min(1, e / 1500, (S.curve.dur - e) / 1500); ctx.drawImage(S.curveImg, 0, 0); ctx.globalAlpha = 1;
@@ -1973,6 +1986,7 @@ function triBars(ctx, x, y, r, a, col) {                // three bars that form 
 let scn = null;
 function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } const pb = document.getElementById(OUR + '-pipbtn'); if (pb) pb.remove(); }
 function startScene() {
+  if (monoPreview) return;                           // v6.12: waits for the exact colors (the quick filter would flip it)
   const name = T && animOn() && !fxOff && window.top === window ? Object.keys(SCENES).find(n => hasFx(n)) || '' : '';
   if (!name) { stopScene(); return; }
   const sig = name + '|' + T.name;
