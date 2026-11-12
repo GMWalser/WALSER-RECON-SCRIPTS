@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.8
+// @version      6.9
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -474,7 +474,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.8: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.9: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1747,9 +1747,10 @@ const SCENES = {
       }
       // typing terminal, top right
       if (t > S.nextC) {
-        const m = S.msgs[S.mi % S.msgs.length];
+        if (!S.m) S.m = pipNextMsg(S, t);
+        const m = S.m;
         if (S.ci < m.length) { S.cur += m[S.ci++]; S.nextC = t + rnd(35, 90); }
-        else { S.lines.push(S.cur); if (S.lines.length > 3) S.lines.shift(); S.cur = ''; S.ci = 0; S.mi++; S.nextC = t + rnd(900, 2200); }
+        else { S.lines.push(S.cur); if (S.lines.length > 3) S.lines.shift(); S.cur = ''; S.ci = 0; S.m = null; S.nextC = t + rnd(900, 2200); }
       }
       const bx = W - 360, bw = 346; ctx.font = '12px Consolas, monospace';
       if (!S.min) {
@@ -1828,6 +1829,25 @@ const SCENES = {
     init() {},
   },
 };
+// v6.9: the wasteland terminal mixes in lines about the RO / vehicle on screen (read at most every 8 s)
+const VIN_COUNTRY = { 1: 'USA', 4: 'USA', 5: 'USA', 2: 'CANADA', 3: 'MEXICO', J: 'JAPAN', K: 'KOREA', W: 'GERMANY', S: 'UNITED KINGDOM', Z: 'ITALY', Y: 'SWEDEN', V: 'FRANCE', L: 'CHINA', 9: 'BRAZIL', M: 'INDIA' };
+function pipNextMsg(S, t) {
+  // only on an open RO (RV work order / Tekion RO) -- a dashboard lists many vehicles, not the one you work on
+  const onRO = /\/work_orders\/|ro-sales|repair-order/i.test(location.pathname) || !!document.querySelector('[data-test-id="undefined-modelButton"]');
+  if (!onRO) S.info = {};
+  else if (!S.infoT || t - S.infoT > 8000) { S.infoT = t; try { S.info = readPageInfo(); } catch (e) { S.info = {}; } }
+  const i = S.info || {}, v = [];
+  if (i.veh) { const veh = i.veh.toUpperCase(), make = (veh.match(/^(?:19|20)\d{2}\s+([A-Z-]+)/) || [])[1];
+    v.push('> SUBJECT VEHICLE: ' + veh, '> ' + veh + ': SURVIVAL ODDS 97%');
+    if (make) v.push('> ' + make + ' DETECTED. RAD SCAN ... CLEAN', '> ' + make + ' PARTS CACHE: SEARCHING ...'); }
+  if (i.ro) v.push('> RO# ' + i.ro + ' ........ ACTIVE', '> RO# ' + i.ro + ': PARTS REQUISITION OPEN', '> LOGGING WORK ON RO# ' + i.ro + ' ...');
+  if (i.vin) { const c = VIN_COUNTRY[i.vin[0]]; v.push('> VIN SCAN: ' + i.vin, '> VIN LAST 8: ' + i.vin.slice(-8)); if (c) v.push('> ORIGIN SCAN: BUILT IN ' + c); }
+  if (i.stock) v.push('> STOCK # ' + i.stock + ' ...... TAGGED');
+  let m;
+  if (v.length && Math.random() < .5) { do { m = v[(Math.random() * v.length) | 0]; } while (v.length > 1 && m === S.lastV); S.lastV = m; }
+  else m = S.msgs[S.mi++ % S.msgs.length];
+  return m.length > 46 ? m.slice(0, 45) + '…' : m;
+}
 // alien glyphs for the hunter readout: strokes on two stacked eight-point stars, made up at random
 function S_glyph() { const g = []; for (let n = 0; n < 2; n++) { const k = 2 + ((Math.random() * 3) | 0); const pick = new Set(); while (pick.size < k) pick.add((Math.random() * 8) | 0); pick.forEach(d => g.push([n, d])); } return g; }
 function drawGlyph(ctx, g, x, y, s, a) {
@@ -1872,7 +1892,7 @@ function startScene() {
 // Reads only what is already on screen: RO number, vehicle, VIN. Clicks pass through it.
 let hudEl = null, hudTimer = 0, hudClock = 0;
 function readPageInfo() {
-  const info = { ro: '', veh: '', vin: '' };
+  const info = { ro: '', veh: '', vin: '', stock: '' };
   const tk = document.querySelector('[data-test-id="undefined-modelButton"] span');   // Tekion vehicle line
   if (tk) info.veh = tk.textContent.trim();
   const els = document.querySelectorAll('span,div,td,a,h1,h2,h3,p,input,b,strong');
@@ -1883,7 +1903,8 @@ function readPageInfo() {
     if (!info.vin && /^[A-HJ-NPR-Z0-9]{17}$/.test(t)) info.vin = t;
     if (!info.ro) { const m = t.match(/^(?:RO\s*#?\s*)?(7\d{6})$/i); if (m) info.ro = m[1]; }
     if (!info.veh) { const m = t.match(/^((?:19|20)\d{2})\s+([A-Za-z][A-Za-z-]+)(\s+[A-Za-z0-9-]+){1,3}$/); if (m) info.veh = t; }
-    if (info.vin && info.ro && info.veh) break;
+    if (!info.stock && /^\d{1,2}[A-Z]\d{4}[A-Z]?$/.test(t)) info.stock = t;
+    if (info.vin && info.ro && info.veh && info.stock) break;
   }
   if (!info.ro) { const m = (document.title + ' ' + location.href).match(/\b(7\d{6})\b/); if (m) info.ro = m[1]; }
   return info;
