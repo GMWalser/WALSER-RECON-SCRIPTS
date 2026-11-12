@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1514
+// @version      2026.1112.1556
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -2559,8 +2559,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.06  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.06', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.07  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.07', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -4256,18 +4256,31 @@ if (IS_PI) {
             // opening the tab -- it waited 8s for a selector that no
             // longer existed. Anchoring primarily on the input's own
             // stable data-test-id instead.
-            const searchBox = await waitFor(
+            await waitFor(
                 '[data-test-id="@tekion-universalComponents-input"], input.ant-v5-input[placeholder="Type Here"], input.ant-input[placeholder="Type Here"]',
                 8000
             );
-            console.log('[PI-Cost] Search box found, typing part#:', partNum);
-            searchBox.focus();
-            rvNote('P&I tab: search box found, typing ' + partNum);
-            // v6.04: no blur/focus right after typing -- that can close Tekion's suggestion list before it shows
+            // v6.07: "@tekion-universalComponents-input" is Tekion's id for ANY of its input boxes -- take the VISIBLE
+            // "Type Here" search box, not just the first match. Re-found before every retype, because Tekion can
+            // rebuild the box right after we type (then nothing happened: "no suggestion", seen 11/12 09:44 + 09:49).
+            const findSearchBox = () => {
+                const all = [...document.querySelectorAll('[data-test-id="@tekion-universalComponents-input"], input.ant-v5-input, input.ant-input')].filter(i => i.tagName === 'INPUT');
+                const vis = all.filter(i => i.offsetParent !== null && !i.disabled);
+                return { box: vis.find(i => /type here|search/i.test(i.placeholder || '')) || vis[0] || all[0], total: all.length, visible: vis.length };
+            };
             const setVal = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-            setVal.call(searchBox, partNum);
-            searchBox.dispatchEvent(new Event('input', { bubbles: true }));
-            searchBox.dispatchEvent(new Event('change', { bubbles: true }));
+            const typeInto = box => {
+                box.focus();
+                setVal.call(box, ''); box.dispatchEvent(new Event('input', { bubbles: true }));
+                setVal.call(box, partNum);
+                box.dispatchEvent(new Event('input', { bubbles: true }));
+                box.dispatchEvent(new Event('change', { bubbles: true }));
+                box.dispatchEvent(new KeyboardEvent('keyup', { key: partNum.slice(-1), bubbles: true }));
+            };
+            let found = findSearchBox(), searchBox = found.box;
+            console.log('[PI-Cost] Search box found, typing part#:', partNum);
+            rvNote('P&I tab: search box found (' + found.visible + ' visible of ' + found.total + ' input boxes, "' + (searchBox.placeholder || '') + '"), typing ' + partNum);
+            typeInto(searchBox);
 
             setPill('Waiting for result...', 'ready');
             await new Promise(r => setTimeout(r, 800));
@@ -4277,18 +4290,25 @@ if (IS_PI) {
             for (let attempt = 0; attempt < 40; attempt++) {
                 // Primary: Tekion autocomplete first item (same dropdown as RO Sales paste)
                 const autoFirst = document.querySelector('[data-test-id="@tekion-parts-downshift-autocomplete-first-item"]');
-                if (autoFirst && autoFirst.innerText.includes(partNum) && !autoFirst.innerText.startsWith('Create')) {
+                const key = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (autoFirst && key(autoFirst.innerText.split(' - ')[0]).includes(key(partNum)) && !autoFirst.innerText.trim().startsWith('Create')) {
                     firstItem = autoFirst;
                 }
                 // Secondary: row-0 in the parts list table
                 if (!firstItem) {
                     const el = document.querySelector('[data-test-id="@tekion-parts-partsAndInventory-tabs-preferredPartListTableUserPreference-row-0"]');
-                    if (el && el.innerText.includes(partNum)) firstItem = el;
+                    if (el && key(el.innerText).includes(key(partNum))) firstItem = el;
                 }
                 if (firstItem) break;
-                if (attempt === 7) {                                 // v6.04: nothing after ~3 s -> press Enter to search
+                if (attempt === 4 || attempt === 9 || attempt === 14) {   // v6.07: nothing yet -> type again into the (possibly new) box
+                    found = findSearchBox();
+                    const rebuilt = found.box !== searchBox;
+                    searchBox = found.box; typeInto(searchBox);
+                    rvNote('P&I tab: no suggestion yet - typed ' + partNum + ' again' + (rebuilt ? ' (Tekion had rebuilt the search box)' : ''));
+                }
+                if (attempt === 19) {                                 // v6.04: nothing after ~3 s -> press Enter to search
                     ['keydown', 'keypress', 'keyup'].forEach(t => searchBox.dispatchEvent(new KeyboardEvent(t, { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true })));
-                    rvNote('P&I tab: no suggestion after 3 s - pressed Enter');
+                    rvNote('P&I tab: no suggestion after 3 tries - pressed Enter');
                 }
                 await new Promise(r => setTimeout(r, 300));
             }
