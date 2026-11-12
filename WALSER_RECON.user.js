@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1245
+// @version      2026.1112.1251
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -6692,8 +6692,8 @@ if (location.hostname === 'app.partstech.com') {
 
 });
 
-// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.22  (BUCKET MOVER.js) =====
-WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.22', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel v3.23  (BUCKET MOVER.js) =====
+WR.add('bucket_scanner', 'ReconVision Bucket Scanner - RPF/DPF/PDR/Alloy Wheel', '3.23', ['https://app.reconvision.com/departments/3122*', 'https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/departments/4282*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 // Storage cleanup: delete old tab-claim records (older than 1 hour).
@@ -7321,7 +7321,10 @@ function injectTekionButton() {
           // fulfillment page and claim this still-unclaimed request
           // itself via the same watcher, no separate code path needed.
           btn.textContent = 'Opening new Tekion tab...';
-          window.open('https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment#rv_fresh=' + sentTs, '_blank');
+          // v3.23: Tampermonkey's tab opener -- window.open() from this timer (no click behind it any more)
+          // was stopped by Chrome's pop-up blocker, so the Tekion tab never opened.
+          const freshUrl = 'https://app.tekioncloud.com/parts/ro-sales/parts-fulfillment#rv_fresh=' + sentTs;
+          if (typeof GM_openInTab === 'function') GM_openInTab(freshUrl, { active: true, insert: true }); else window.open(freshUrl, '_blank');
           setTimeout(() => { btn.textContent = '🔧 Open in Tekion'; btn.disabled = false; }, 1500);
         }
       }
@@ -7611,7 +7614,10 @@ function watchForTekionRequests() {
   }
   if (existing) lastSeenTs = existing.ts;
 
-  setInterval(() => {
+  // v3.23: check the moment a request is written (Tampermonkey tells every tab right away), not only on the
+  // 1 s timer -- Chrome slows timers in a background Tekion tab to about once a minute after a few minutes,
+  // so RV's 5 s wait for an answer ran out and the Tekion tab only reacted much later (or never).
+  function checkRequest() {
     const req = GM_getValue('rv_tekion_ro_request', null);
     if (req && req.ts !== lastSeenTs) {
       lastSeenTs = req.ts;
@@ -7624,7 +7630,9 @@ function watchForTekionRequests() {
         tryClaimAndRun(req);
       }
     }
-  }, 1000);
+  }
+  if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener('rv_tekion_ro_request', () => checkRequest());
+  setInterval(checkRequest, 1000);
 }
 
 
