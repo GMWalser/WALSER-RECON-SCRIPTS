@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1502
+// @version      2026.1112.1510
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v6.13  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '6.13', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.14  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.14', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -440,6 +440,24 @@ const POPUP_SEL = ['[role="dialog"]', '[aria-modal="true"]', '[role="menu"]', '[
 // Only RV's photo viewers show them in full color -- names read from RV's real page: the PHOTOS panel
 // (#wo-photos-panel) and the enlarged-photo lightbox (.mfp-wrap) -- plus real pop-up windows and photos pages.
 const PHOTO_VIEW_SEL = ['#wo-photos-panel', '.mfp-wrap', '[role="dialog"]', '[aria-modal="true"]'];
+// v6.14: original retro tin-toy robot that walks in place on the LOADING screen (animated SVG -- the browser
+// animates it by itself, no script work). Swinging arms and legs, bobbing body, blinking antenna.
+function walkerSvg(c) {
+  const swing = (from, to, cx, cy) => `<animateTransform attributeName="transform" type="rotate" values="${from} ${cx} ${cy};${to} ${cx} ${cy};${from} ${cx} ${cy}" dur="0.9s" repeatCount="indefinite"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 170" fill="none" stroke="${c}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<ellipse cx="60" cy="163" rx="30" ry="4" fill="${c}" opacity=".25" stroke="none"/>
+<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -4;0 0;0 -4;0 0" dur="0.9s" repeatCount="indefinite"/>
+<g>${swing(28, -28, 50, 112)}<rect x="44" y="110" width="12" height="34" rx="3"/><rect x="38" y="142" width="22" height="9" rx="3" fill="${c}"/></g>
+<g>${swing(-28, 28, 70, 112)}<rect x="64" y="110" width="12" height="34" rx="3"/><rect x="62" y="142" width="22" height="9" rx="3" fill="${c}"/></g>
+<g>${swing(-35, 35, 32, 72)}<rect x="22" y="70" width="10" height="34" rx="4"/><circle cx="27" cy="108" r="5"/></g>
+<g>${swing(35, -35, 88, 72)}<rect x="88" y="70" width="10" height="34" rx="4"/><circle cx="93" cy="108" r="5"/></g>
+<rect x="32" y="64" width="56" height="50" rx="8"/><circle cx="60" cy="86" r="10"/><line x1="60" y1="86" x2="66" y2="80"><animateTransform attributeName="transform" type="rotate" values="0 60 86;360 60 86" dur="2s" repeatCount="indefinite"/></line>
+<rect x="40" y="104" width="6" height="4" fill="${c}"/><rect x="50" y="104" width="6" height="4" fill="${c}"/><rect x="74" y="104" width="6" height="4" fill="${c}"/>
+<rect x="54" y="56" width="12" height="8"/>
+<rect x="36" y="20" width="48" height="36" rx="10"/><circle cx="50" cy="36" r="6" fill="${c}"/><circle cx="70" cy="36" r="6" fill="${c}"/><path d="M48 48 h24"/>
+<path d="M60 20 V8"/><circle cx="60" cy="6" r="4" fill="${c}"><animate attributeName="opacity" values="1;.15;1" dur="0.6s" repeatCount="indefinite"/></circle>
+</g></svg>`;
+}
 const styleEl = document.createElement('style');
 styleEl.id = OUR + '-style';
 function cssText() {
@@ -498,7 +516,7 @@ body,[data-wr-bg=page]{background-color:transparent !important}
     // green/amber colors are all on, then lifts in one step (no flash of the site's own colors). v6.12's color
     // filter flipped light/dark, which made RV's dark panels light green -- removed.
     if (T.mono != null && monoPreview) css += `
-html::before{content:'> LOADING ...';position:fixed;inset:0;z-index:2147483647;background:${T.bg};color:${T.accent};font:700 16px Consolas,monospace;padding:28px 32px;pointer-events:none;white-space:pre}`;
+html::before{content:'> LOADING ...';position:fixed;inset:0;z-index:2147483647;background:url("data:image/svg+xml;utf8,${encodeURIComponent(walkerSvg(T.accent))}") center 45% / 150px auto no-repeat,${T.bg};color:${T.accent};font:700 16px Consolas,monospace;padding:28px 32px;pointer-events:none;white-space:pre}`;
     if (animOn()) css += animCss();
   }
   if (T && IS_TEAMS) {
@@ -564,7 +582,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.13: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.14: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
