@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.10
+// @version      6.11
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -484,7 +484,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.10: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.11: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1711,6 +1711,7 @@ const SCENES = {
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
       S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
+      S.nextCurve = performance.now() + rnd(60000, 240000); S.curveImg = null;   // v6.11 curved-tube look
       // v6.8: minimize button for the terminal box (it can cover a site's search bar)
       S.min = !!load('pip_min_' + HOST, false);
       if (!document.getElementById(OUR + '-pipbtn')) {
@@ -1788,6 +1789,18 @@ const SCENES = {
         if (lab) ctx.fillText(lab, x, y + 4); else ctx.fillRect(x, y - 4, 1, 8);
       }
       ctx.restore(); ctx.textAlign = 'start'; ctx.globalAlpha = 1;
+      // v6.11: every few minutes, for 30 s, the screen looks like an old curved TV tube: dark bulging edges and
+      // corners, bowed scanlines, a glass reflection. Drawn ONCE into a picture and faded in/out -- almost free.
+      // (A real fish-eye bend of the page was measured at ~37x the page work while scrolling, so not that.)
+      if (!S.curve && t > S.nextCurve) S.curve = { start: t, dur: 30000 };
+      if (S.curve) {
+        const e = t - S.curve.start;
+        if (e > S.curve.dur) { S.curve = null; S.nextCurve = t + rnd(180000, 480000); }
+        else {
+          if (!S.curveImg) S.curveImg = curvedTube(W, H, col);
+          ctx.globalAlpha = Math.min(1, e / 1500, (S.curve.dur - e) / 1500); ctx.drawImage(S.curveImg, 0, 0); ctx.globalAlpha = 1;
+        }
+      }
     },
   },
   // ----- Shelter Blue & Gold: a huge round blast door slowly turning, atomic-age starbursts -----
@@ -1839,6 +1852,22 @@ const SCENES = {
     init() {},
   },
 };
+// v6.11: the curved-tube picture for the wasteland themes (made once per screen size)
+function curvedTube(W, H, col) {
+  const c = off(W, H), x = c.getContext('2d');
+  const v = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .32, W / 2, H / 2, Math.hypot(W, H) * .56);   // edges fall away like a bulging tube
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(.7, 'rgba(0,0,0,.28)'); v.addColorStop(1, 'rgba(0,0,0,.85)');
+  x.fillStyle = v; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(0,0,0,.9)'; const R = Math.min(W, H) * .12;                                                   // rounded tube corners
+  [[0, 0, 1, 1], [W, 0, -1, 1], [0, H, 1, -1], [W, H, -1, -1]].forEach(([cx, cy, sx, sy]) => { x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + sx * R, cy); x.quadraticCurveTo(cx, cy, cx, cy + sy * R); x.closePath(); x.fill(); });
+  x.strokeStyle = 'rgba(0,0,0,.22)'; x.lineWidth = 1;                                                               // scanlines bowing out
+  for (let y = 2; y < H; y += 4) { const bow = ((y - H / 2) / (H / 2)) * 14; x.beginPath(); x.moveTo(0, y + bow); x.quadraticCurveTo(W / 2, y - bow * .6, W, y + bow); x.stroke(); }
+  x.strokeStyle = rgba(col, .10); x.lineWidth = 2;                                                                    // faint bowed frame lines
+  for (const k of [.02, .98]) { x.beginPath(); x.moveTo(W * .08, H * k); x.quadraticCurveTo(W / 2, H * k + (k < .5 ? -H * .03 : H * .03), W * .92, H * k); x.stroke(); }
+  const g = x.createRadialGradient(W * .3, H * .22, 0, W * .3, H * .22, Math.max(W, H) * .45);                        // glass reflection
+  g.addColorStop(0, 'rgba(255,255,255,.07)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  return c;
+}
 // v6.9: the wasteland terminal mixes in lines about the RO / vehicle on screen (read at most every 8 s)
 const VIN_COUNTRY = { 1: 'USA', 4: 'USA', 5: 'USA', 2: 'CANADA', 3: 'MEXICO', J: 'JAPAN', K: 'KOREA', W: 'GERMANY', S: 'UNITED KINGDOM', Z: 'ITALY', Y: 'SWEDEN', V: 'FRANCE', L: 'CHINA', 9: 'BRAZIL', M: 'INDIA' };
 function pipNextMsg(S, t) {
