@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Euro Filter Order
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/EURO_FILTER_ORDER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/EURO_FILTER_ORDER.js
@@ -124,7 +124,21 @@ function rvInjectStyles() {
 // #notesmodal (visible via style.display:block or class "in"), textarea
 // #comment_comment, hidden field #comment_commentable_id (confirms which
 // WO's data actually loaded into the shared modal), save button #save-note.
-async function markFiltersOrdered(notesBtn, woId) {
+// v1.5: you can see that it worked -- the button says SAVING... then NOTED (red) or RETRY, in words as well
+// as color (one-color themes turn purple/red green), remembered in this browser. Ids start "wr-theme-" so
+// Page Themes never repaints these buttons.
+const EURO_DONE_KEY = 'euro_filters_done';
+function euroDoneList() { try { return JSON.parse(localStorage.getItem(EURO_DONE_KEY) || '[]'); } catch (e) { return []; } }
+function euroRememberDone(woId) { try { const l = euroDoneList(); if (!l.includes(String(woId))) { l.push(String(woId)); localStorage.setItem(EURO_DONE_KEY, JSON.stringify(l.slice(-500))); } } catch (e) {} }
+function euroPaint(btn, state, why) {
+  if (!btn) return;
+  btn.style.width = 'auto'; btn.style.padding = '0 8px'; btn.style.whiteSpace = 'nowrap';
+  if (state === 'busy') { btn.style.background = '#a16207'; btn.textContent = 'SAVING\u2026'; }
+  if (state === 'done') { btn.style.background = '#dc2626'; btn.textContent = '\u2713 NOTED'; btn.title = 'FILTERS ORDERED note added'; }
+  if (state === 'fail') { btn.style.background = '#7c2d12'; btn.textContent = '\u26a0 RETRY'; btn.title = 'Note NOT saved: ' + why + ' - click to try again'; }
+}
+async function markFiltersOrdered(notesBtn, woId, btn) {
+  euroPaint(btn, 'busy');
   notesBtn.click();
 
   try {
@@ -137,17 +151,21 @@ async function markFiltersOrdered(notesBtn, woId) {
     }, 4000);
 
     const textarea = document.getElementById('comment_comment');
-    if (textarea) nativeSetTextareaValue(textarea, 'FILTERS ORDERED');
+    if (!textarea) { log('Notes textarea not found for WO', woId); euroPaint(btn, 'fail', 'notes box not found'); return; }
+    nativeSetTextareaValue(textarea, 'FILTERS ORDERED');
 
     const saveBtn = document.getElementById('save-note');
     if (saveBtn) {
       saveBtn.click();
       log('Marked Filters Ordered for WO', woId);
+      euroRememberDone(woId); euroPaint(btn, 'done');
     } else {
       log('Save note button not found for WO', woId);
+      euroPaint(btn, 'fail', 'save button not found');
     }
   } catch (err) {
     log('Notes modal never opened (or loaded the wrong WO) for WO', woId);
+    euroPaint(btn, 'fail', 'notes window did not open');
   }
 }
 
@@ -160,13 +178,15 @@ function injectFiltersOrderedButton(link) {
   const woId = notesBtn.dataset.woId;
   const btn = document.createElement('div');
   btn.className = 'info-bar__button rv-euro-filters-ordered-btn';
+  btn.id = 'wr-theme-euro-ordered-' + woId;      // Page Themes leaves ids starting "wr-theme" alone
   btn.title = 'Mark Filters Ordered';
   btn.textContent = '✓';
   btn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    markFiltersOrdered(notesBtn, woId);
+    markFiltersOrdered(notesBtn, woId, btn);
   });
+  if (euroDoneList().includes(String(woId))) euroPaint(btn, 'done');
   buttonsContainer.insertBefore(btn, notesBtn);
 }
 
@@ -192,6 +212,7 @@ function rvScanRows() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'rv-euro-btn';
+    btn.id = 'wr-theme-euro-order-' + vin;       // keeps its purple under any theme
     btn.textContent = '🇪🇺 Order Filters';
     btn.addEventListener('click', (e) => {
       e.preventDefault();
