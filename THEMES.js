@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.17
+// @version      6.18
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -441,7 +441,7 @@ input:disabled,textarea:disabled,select:disabled,input[readonly],textarea[readon
 [data-wr-fg=tint]{color:var(--wr-fgtint) !important}
 [data-wr-bd=border]{border-color:var(--wr-border) !important}
 [data-wr-notr],[data-wr-notr]::before,[data-wr-notr]::after{transition:none !important}
-${T.mono != null ? `[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}` + (/photo/i.test(location.pathname) ? '' : `\nimg,video{filter:grayscale(1) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(3) brightness(.85)}\n${PHOTO_VIEW_SEL.map(p => p + ' img,' + p + ' video').join(',')},img[class*="mfp"]{filter:none !important}`) : ''}
+${T.mono != null ? `html :where(body *:not([id^="${OUR}"])){color:var(--wr-text) !important}\n[data-wr-fg=accentText]{color:var(--wr-accentText) !important}\n[data-wr-fg=link]{color:var(--wr-link) !important}\n[data-wr-fg=dim]{color:${mix(T.text, T.bg, .35)} !important}\n[data-wr-bg]{background-image:none !important}` + (/photo/i.test(location.pathname) ? '' : `\nimg,video{filter:grayscale(1) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(3) brightness(.85)}\n${PHOTO_VIEW_SEL.map(p => p + ' img,' + p + ' video').join(',')},img[class*="mfp"]{filter:none !important}`) : ''}
 ::placeholder{color:${mix(T.text, T.bg, 0.45)} !important}
 input,textarea,select,[contenteditable]{caret-color:${T.text}}
 input[type=checkbox],input[type=radio],progress{accent-color:${T.accent}}
@@ -464,7 +464,7 @@ body,[data-wr-bg=page]{background-color:transparent !important}
     // green/amber colors are all on, then lifts in one step (no flash of the site's own colors). v6.12's color
     // filter flipped light/dark, which made RV's dark panels light green -- removed.
     if (T.mono != null && monoPreview) css += `
-html::before{content:'${T.coverText || '> LOADING ...'}';position:fixed;inset:0;z-index:2147483647;background:${hasFx('pipterm') ? `url("data:image/svg+xml;utf8,${encodeURIComponent(walkerSvg(T.accent))}") center 45% / 210px auto no-repeat,` : ''}${T.bg};color:${T.accent};font:700 16px Consolas,monospace;padding:28px 32px;pointer-events:none;white-space:pre}`;
+html::before{content:'${hasFx('pipterm') ? '' : (T.coverText || '> LOADING ...')}';position:fixed;inset:0;z-index:2147483647;background:${hasFx('pipterm') ? `url("data:image/svg+xml;utf8,${encodeURIComponent(walkerSvg(T.accent))}") center 45% / 210px auto no-repeat,` : ''}${T.bg};color:${T.accent};font:700 16px Consolas,monospace;padding:28px 32px;pointer-events:none;white-space:pre}`;
     if (animOn()) css += animCss();
   }
   if (T && IS_TEAMS) {
@@ -530,7 +530,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.17: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.18: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -599,7 +599,7 @@ function decideMono(el, cs, d) {
   if (c && c.a > 0.3) {
     const L = lum(c);
     if (el.tagName === 'A' && hsl(c).s > 0.4) d.fg = 'link';
-    else d.fg = L >= 0.25 && L < 0.55 ? 'dim' : 'text';
+    else if (L >= 0.25 && L < 0.55) d.fg = 'dim';          // v6.18: plain text is colored by one page rule, not a tag each
   }
   const side = ['Top', 'Bottom', 'Left', 'Right'].find(s => parseFloat(cs['border' + s + 'Width']) > 0);
   if (side) { const b = parseColor(cs['border' + side + 'Color']); if (b && b.a > 0.3) d.bd = 'border'; }
@@ -636,7 +636,11 @@ function collect(root, redo) {
     }
   });
   let n = 0;
-  while (tw.nextNode()) { take(tw.currentNode); if (redo && ++n > 3000) break; }   // style change on a huge container: cap it
+  // v6.18: a class change on the page body / a huge container (RV adds "modal-open" when a window opens) used to
+  // re-read up to 3,000 elements each time -- the "theme used 20-46%" moments in the speed report. Now: the
+  // body itself only; any other container up to 500 elements. New content is still colored in full (not a redo).
+  if (redo && (root === document.body || root === document.documentElement)) return;
+  while (tw.nextNode()) { take(tw.currentNode); if (redo && ++n > 500) break; }
 }
 function scan(roots, redo) {
   if (!T) return;
@@ -794,6 +798,14 @@ a:hover{text-shadow:0 0 8px ${rgba(T.link, .8)}}`;
 html[data-wr-jolt~=pull] body{animation:wrPull var(--wr-jd) steps(6) 1}
 html[data-wr-jolt~=warp] body{animation:wrWarp var(--wr-jd) linear 1}
 html[data-wr-jolt~=roll] body{animation:wrRoll var(--wr-jd) steps(5) 1}`;
+  if (hasFx('pipterm') && !monoPreview) css += `
+@keyframes wrBand{from{transform:translateY(-140px)}to{transform:translateY(100vh)}}
+html::before{content:'';position:fixed;left:0;right:0;top:0;height:120px;z-index:2147483599;pointer-events:none;background:linear-gradient(180deg,transparent,${rgba(c, .07)},transparent);animation:wrBand 9s linear infinite;will-change:transform}`;
+  if (hasFx('pipterm')) css += `
+html body :not(i):not(svg):not(svg *):not([class*="icon"]):not([class*="Icon"]):not([class^="fa"]):not([class*=" fa-"]):not([class*="glyph"]):not([class*="material"]):not([id^="${OUR}"]){font-family:Consolas,"Lucida Console","Courier New",monospace !important;letter-spacing:-.2px}`;
+  if (hasFx('pipterm') && monoPreview) css += `
+@keyframes wrBoot{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+html::after{content:'> INITIALIZING TERMLINK ...\\A > MEMORY CHECK ............ OK\\A > REACTOR OUTPUT .......... 98%\\A > RAD SHIELDING ........... OK\\A > LOADING WORK ORDER ...';position:fixed;left:32px;top:28px;z-index:2147483647;pointer-events:none;white-space:pre;color:${T.accent};font:700 15px/22px Consolas,monospace;animation:wrBoot 1.4s steps(5,end) forwards}`;
   if (hasFx('crt') && !monoPreview) css += `
 @keyframes wrCrt{0%,100%{opacity:.85}50%{opacity:1}}
 html::after{content:'';position:fixed;inset:0;z-index:2147483500;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.5) 100%);animation:wrCrt 3.2s ease-in-out infinite}`;
@@ -1749,36 +1761,60 @@ const SCENES = {
   },
   // ----- Wasteland Terminal / Amber: wrist-computer HUD (HP, compass, AP), a typing terminal and a rolling scan band -----
   pipterm: {
-    over: true, fps: 15,
+    // v6.18: redraws ONLY what changes (terminal box, bottom strip, banner) at 10 fps instead of the whole screen at
+    // 15 fps; the rolling band is CSS; the curved-tube picture is its own layer faded by CSS. New: terminal font
+    // (CSS), boot text on the loading screen (CSS), rad meter, caps counter, task banners, retro date stamp.
+    over: true, fps: 10,
     init(S) {
-      S.col = (T && T.fxColor) || '#1bff80'; S.lines = []; S.cur = ''; S.mi = (Math.random() * 20) | 0; S.ci = 0; S.nextC = 0; S.ap = 1; S.hp = .92;
+      S.col = (T && T.fxColor) || '#1bff80'; S.lines = []; S.cur = ''; S.mi = (Math.random() * 20) | 0; S.ci = 0; S.nextC = 0; S.ap = 1; S.hp = .92; S.full = true;
       S.msgs = ['> SHELTER-NET TERMLINK v2.07 ... ONLINE', '> GEIGER COUNTER: 0.4 RAD/HR  [SAFE]', '> SCANNING PARTS INVENTORY ...', '> WATER PURIFIER ......... OK', '> REACTOR CORE ........... 98%',
-        '> SURFACE CONDITIONS: DUSTY, HOSTILE', '> CAPS ON HAND: 1,337', '> RADIO: SIGNAL FOUND 104.7 MHz', '> WORK ORDER QUEUE: LOADING ...', '> REMEMBER: STAY INSIDE THE SHELTER',
+        '> SURFACE CONDITIONS: DUSTY, HOSTILE', '> RADIO: SIGNAL FOUND 104.7 MHz', '> WORK ORDER QUEUE: LOADING ...', '> REMEMBER: STAY INSIDE THE SHELTER',
         '> DOOR SEAL INTEGRITY ...... 100%', '> HAVE A PRODUCTIVE DAY, WANDERER', '> RADIATION SUIT: CLEAN', '> NEW HOLOTAPE RECEIVED', '> AIR FILTERS: REPLACE IN 30 DAYS', '> CHECKING SUPPLY CRATES ...',
         '> MORALE ........... EXCELLENT', '> TERMINAL LOCKED? TRY: PASSWORD', '> FOOD STORES: 2 YEARS', '> ALL SYSTEMS NOMINAL'];
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
       S.nextJolt = performance.now() + rnd(8000, 60000); S.noise = off(160, 90);
-      S.curveImg = null;   // v6.11 curved-tube look; v6.12: time kept across page loads (switching ROs no longer restarts it)
       { let due = 0; try { due = +localStorage.getItem('wr_curve_next') || 0; } catch (e) {}
         if (!due || due < Date.now() - 600000) { due = Date.now() + rnd(15000, 60000); try { localStorage.setItem('wr_curve_next', String(due)); } catch (e) {} }
         S.nextCurve = performance.now() + Math.max(0, due - Date.now()); }
-      // v6.8: minimize button for the terminal box (it can cover a site's search bar)
+      // curved-tube picture: its own layer, drawn once, shown/hidden with a CSS fade (no per-frame work)
+      const old = document.getElementById(OUR + '-curve'); if (old) old.remove();
+      S.curveEl = curvedTube(S.W, S.H, S.col); S.curveEl.id = OUR + '-curve';
+      S.curveEl.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483598;opacity:0;transition:opacity 1.5s linear';
+      document.documentElement.appendChild(S.curveEl);
+      // minimize button for the terminal box (it can cover a site's search bar)
       S.min = !!load('pip_min_' + HOST, false);
       if (!document.getElementById(OUR + '-pipbtn')) {
         const b = document.createElement('button'); b.id = OUR + '-pipbtn'; b.type = 'button';
         b.style.cssText = 'position:fixed;top:12px;right:18px;z-index:2147483601;width:22px;height:20px;padding:0;margin:0;cursor:pointer;font:bold 13px/18px Consolas,monospace;'
           + 'background:#000;border:1px solid ' + S.col + ';color:' + S.col + ';border-radius:3px;opacity:.85';
-        const label = () => { b.textContent = S.min ? '\u25a2' : '\u2013'; b.title = S.min ? 'Show the status terminal' : 'Minimize the status terminal'; };
-        b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const st = scn && scn.S; if (!st) return; st.min = !st.min; S.min = st.min; save('pip_min_' + HOST, st.min); label(); });
+        const label = () => { b.textContent = S.min ? '▢' : '–'; b.title = S.min ? 'Show the status terminal' : 'Minimize the status terminal'; };
+        b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const st = scn && scn.S; if (!st) return; st.min = !st.min; st.full = true; S.min = st.min; save('pip_min_' + HOST, st.min); label(); });
         label(); document.documentElement.appendChild(b);
       }
-      if (!window.__wrApHook) { window.__wrApHook = true; window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true }); }
+      // caps: +10 for each work order / RO opened, +1 for each real button click, +25 for a finished task; per day
+      const today = todayStr(); let caps = load('caps', { d: today, n: 0 }); if (caps.d !== today) caps = { d: today, n: 0 };
+      S.caps = caps.n; S.capsSaved = caps.n;
+      const earn = n => { const st = (scn && scn.S) || S; st.caps += n; };
+      if (/\/work_orders\/\d+\/edit|ro-sales\/details/.test(location.pathname) && !S.inited) earn(10);
+      S.inited = true;
+      try { const p = JSON.parse(sessionStorage.getItem('wr_task') || 'null'); if (p && Date.now() - p.at < 6000) S.banner = { text: p.text, until: performance.now() + 2600 }; sessionStorage.removeItem('wr_task'); } catch (e) {}
+      if (!window.__wrApHook) {
+        window.__wrApHook = true;
+        window.addEventListener('mousedown', () => { if (scn && scn.S) scn.S.ap = Math.max(0, scn.S.ap - .12); }, { passive: true, capture: true });
+        const TASKS = [[/^\s*save\s*$/i, 'SAVED'], [/save as draft/i, 'DRAFT SAVED'], [/^\s*submit\s*$/i, 'ORDER SUBMITTED'], [/^\s*fulfill\s*$/i, 'PARTS FULFILLED'], [/place order/i, 'ORDER PLACED'],
+          [/complete task/i, 'TASK COMPLETE'], [/add service/i, 'SERVICE ADDED'], [/fill parts into rv/i, 'PARTS SENT TO RV'], [/create po/i, 'PURCHASE ORDER STARTED']];
+        window.addEventListener('click', e => {
+          const st = scn && scn.S; if (!st || !e.isTrusted) return;
+          const b = e.target.closest && e.target.closest('button,a,[role=button],input[type=submit]'); if (!b || (b.id || '').startsWith(OUR)) return;
+          st.caps += 1;
+          const txt = (b.innerText || b.value || '').replace(/\s+/g, ' ').trim().slice(0, 40), hit = TASKS.find(([re]) => re.test(txt));
+          if (hit) { st.caps += 25; st.banner = { text: 'TASK COMPLETE: ' + hit[1] + '   +25 CAPS', until: performance.now() + 2600 }; try { sessionStorage.setItem('wr_task', JSON.stringify({ at: Date.now(), text: st.banner.text })); } catch (er) {} }
+        }, { passive: true, capture: true });
+      }
     },
     draw(ctx, S, t) {
       const { W, H } = S, col = S.col; scn.S = S;
-      ctx.clearRect(0, 0, W, H);
-      // v6.5: glitches at random times -- kinds, strength, direction and length all random, sometimes in bursts.
-      // v6.6: any kind can happen at any time (you are always clicking/typing/scrolling, so a pause rule meant they never came).
+      // glitches at random times -- kinds, strength, direction and length all random, sometimes in bursts
       if (t > S.nextJolt) {
         const burst = Math.random() < .25;
         S.nextJolt = t + (burst ? rnd(150, 1200) : rnd(12000, 110000));
@@ -1794,7 +1830,13 @@ const SCENES = {
           clearTimeout(S.joltT); S.joltT = setTimeout(() => h.removeAttribute('data-wr-jolt'), dur + 30);
         }
       }
-      if (S.glitch && S.glitch.until > t) {
+      const glitching = S.glitch && S.glitch.until > t, bannerOn = S.banner && S.banner.until > t;
+      const bx = W - 360, bw = 346, bh = 92, y = H - 22;
+      // clear: everything during (and once right after) a glitch / banner; otherwise only the parts that change
+      if (glitching || S.full || S.hadBanner) ctx.clearRect(0, 0, W, H);
+      else { ctx.clearRect(bx - 2, 8, bw + 6, bh + 6); ctx.clearRect(0, H - 48, W, 48); }
+      S.full = glitching; S.hadBanner = bannerOn;
+      if (glitching) {
         const g = S.glitch;
         if (/static/.test(g.kind)) {                                                        // TV snow
           const nx = S.noise.getContext('2d'), img = nx.createImageData(160, 90), d = img.data;
@@ -1802,27 +1844,31 @@ const SCENES = {
           nx.putImageData(img, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = .12 + .3 * g.amt; ctx.drawImage(S.noise, 0, 0, W, H); ctx.imageSmoothingEnabled = true;
         }
         if (/tear|pull|warp|roll/.test(g.kind)) {                                           // bright tear lines
-          for (let i = 0; i < 2 + ((Math.random() * 6) | 0); i++) { const y = rnd(0, H), hh = rnd(2, 24); ctx.globalAlpha = rnd(.1, .3) * g.amt + .05; ctx.fillStyle = col; ctx.fillRect(rnd(-40, 40), y, W, hh); ctx.globalAlpha = .4; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, y + hh / 2, W, 1); }
+          for (let i = 0; i < 2 + ((Math.random() * 6) | 0); i++) { const yy = rnd(0, H), hh = rnd(2, 24); ctx.globalAlpha = rnd(.1, .3) * g.amt + .05; ctx.fillStyle = col; ctx.fillRect(rnd(-40, 40), yy, W, hh); ctx.globalAlpha = .4; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, yy + hh / 2, W, 1); }
         }
         ctx.globalAlpha = 1;
       }
-      // typing terminal, top right
-      if (t > S.nextC) {
-        if (!S.m) S.m = pipNextMsg(S, t);
+      // typing terminal, top right (catches up if frames were skipped)
+      for (let k = 0; k < 6 && t > S.nextC; k++) {
+        if (!S.m) { S.m = pipNextMsg(S, t); if (Math.random() < .12) S.m = '> CAPS ON HAND: ' + S.caps.toLocaleString('en-US'); }
         const m = S.m;
-        if (S.ci < m.length) { S.cur += m[S.ci++]; S.nextC = t + rnd(35, 90); }
+        if (S.ci < m.length) { S.cur += m[S.ci++]; S.nextC = Math.max(S.nextC, t - 300) + rnd(35, 90); }
         else { S.lines.push(S.cur); if (S.lines.length > 3) S.lines.shift(); S.cur = ''; S.ci = 0; S.m = null; S.nextC = t + rnd(900, 2200); }
       }
-      const bx = W - 360, bw = 346; ctx.font = '12px Consolas, monospace';
+      ctx.font = '12px Consolas, monospace';
       if (!S.min) {
-      ctx.globalAlpha = .55; ctx.fillStyle = '#000000'; ctx.fillRect(bx, 10, bw, 74);
-      ctx.globalAlpha = .9; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, 10.5, bw, 74);
-      ctx.fillStyle = col; [...S.lines, S.cur].forEach((l, i) => { ctx.globalAlpha = i === S.lines.length ? 1 : .7; ctx.fillText(l, bx + 8, 28 + i * 16); });
-      if (Math.floor(t / 450) % 2) { ctx.globalAlpha = 1; ctx.fillRect(bx + 8 + ctx.measureText(S.cur).width + 1, 28 + S.lines.length * 16 - 10, 7, 12); }
+        ctx.globalAlpha = .55; ctx.fillStyle = '#000000'; ctx.fillRect(bx, 10, bw, bh);
+        ctx.globalAlpha = .9; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, 10.5, bw, bh);
+        const now = new Date(), p2 = n => String(n).padStart(2, '0');                       // retro-future date stamp
+        ctx.fillStyle = col; ctx.globalAlpha = .55; ctx.font = 'bold 10px Consolas, monospace';
+        ctx.fillText('TERMLINK   ' + p2(now.getMonth() + 1) + '.' + p2(now.getDate()) + '.2077   ' + p2(now.getHours()) + ':' + p2(now.getMinutes()) + '   SECTOR: PARTS', bx + 8, 23);
+        ctx.fillRect(bx + 8, 27, bw - 46, 1); ctx.font = '12px Consolas, monospace';
+        [...S.lines, S.cur].forEach((l, i) => { ctx.globalAlpha = i === S.lines.length ? 1 : .7; ctx.fillText(l, bx + 8, 44 + i * 16); });
+        if (Math.floor(t / 450) % 2) { ctx.globalAlpha = 1; ctx.fillRect(bx + 8 + ctx.measureText(S.cur).width + 1, 44 + S.lines.length * 16 - 10, 7, 12); }
       }
-      // bottom HUD: HP (left), compass (center), AP (right)
-      S.ap = Math.min(1, S.ap + .004); S.hp = .85 + .1 * Math.sin(t / 20000);
-      const y = H - 22, seg = (x, w, v, label, right) => {
+      // bottom HUD: HP, rad meter, compass, caps, AP
+      S.ap = Math.min(1, S.ap + .006); S.hp = .85 + .1 * Math.sin(t / 20000);
+      const seg = (x, w, v, label, right) => {
         ctx.globalAlpha = .8; ctx.fillStyle = col; ctx.font = 'bold 13px Consolas, monospace';
         ctx.fillText(label, right ? x + w + 6 : x - 26, y + 5);
         const n = 18, sw = w / n; for (let i = 0; i < n; i++) { const on = (right ? n - 1 - i : i) < v * n; ctx.globalAlpha = on ? .85 : .2; ctx.fillRect(x + i * sw, y - 3, sw - 2, 8); }
@@ -1838,19 +1884,37 @@ const SCENES = {
         const hd = Math.round((head + d) / 15) * 15, x = W / 2 + ((hd - head) / 90) * (cw / 2), lab = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW' }[((hd % 360) + 360) % 360];
         if (lab) ctx.fillText(lab, x, y + 4); else ctx.fillRect(x, y - 4, 1, 8);
       }
-      ctx.restore(); ctx.textAlign = 'start'; ctx.globalAlpha = 1;
-      // v6.11: every few minutes, for 30 s, the screen looks like an old curved TV tube: dark bulging edges and
-      // corners, bowed scanlines, a glass reflection. Drawn ONCE into a picture and faded in/out -- almost free.
-      // (A real fish-eye bend of the page was measured at ~37x the page work while scrolling, so not that.)
-      if (!S.curve && t > S.nextCurve) S.curve = { start: t, dur: 30000 };
-      if (S.curve) {
-        const e = t - S.curve.start;
-        if (e > S.curve.dur) { S.curve = null; const gap = rnd(40000, 150000); S.nextCurve = t + gap; try { localStorage.setItem('wr_curve_next', String(Date.now() + gap)); } catch (e) {} }
-        else {
-          if (!S.curveImg) S.curveImg = curvedTube(W, H, col);
-          ctx.globalAlpha = Math.min(1, e / 1500, (S.curve.dur - e) / 1500); ctx.drawImage(S.curveImg, 0, 0); ctx.globalAlpha = 1;
-        }
+      ctx.restore(); ctx.textAlign = 'start';
+      // rad meter: a needle gauge that twitches, with the odd spike (between HP and the compass, if there is room)
+      const gx = 250, gy = y + 8;
+      if (cx - gx > 70) {
+        if (t > (S.radT || 0)) { S.radT = t + rnd(200, 900); S.radTo = Math.random() < .06 ? rnd(.6, .95) : rnd(.04, .22); }
+        S.rad = (S.rad || .1) + ((S.radTo || .1) - (S.rad || .1)) * .35;
+        ctx.globalAlpha = .8; ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(gx + 24, gy, 22, Math.PI, 2 * Math.PI); ctx.stroke();
+        for (let i = 0; i <= 6; i++) { const a = Math.PI + i / 6 * Math.PI; ctx.beginPath(); ctx.moveTo(gx + 24 + Math.cos(a) * 18, gy + Math.sin(a) * 18); ctx.lineTo(gx + 24 + Math.cos(a) * 22, gy + Math.sin(a) * 22); ctx.stroke(); }
+        const na = Math.PI + S.rad * Math.PI; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(gx + 24, gy); ctx.lineTo(gx + 24 + Math.cos(na) * 19, gy + Math.sin(na) * 19); ctx.stroke();
+        ctx.fillStyle = col; ctx.font = 'bold 10px Consolas, monospace'; ctx.fillText('RADS', gx + 52, gy - 2); ctx.globalAlpha = S.rad > .5 ? 1 : .55; ctx.fillText(S.rad > .5 ? '!!' : (S.rad * 2).toFixed(1), gx + 52, gy - 13);
       }
+      // caps counter (between the compass and AP, if there is room)
+      const kx = cx + cw + 24;
+      if (W - 250 - kx > 90) {
+        ctx.globalAlpha = .85; ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(kx + 7, y + 1, 7, 0, 6.28); ctx.stroke(); ctx.beginPath(); ctx.arc(kx + 7, y + 1, 3, 0, 6.28); ctx.stroke();
+        ctx.fillStyle = col; ctx.font = 'bold 13px Consolas, monospace'; ctx.fillText(S.caps.toLocaleString('en-US'), kx + 20, y + 5);
+        ctx.globalAlpha = .55; ctx.font = 'bold 9px Consolas, monospace'; ctx.fillText('CAPS TODAY', kx + 20, y - 8);
+      }
+      if (S.caps !== S.capsSaved && t > (S.capsT || 0)) { S.capsT = t + 5000; S.capsSaved = S.caps; const cur = load('caps', { d: todayStr(), n: 0 }); save('caps', { d: todayStr(), n: Math.max(S.caps, cur.d === todayStr() ? cur.n : 0) }); }
+      // task banner
+      if (bannerOn) {
+        const e = 2600 - (S.banner.until - t), a = Math.min(1, e / 200, (S.banner.until - t) / 400);
+        ctx.font = 'bold 18px Consolas, monospace'; const tw = ctx.measureText(S.banner.text).width + 40, bx0 = W / 2 - tw / 2;
+        ctx.globalAlpha = .8 * a; ctx.fillStyle = '#000000'; ctx.fillRect(bx0, 96, tw, 40);
+        ctx.globalAlpha = a; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(bx0 + 1, 97, tw - 2, 38);
+        ctx.fillStyle = col; ctx.fillText(S.banner.text, bx0 + 20, 122);
+      }
+      ctx.globalAlpha = 1;
+      // curved-TV moment: just switch the ready-made layer on and off (CSS fades it)
+      if (!S.curve && t > S.nextCurve) { S.curve = { start: t, dur: 30000 }; S.curveEl.style.opacity = '1'; }
+      if (S.curve && t - S.curve.start > S.curve.dur) { S.curve = null; S.curveEl.style.opacity = '0'; const gap = rnd(40000, 150000); S.nextCurve = t + gap; try { localStorage.setItem('wr_curve_next', String(Date.now() + gap)); } catch (e) {} }
     },
   },
   // ----- Shelter Blue & Gold: a huge round blast door slowly turning, atomic-age starbursts -----
@@ -2082,7 +2146,7 @@ function triBars(ctx, x, y, r, a, col) {                // three bars that form 
   for (let i = 0; i < 3; i++) { const A = p[i], B = p[(i + 1) % 3], m = .18; ctx.beginPath(); ctx.moveTo(A[0] + (B[0] - A[0]) * m, A[1] + (B[1] - A[1]) * m); ctx.lineTo(A[0] + (B[0] - A[0]) * (1 - m), A[1] + (B[1] - A[1]) * (1 - m)); ctx.stroke(); }
 }
 let scn = null;
-function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } const pb = document.getElementById(OUR + '-pipbtn'); if (pb) pb.remove(); }
+function stopScene() { if (scn) { cancelAnimationFrame(scn.raf); window.removeEventListener('resize', scn.resize); scn.cv.remove(); scn = null; } const pb = document.getElementById(OUR + '-pipbtn'); if (pb) pb.remove(); const cl = document.getElementById(OUR + '-curve'); if (cl) cl.remove(); }
 function startScene() {
   if (monoPreview) return;                           // v6.12: waits for the exact colors (the quick filter would flip it)
   const name = T && animOn() && !fxOff && window.top === window ? Object.keys(SCENES).find(n => hasFx(n)) || '' : '';
