@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Page Themes
 // @namespace    reconclipboard
-// @version      6.12
+// @version      6.13
 // @author       Gabe
 // @description  Dark themes / skins for RV, Tekion, PartsTech and the parts sites. Pick a suggested theme or make your own, click any element to recolor it, add custom CSS, share themes with a code. Tampermonkey menu -> Themes & colors.
 // @match        https://*.reconvision.com/*
@@ -323,7 +323,7 @@ if (REMOVED_THEMES.includes(cfg.theme)) { cfg.theme = 'contrast'; saveSiteCfg(cf
 let T = allThemes()[activeThemeId()] || null;     // active theme colors, or null = Off
 let monoPreview = !!(T && T.mono != null);          // v6.12: quick filter until the first full pass is done
 function endPreview() { if (!monoPreview) return; monoPreview = false; pushCss(cssText()); if (document.body) startFx(); }   // scanlines + HUD come on with the exact colors
-if (monoPreview) setTimeout(endPreview, 6000);       // never longer than 6 s
+if (monoPreview) setTimeout(endPreview, 5000);       // never longer than 5 s
 
 // ---------- color math ----------
 function parseColor(s) {
@@ -422,12 +422,11 @@ body,[data-wr-bg=page]{background-color:transparent !important}
 `;
     }
     if (T.mesh) css += `\nbody,[data-wr-bg=page]{background-color:transparent !important}`;
-    // v6.12: one-color themes -- from the very first paint, a screen-wide color filter (done by the graphics
-    // chip, no per-element work) shows the page dark with green/amber text, until the exact colors are on.
-    // Before, the page showed in its own colors (white panels, blue buttons) for a second or two first.
+    // v6.13: one-color themes -- while the page loads, a dark terminal "LOADING" screen covers it until the
+    // green/amber colors are all on, then lifts in one step (no flash of the site's own colors). v6.12's color
+    // filter flipped light/dark, which made RV's dark panels light green -- removed.
     if (T.mono != null && monoPreview) css += `
-html,body{background-color:#ffffff !important;background-image:none !important}
-html{filter:invert(1) hue-rotate(180deg) sepia(1) hue-rotate(${T.mono - 50}deg) saturate(2.4) brightness(.92) !important}`;
+html::before{content:'> LOADING ...';position:fixed;inset:0;z-index:2147483647;background:${T.bg};color:${T.accent};font:700 16px Consolas,monospace;padding:28px 32px;pointer-events:none;white-space:pre}`;
     if (animOn()) css += animCss();
   }
   if (T && IS_TEAMS) {
@@ -493,7 +492,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.12: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.13: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -621,7 +620,7 @@ function scan(roots, redo) {
   }
   if (!pumping && work.length) {
     pumping = true; cycleStart = performance.now(); clearRedo();
-    if (document.readyState !== 'complete' && window.requestIdleCallback) requestIdleCallback(() => requestAnimationFrame(pump), { timeout: 400 });   // v5.8
+    if (document.readyState !== 'complete' && window.requestIdleCallback && !monoPreview) requestIdleCallback(() => requestAnimationFrame(pump), { timeout: 400 });   // v5.8
     else requestAnimationFrame(pump);
   }
 }
@@ -669,7 +668,7 @@ function pump() {
     if (el.isConnected) { getComputedStyle(el).color; const sw = performance.now() - t0;
       if (sw > 100 && Date.now() - styleNoteAt > 10000) { styleNoteAt = Date.now(); try { window.dispatchEvent(new CustomEvent('wr-note', { detail: '[Page Themes] the browser needed ' + Math.round(sw) + ' ms to work out the styles of this page (' + document.getElementsByTagName('*').length + ' elements) before re-coloring could start' })); } catch (e) {} } }
   }
-  while (work.length && performance.now() - t0 < 8) {                 // READ only
+  while (work.length && performance.now() - t0 < (monoPreview ? 40 : 8)) {   // READ only (bigger chunks while the LOADING cover is up)
     const batch = work.splice(0, 200);
     for (const x of batch) {
       const el = x.el || x; if (!el.isConnected) continue;
