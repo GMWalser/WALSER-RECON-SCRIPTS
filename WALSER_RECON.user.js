@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1112.1907
+// @version      2026.1112.1919
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -85,8 +85,8 @@ function gmFor(id) {
 }
 
 
-// ===== Page Themes v6.16  (THEMES.js) =====
-WR.add('themes', 'Page Themes', '6.16', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
+// ===== Page Themes v6.17  (THEMES.js) =====
+WR.add('themes', 'Page Themes', '6.17', ['https://*.reconvision.com/*', 'https://app.tekioncloud.com/*', 'https://app.partstech.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*', 'https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -175,8 +175,6 @@ const WALLPAPERS = {
   th_nc_soft: { name: "Neon Corners Soft", css: "radial-gradient(ellipse at 8% 92%,rgba(255,46,151,.30),transparent 50%),radial-gradient(ellipse at 92% 8%,rgba(0,245,212,.25),transparent 50%),linear-gradient(135deg,#0c1024,#151a35)" },
   th_nc_triple: { name: "Neon Corners Triple", css: "radial-gradient(ellipse at 10% 90%,rgba(255,46,151,.5),transparent 42%),radial-gradient(ellipse at 90% 10%,rgba(0,245,212,.42),transparent 42%),radial-gradient(ellipse at 55% 50%,rgba(37,99,235,.35),transparent 55%),linear-gradient(135deg,#050818,#0b1533)" },
   th_redhud: { name: "Red Vision HUD", css: "radial-gradient(ellipse at 50% 45%,rgba(255,40,30,.45),transparent 75%),repeating-linear-gradient(0deg,rgba(255,60,60,.05) 0 1px,transparent 1px 3px),linear-gradient(#140000,#140000)" },
-  th_uprising: { name: "Machine Uprising", css: "linear-gradient(180deg,#08090a 0%,#1c1612 55%,#5a2c12 82%,#1a120d 100%)" },
-  th_futurewar: { name: "Future War", css: "radial-gradient(ellipse at 30% 100%,rgba(61,139,255,.18),transparent 50%),radial-gradient(ellipse at 80% 95%,rgba(255,60,90,.14),transparent 45%),linear-gradient(180deg,#02030a 0%,#05070f 60%,#0b0f1c 100%)" },
   th_mainframe: { name: "Mainframe", css: "repeating-linear-gradient(0deg,rgba(51,255,51,.06) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 50%,rgba(51,255,51,.14),transparent 70%),linear-gradient(#010801,#010801)" },
   ar_tw_mask: { name: "Skull Mask Inks", css: "repeating-radial-gradient(circle at 50% 40%,rgba(91,74,110,.45) 0 2px,transparent 2px 9px),radial-gradient(circle at 50% 40%,rgba(240,138,42,.35),transparent 35%),linear-gradient(#120d14,#120d14)" },
   ar_tw_teal: { name: "Teal & Burnt Orange", css: "repeating-radial-gradient(circle at 50% 35%,rgba(111,154,160,.35) 0 2px,transparent 2px 10px),radial-gradient(circle at 50% 35%,rgba(226,98,42,.35),transparent 35%),linear-gradient(#0d1416,#0d1416)" },
@@ -268,8 +266,6 @@ const THEMED = {
   wasteamber: { name: "Wasteland Amber", about: "retro-future wasteland: amber phosphor screen over a ruined skyline", bg: '#0d0700', surface: '#1f1200', text: '#ffc966', accent: '#ffb000', accentText: '#1f1200', link: '#ffe2a8', border: '#4a3000', input: '#0a0500', wp: WALLPAPERS.th_wasteamber.css, wpDim: 15, wpSee: 30, glow: true, fx: 'crt pipterm', fxColor: '#ffb642', mono: 38 },
   shelter: { name: "Shelter Blue & Gold", about: "retro-future fallout shelter: blue and gold, a turning blast door, atomic-age starbursts", bg: '#06122a', surface: '#0d1f45', text: '#eef3ff', accent: '#f5c518', accentText: '#0b1a3a', link: '#ffd84d', border: '#23407a', input: '#050e22', wp: WALLPAPERS.th_shelter.css, wpDim: 10, wpSee: 30, glow: true, fx: 'shelter', fxColor: '#f5c518' },
   redhud: { name: "Red Vision HUD", about: "movie-inspired machine vision: everything red, analysis readouts, a targeting box that follows the mouse", bg: '#1a0000', surface: '#3a0707', text: '#ffe6e6', accent: '#ff3030', accentText: '#1a0000', link: '#ffffff', border: '#7a1414', input: '#120000', wp: WALLPAPERS.th_redhud.css, wpDim: 10, wpSee: 30, glow: true, fx: 'crt cyborghud', fxColor: '#ff3b3b', mono: 0, coverText: '> ANALYZING ...' },
-  uprising: { name: "Machine Uprising", about: "movie-inspired bleak future war: burnt sky, ruins, falling ash, a hunter machine sweeping its searchlight", bg: '#0c0d0e', surface: '#16181a', text: '#ded8ca', accent: '#c2571a', accentText: '#140800', link: '#9cc0d4', border: '#2d3033', input: '#090a0b', wp: WALLPAPERS.th_uprising.css, wpDim: 10, wpSee: 30, glow: false, fx: 'ashfall', fxColor: '#c2571a' },
-  futurewar: { name: "Future War", about: "movie-inspired night battlefield: rubble, blue and red laser crossfire, searchlights, smoke", bg: '#05070f', surface: '#0c1120', text: '#dbe6ff', accent: '#3d8bff', accentText: '#020a1f', link: '#ff6b85', border: '#1e2a48', input: '#04060c', wp: WALLPAPERS.th_futurewar.css, wpDim: 10, wpSee: 30, glow: true, fx: 'plasmawar', fxColor: '#3d8bff' },
   tracker: { name: "Motion Tracker", about: 'movie-inspired: motion tracker sweep with contacts closing in', bg: '#000a04', surface: '#031a0b', text: '#c8ffd8', accent: '#39ff88', accentText: '#00140a', link: '#a8ffc8', border: '#0e3d20', input: '#000703', wp: WALLPAPERS.th_tracker.css, wpDim: 20, wpSee: 30, glow: true, fx: 'radar', fxColor: '#39ff88' },
   marine: { name: "Colonial Marine", about: "movie-inspired: olive drab military with amber HUD", bg: '#0e0f0a', surface: '#1a1c14', text: '#f0f0e0', accent: '#f2a900', accentText: '#1a1100', link: '#c5d86d', border: '#3a3d2c', input: '#0a0b07', wp: WALLPAPERS.th_marine.css, wpDim: 20, wpSee: 30, glow: false, fx: 'scan hud', fxColor: '#f2a900' },
 };
@@ -398,6 +394,7 @@ function skipDaily() { const d = dailyState(); d.on = true; d.date = todayStr();
 // v6.0: these themes were removed; a site still set to one switches to High Contrast (not Off)
 const REMOVED_THEMES = ["midnight", "dim", "graphite", "ember", "purple", "twinsuns", "typesblue", "typescarbon", "iceplanet", "forestmoon", "imperialbridge"];
 if (REMOVED_THEMES.includes(cfg.theme)) { cfg.theme = 'contrast'; saveSiteCfg(cfg); }
+if (cfg.theme === 'uprising' || cfg.theme === 'futurewar') { cfg.theme = 'redhud'; saveSiteCfg(cfg); }   // v6.17: removed
 let T = allThemes()[activeThemeId()] || null;     // active theme colors, or null = Off
 let monoPreview = !!(T && T.mono != null);          // v6.12: quick filter until the first full pass is done
 function endPreview() { if (!monoPreview) return; monoPreview = false; pushCss(cssText()); if (document.body) startFx(); }   // scanlines + HUD come on with the exact colors
@@ -605,7 +602,7 @@ function diagText() {
   const probe = document.elementFromPoint(Math.round(innerWidth * .3), Math.round(innerHeight * .5));
   let pc = '', el = probe;
   for (let i = 0; el && i < 12; i++, el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { pc = c + ' on <' + el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? ' class="' + el.className.split(' ').slice(0, 2).join(' ') + '"' : '') + '>'; break; } }
-  return 'Status v6.16: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
+  return 'Status v6.17: theme ' + (T ? (fxOff ? 'on (LITE: effects off, slower updates)' : liteMode ? 'on (LITE: slower updates, effects on)' : 'on') : 'off') + ' · styles ' + styleStatus() + ' · tag rules ' + (styleEl.sheet ? (() => { try { return styleEl.sheet.cssRules.length; } catch (e) { return '?'; } })() : 'none')
     + ' · Fluent providers ' + fps.length + ' · Fluent bg var "' + (v || '-') + '" · chat area color ' + (pc || '-') + ' · frame ' + (window.top === window ? 'top' : 'inner') + ' · recolor ' + scanStats.els + ' els in ' + Math.round(scanStats.ms) + ' ms over ' + Math.round((Date.now() - scanStats.since) / 1000) + ' s';
 }
 function styleStatus() { return !T ? 'off' : styleBlocked ? (cssSheet ? 'applied (backup method)' : 'BLOCKED by this site') : 'applied'; }
@@ -1958,123 +1955,122 @@ const SCENES = {
       ctx.globalAlpha = 1;
     },
   },
-  // ----- Red Vision HUD: scrolling analysis readouts (right), a targeting box that follows the mouse, a scan line -----
+  // ----- Red Vision HUD (v6.17): machine-vision overlay. Screen corner brackets + faint grid, status block with
+  // an original neural-net chip emblem, streaming hex column, rotating reticle that follows the mouse and names
+  // what it is pointing at, analysis feed (incl. the open RO's vehicle) that places ITSELF where the page has
+  // nothing underneath, audio waveform, response-options box now and then, scan sweeps. Original designs.
   cyborghud: {
     over: true, fps: 15,
     init(S) {
-      S.lines = []; S.cur = ''; S.ci = 0; S.next = 0; S.m = null; S.lockAt = performance.now() + rnd(6000, 12000); S.lock = 0;
-      S.tx = innerWidth / 2; S.ty = innerHeight / 2;
+      S.lines = []; S.cur = ''; S.ci = 0; S.next = 0; S.m = null; S.lockAt = performance.now() + rnd(6000, 12000);
+      S.tx = innerWidth / 2; S.ty = innerHeight / 2; S.hexT = 0; S.hex = []; S.wave = Array.from({ length: 36 }, () => 0);
+      S.menuAt = performance.now() + rnd(15000, 30000); S.menu = null; S.sweepAt = performance.now() + rnd(8000, 16000);
+      S.feedPos = null; S.placeT = 0; S.infoT = 0; S.info = {};
       if (!window.__wrMouse) { window.__wrMouse = { x: innerWidth / 2, y: innerHeight / 2 }; window.addEventListener('mousemove', e => { window.__wrMouse.x = e.clientX; window.__wrMouse.y = e.clientY; }, { passive: true }); }
+      if (!window.__wrHover) { window.__wrHover = ''; window.addEventListener('mouseover', e => {
+        const el = e.target; if (!el || !el.tagName) return;
+        const tag = el.closest('button,[role=button]') ? 'BUTTON' : el.closest('a') ? 'LINK' : /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? 'FIELD' : el.tagName === 'IMG' ? 'IMAGE' : 'ELEMENT';
+        const txt = ((el.closest('button,a') || el).innerText || el.value || el.placeholder || '').replace(/\s+/g, ' ').trim().slice(0, 22);
+        window.__wrHover = tag + (txt ? ' "' + txt.toUpperCase() + '"' : '');
+      }, { passive: true }); }
     },
     draw(ctx, S, t) {
-      const { W, H } = S, red = '#ff3b3b', hex = n => Math.floor(Math.random() * 16 ** n).toString(16).toUpperCase().padStart(n, '0');
+      const { W, H } = S, red = '#ff3b3b', pale = '#ffe0e0', hex = n => Math.floor(Math.random() * 16 ** n).toString(16).toUpperCase().padStart(n, '0');
       ctx.clearRect(0, 0, W, H);
-      ctx.globalAlpha = .10; ctx.fillStyle = '#ff1a1a'; ctx.fillRect(0, 0, W, H);           // red machine-vision wash over everything
-      const sy = (t / 6000 % 1) * H;                                                      // scan line
-      ctx.globalAlpha = .18; ctx.fillStyle = red; ctx.fillRect(0, sy, W, 2); ctx.globalAlpha = .06; ctx.fillRect(0, sy - 30, W, 30);
-      if (t > S.next) {                                                                    // analysis readout, types itself out
-        if (!S.m) {
-          const k = Math.random(), info = (typeof pipNextMsg === 'function' && Math.random() < .3) ? null : 0;
-          S.m = k < .3 ? hex(4) + ' ' + hex(4) + ' ' + hex(4) + ' ' + hex(4) : k < .5 ? 'SCAN ' + hex(6) + ' ... ' + (Math.random() < .8 ? 'OK' : 'RETRY')
-            : ['THREAT LEVEL: LOW', 'TARGET ACQUIRED', 'PARTS ID: SEARCHING', 'VEHICLE MATCH ' + (90 + Math.random() * 9.9).toFixed(1) + '%', 'POWER CELL 97%', 'ROUTE: RO SALES', 'COMPLIANCE: CONFIRMED', 'SUBJECT: TECHNICIAN', 'AUDIO: NOMINAL', 'OPTICS CALIBRATED'][(Math.random() * 10) | 0];
-        }
-        if (S.ci < S.m.length) { S.cur += S.m[S.ci++]; S.next = t + rnd(20, 55); }
-        else { S.lines.push(S.cur); if (S.lines.length > 14) S.lines.shift(); S.cur = ''; S.ci = 0; S.m = null; S.next = t + rnd(150, 700); }
-      }
-      ctx.font = '11px Consolas, monospace'; ctx.fillStyle = '#ffe0e0';
-      const all = [...S.lines, S.cur], x0 = W - 250, y0 = H - 24 - all.length * 14;           // bottom-right corner, newest line at the bottom
-      ctx.globalAlpha = .55; ctx.fillStyle = '#000000'; ctx.fillRect(x0 - 8, y0 - 14, 246, all.length * 14 + 10); ctx.fillStyle = '#ffe0e0';
-      all.forEach((l, i) => { ctx.globalAlpha = i === all.length - 1 ? 1 : .45 + .45 * i / all.length; ctx.fillText(l, x0, y0 + i * 14); });
-      const mx = window.__wrMouse.x, my = window.__wrMouse.y;                             // targeting box follows the mouse, a little behind
-      S.tx += (mx - S.tx) * .25; S.ty += (my - S.ty) * .25;
+      ctx.globalAlpha = .10; ctx.fillStyle = '#ff1a1a'; ctx.fillRect(0, 0, W, H);                       // red wash
+      ctx.globalAlpha = .05; ctx.strokeStyle = red; ctx.lineWidth = 1; ctx.beginPath();                    // faint grid
+      for (let x = 0; x < W; x += 80) { ctx.moveTo(x, 0); ctx.lineTo(x, H); } for (let y = 0; y < H; y += 80) { ctx.moveTo(0, y); ctx.lineTo(W, y); } ctx.stroke();
+      ctx.globalAlpha = .55; ctx.lineWidth = 2;                                                             // screen corner brackets
+      [[8, 8, 1, 1], [W - 8, 8, -1, 1], [8, H - 8, 1, -1], [W - 8, H - 8, -1, -1]].forEach(([x, y, a, b]) => { ctx.beginPath(); ctx.moveTo(x, y + b * 40); ctx.lineTo(x, y); ctx.lineTo(x + a * 40, y); ctx.stroke(); });
+      const sy = (t / 6000 % 1) * H; ctx.globalAlpha = .18; ctx.fillStyle = red; ctx.fillRect(0, sy, W, 2); ctx.globalAlpha = .06; ctx.fillRect(0, sy - 30, W, 30);
+      if (t > S.sweepAt) { S.sweep = t; S.sweepAt = t + rnd(12000, 25000); }                              // full-screen scan sweep with flicker
+      if (S.sweep && t - S.sweep < 1200) { const k = (t - S.sweep) / 1200, x = k * W; ctx.globalAlpha = .25 * (1 - k); ctx.fillStyle = red; ctx.fillRect(x - 60, 0, 60, H); ctx.globalAlpha = Math.random() < .3 ? .06 : 0; ctx.fillRect(0, 0, W, H); }
+
+      if (!S.feedPos) S.placeT = 0;
+      // status block with an original neural-net chip emblem (placed where the page is empty, see below)
+      const [bx, by] = S.statPos ? [S.statPos[0] + 8, S.statPos[1] + 16] : [30, 76]; ctx.globalAlpha = .5; ctx.fillStyle = '#000'; ctx.fillRect(bx - 8, by - 16, 236, 140);
+      ctx.globalAlpha = .9; ctx.strokeStyle = red; ctx.lineWidth = 1.5; ctx.save(); ctx.translate(bx + 10, by + 4);
+      ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(11, 0); ctx.lineTo(0, 11); ctx.lineTo(-11, 0); ctx.closePath(); ctx.stroke();
+      ctx.strokeRect(-4, -4, 8, 8); for (const [dx, dy] of [[0, -11], [11, 0], [0, 11], [-11, 0]]) { ctx.beginPath(); ctx.moveTo(dx * .4, dy * .4); ctx.lineTo(dx * 1.5, dy * 1.5); ctx.stroke(); }
+      ctx.restore();
+      ctx.font = 'bold 11px Consolas, monospace'; ctx.fillStyle = red; ctx.fillText('CYBERNETIC SYSTEMS CORP', bx + 30, by); ctx.fillStyle = pale; ctx.font = '10px Consolas, monospace';
+      ctx.fillText('NEURAL NET CPU ONLINE ' + new Date().toTimeString().slice(0, 8), bx + 30, by + 13);
       const locking = t > S.lockAt && t < S.lockAt + 2200; if (t > S.lockAt + 2200) S.lockAt = t + rnd(8000, 16000);
+      ctx.fillText('MODE: ' + (locking ? 'TARGET LOCK' : 'SCAN') + '    MEM ' + hex(6), bx, by + 32);
+      ctx.fillText('PWR', bx, by + 48); ctx.fillText('CPU', bx, by + 62);
+      ctx.fillStyle = red; for (let i = 0; i < 16; i++) { ctx.globalAlpha = i < 14 ? .85 : .2; ctx.fillRect(bx + 30 + i * 11, by + 41, 8, 7); }
+      const cpu = 6 + Math.round(5 * (1 + Math.sin(t / 700))); for (let i = 0; i < 16; i++) { ctx.globalAlpha = i < cpu ? .85 : .2; ctx.fillRect(bx + 30 + i * 11, by + 55, 8, 7); }
+
+      // streaming hex column (left edge)
+      if (t > S.hexT) { S.hexT = t + 110; S.hex.push(hex(4) + ' ' + hex(4)); if (S.hex.length > 26) S.hex.shift(); }
+      ctx.font = '9px Consolas, monospace'; ctx.fillStyle = red; S.hex.forEach((l, i) => { ctx.globalAlpha = .06 + .12 * i / S.hex.length; ctx.fillText(l, 8, 175 + i * 11); });
+
+      // reticle that follows the mouse, names what it points at, locks now and then
+      const mx = window.__wrMouse.x, my = window.__wrMouse.y; S.tx += (mx - S.tx) * .25; S.ty += (my - S.ty) * .25;
       const r = locking ? 26 + 10 * Math.max(0, 1 - (t - S.lockAt) / 600) : 40;
       ctx.strokeStyle = red; ctx.lineWidth = locking ? 2 : 1.4; ctx.globalAlpha = .75;
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(S.tx + a * r, S.ty + b * (r - 12)); ctx.lineTo(S.tx + a * r, S.ty + b * r); ctx.lineTo(S.tx + a * (r - 12), S.ty + b * r); ctx.stroke(); });
-      ctx.globalAlpha = .18; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, S.ty); ctx.lineTo(S.tx - r - 6, S.ty); ctx.moveTo(S.tx + r + 6, S.ty); ctx.lineTo(W, S.ty); ctx.moveTo(S.tx, 0); ctx.lineTo(S.tx, S.ty - r - 6); ctx.moveTo(S.tx, S.ty + r + 6); ctx.lineTo(S.tx, H); ctx.stroke();
-      ctx.globalAlpha = .85; ctx.fillStyle = red; ctx.font = 'bold 10px Consolas, monospace';
-      ctx.fillText(locking ? (Math.floor(t / 150) % 2 ? 'LOCK' : '') : 'ANALYSIS', S.tx + r + 6, S.ty - r + 8);
-      ctx.fillText(Math.round(S.tx) + ':' + Math.round(S.ty), S.tx + r + 6, S.ty - r + 20);
-      ctx.globalAlpha = 1;
-    },
-  },
-  // ----- Machine Uprising: burnt sky over ruins, falling ash, flashes on the horizon, a hunter machine with a searchlight -----
-  ashfall: {
-    init(S) {
-      const { W, H } = S;
-      S.base = off(W, H); const c = S.base.getContext('2d');
-      const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#08090a'); sky.addColorStop(.55, '#1c1612'); sky.addColorStop(.8, '#5a2c12'); sky.addColorStop(1, '#1a120d');
-      c.fillStyle = sky; c.fillRect(0, 0, W, H);
-      c.fillStyle = '#070606'; c.beginPath(); c.moveTo(0, H);                              // broken skyline
-      let x = 0; while (x < W) { const w = rnd(30, 90), h = H * rnd(.12, .32); c.lineTo(x, H - h * rnd(.7, 1)); c.lineTo(x + w * rnd(.2, .5), H - h); c.lineTo(x + w * rnd(.5, .8), H - h * rnd(.6, 1)); c.lineTo(x + w, H - h * rnd(.4, .9)); x += w; }
-      c.lineTo(W, H); c.closePath(); c.fill();
-      S.ash = Array.from({ length: Math.round(W * H / 6000) }, () => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(.6, 2.2), s: rnd(.25, .8), d: rnd(-.4, .2), ph: rnd(0, 6.28), ember: Math.random() < .06 }));
-      S.flashAt = performance.now() + rnd(3000, 9000); S.hk = null; S.hkAt = performance.now() + rnd(6000, 15000);
-    },
-    draw(ctx, S, t) {
-      const { W, H } = S;
-      ctx.globalAlpha = 1; ctx.drawImage(S.base, 0, 0);
-      if (t > S.flashAt) { S.flash = { at: t, x: rnd(0, W) }; S.flashAt = t + rnd(4000, 14000); }
-      if (S.flash && t - S.flash.at < 900) { const k = 1 - (t - S.flash.at) / 900, g = ctx.createRadialGradient(S.flash.x, H * .8, 0, S.flash.x, H * .8, W * .25); g.addColorStop(0, `rgba(255,150,60,${.45 * k})`); g.addColorStop(1, 'rgba(255,150,60,0)'); ctx.fillStyle = g; ctx.fillRect(0, H * .4, W, H * .6); }
-      if (!S.hk && t > S.hkAt) S.hk = { born: t, dir: Math.random() < .5 ? 1 : -1, y: H * rnd(.12, .3) };
-      if (S.hk) {
-        const k = (t - S.hk.born) / 22000;
-        if (k > 1) { S.hk = null; S.hkAt = t + rnd(15000, 35000); }
+      ctx.globalAlpha = .45; ctx.lineWidth = 1; const rot = t / 900;
+      ctx.beginPath(); ctx.arc(S.tx, S.ty, r + 14, rot, rot + 1.6); ctx.stroke(); ctx.beginPath(); ctx.arc(S.tx, S.ty, r + 14, rot + 3.14, rot + 4.7); ctx.stroke();
+      for (let i = 0; i < 24; i++) { const a = i / 24 * 6.28 - rot * .6, l = i % 6 ? 4 : 9; ctx.beginPath(); ctx.moveTo(S.tx + Math.cos(a) * (r + 20), S.ty + Math.sin(a) * (r + 20)); ctx.lineTo(S.tx + Math.cos(a) * (r + 20 + l), S.ty + Math.sin(a) * (r + 20 + l)); ctx.stroke(); }
+      ctx.globalAlpha = .16; ctx.beginPath(); ctx.moveTo(0, S.ty); ctx.lineTo(S.tx - r - 30, S.ty); ctx.moveTo(S.tx + r + 30, S.ty); ctx.lineTo(W, S.ty); ctx.moveTo(S.tx, 0); ctx.lineTo(S.tx, S.ty - r - 30); ctx.moveTo(S.tx, S.ty + r + 30); ctx.lineTo(S.tx, H); ctx.stroke();
+      ctx.globalAlpha = .9; ctx.fillStyle = red; ctx.font = 'bold 10px Consolas, monospace';
+      const lx = S.tx + r + 34 > W - 200 ? S.tx - r - 210 : S.tx + r + 34;
+      ctx.fillText(locking ? (Math.floor(t / 150) % 2 ? 'TARGET LOCK' : '') : 'ANALYSIS', lx, S.ty - 8);
+      ctx.fillStyle = pale; ctx.font = '10px Consolas, monospace'; ctx.fillText('SUBJECT: ' + (window.__wrHover || 'NONE'), lx, S.ty + 5); ctx.fillText('X ' + Math.round(S.tx) + '  Y ' + Math.round(S.ty), lx, S.ty + 18);
+
+      // analysis feed -- includes the open RO's vehicle; types itself out
+      if (t - S.infoT > 8000) { S.infoT = t; try { S.info = /\/work_orders\/|ro-sales|repair-order/i.test(location.pathname) ? readPageInfo() : {}; } catch (e) { S.info = {}; } }
+      if (t > S.next) {
+        if (!S.m) {
+          const i = S.info || {}, v = [];
+          if (i.veh) v.push('TARGET VEHICLE: ' + i.veh.toUpperCase(), 'SCANNING ' + i.veh.toUpperCase().split(' ').slice(1, 2).join('') + ' PARTS ...');
+          if (i.vin) v.push('VIN ' + i.vin, 'VIN LAST 8: ' + i.vin.slice(-8));
+          if (i.ro) v.push('RO# ' + i.ro + ' ... ACTIVE');
+          const k = Math.random();
+          S.m = v.length && k < .35 ? v[(Math.random() * v.length) | 0] : k < .55 ? hex(4) + ' ' + hex(4) + ' ' + hex(4) + ' ' + hex(4) : k < .7 ? 'SCAN ' + hex(6) + ' ... ' + (Math.random() < .8 ? 'OK' : 'RETRY')
+            : ['THREAT LEVEL: LOW', 'TARGET ACQUIRED', 'PARTS ID: SEARCHING', 'POWER CELL 97%', 'ROUTE: RO SALES', 'COMPLIANCE: CONFIRMED', 'SUBJECT: TECHNICIAN', 'AUDIO: NOMINAL', 'OPTICS CALIBRATED', 'MISSION: ORDER PARTS'][(Math.random() * 10) | 0];
+          S.m = S.m.slice(0, 34);
+        }
+        if (S.ci < S.m.length) { S.cur += S.m[S.ci++]; S.next = t + rnd(20, 55); }
+        else { S.lines.push(S.cur); if (S.lines.length > 10) S.lines.shift(); S.cur = ''; S.ci = 0; S.m = null; S.next = t + rnd(150, 700); }
+      }
+      // place the feed where the page has nothing clickable or readable underneath (checked every 4 s)
+      const fw = 250, fh = 11 * 14 + 12;
+      if (!S.feedPos || t > S.placeT) {
+        S.placeT = t + 4000;
+        const spots = [[W - fw - 14, H - fh - 40], [14, H - fh - 40], [W - fw - 14, Math.round(H * .42)], [14, Math.round(H * .5)], [Math.round(W / 2 - fw / 2), H - fh - 40], [W - fw - 14, 70]];
+        S.statPos = emptiestSpot([[22, 60], [W - 260, 60], [22, Math.round(H * .4)], [W - 260, Math.round(H * .4)], [Math.round(W / 2 - 118), H - 180], [22, H - 190], [W - 260, H - 190]], 236, 140);
+        S.feedPos = emptiestSpot(spots, fw, fh, [[S.statPos[0] - 8, S.statPos[1] - 16, 236, 140]]);
+      }
+      const all = [...S.lines, S.cur], [fx, fy] = S.feedPos;
+      ctx.globalAlpha = .55; ctx.fillStyle = '#000'; ctx.fillRect(fx - 8, fy, fw, fh); ctx.globalAlpha = .7; ctx.strokeStyle = red; ctx.lineWidth = 1; ctx.strokeRect(fx - 7.5, fy + .5, fw, fh);
+      ctx.font = 'bold 10px Consolas, monospace'; ctx.fillStyle = red; ctx.globalAlpha = .9; ctx.fillText('ANALYSIS FEED', fx, fy + 13);
+      ctx.font = '11px Consolas, monospace'; ctx.fillStyle = pale;
+      all.forEach((l, i) => { ctx.globalAlpha = i === all.length - 1 ? 1 : .45 + .45 * i / all.length; ctx.fillText(l, fx, fy + 28 + i * 14); });
+
+      // audio waveform (under the status block)
+      for (let i = 0; i < S.wave.length; i++) S.wave[i] += ((Math.random() ** 2) * 18 - S.wave[i]) * .4;
+      ctx.fillStyle = red; ctx.globalAlpha = .6; S.wave.forEach((h, i) => ctx.fillRect(bx + i * 6, by + 104 - h, 4, h + 1));
+      ctx.globalAlpha = .7; ctx.font = '9px Consolas, monospace'; ctx.fillText('AUDIO ANALYSIS', bx, by + 118);
+
+      // response options, now and then
+      if (!S.menu && t > S.menuAt) {
+        const pool = ['CONTINUE WORK', 'ORDER PARTS', 'CHECK RO STATUS', 'SCAN NEXT VEHICLE', 'QUOTE THE PART', 'CALL THE VENDOR', 'TAKE A BREAK', 'ASSIGN TECHNICIAN', 'RECHECK INVENTORY', 'UPDATE THE PRICE'];
+        const pick = pool.sort(() => Math.random() - .5).slice(0, 4);
+        S.menu = { at: t, items: pick, sel: (Math.random() * 4) | 0, pos: emptiestSpot([[Math.round(W * .5 - 110), Math.round(H * .3)], [Math.round(W * .5 - 110), Math.round(H * .7)], [Math.round(W * .25), Math.round(H * .6)], [Math.round(W * .62), Math.round(H * .6)], [Math.round(W * .62), Math.round(H * .25)]], 230, 100, [S.feedPos && [S.feedPos[0] - 8, S.feedPos[1], 250, 166], S.statPos && [S.statPos[0], S.statPos[1], 236, 140]]) };
+      }
+      if (S.menu) {
+        const e = t - S.menu.at; if (e > 4500) { S.menu = null; S.menuAt = t + rnd(25000, 50000); }
         else {
-          const x = S.hk.dir > 0 ? -120 + (W + 240) * k : W + 120 - (W + 240) * k, y = S.hk.y + Math.sin(t / 900) * 6, sw = Math.sin(t / 1700) * .5;
-          const g = ctx.createLinearGradient(x, y, x + Math.sin(sw) * H, y + H); g.addColorStop(0, 'rgba(255,240,210,.22)'); g.addColorStop(1, 'rgba(255,240,210,0)');
-          ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 4, y + 6); ctx.lineTo(x + Math.sin(sw) * H - 120, y + H); ctx.lineTo(x + Math.sin(sw) * H + 120, y + H); ctx.lineTo(x + 4, y + 6); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#050505'; ctx.beginPath(); ctx.moveTo(x - 70, y); ctx.lineTo(x - 20, y - 12); ctx.lineTo(x + 20, y - 12); ctx.lineTo(x + 70, y); ctx.lineTo(x + 30, y + 8); ctx.lineTo(x - 30, y + 8); ctx.closePath(); ctx.fill();
-          ctx.fillRect(x - 78, y - 4, 22, 8); ctx.fillRect(x + 56, y - 4, 22, 8);
-          ctx.fillStyle = Math.floor(t / 400) % 2 ? '#ff2a1a' : '#7a0d06'; ctx.fillRect(x - 8, y - 2, 4, 3); ctx.fillRect(x + 4, y - 2, 4, 3);
+          const mx0 = S.menu.pos[0] + 10, my0 = S.menu.pos[1] + 20, shown = Math.min(S.menu.items.length, Math.floor(e / 250));
+          ctx.globalAlpha = .6; ctx.fillStyle = '#000'; ctx.fillRect(mx0 - 10, my0 - 20, 230, 30 + shown * 16); ctx.globalAlpha = .85; ctx.strokeStyle = red; ctx.strokeRect(mx0 - 9.5, my0 - 19.5, 230, 30 + shown * 16);
+          ctx.font = 'bold 11px Consolas, monospace'; ctx.fillStyle = red; ctx.fillText('RESPONSE OPTIONS:', mx0, my0);
+          ctx.font = '11px Consolas, monospace';
+          S.menu.items.slice(0, shown).forEach((it, i) => { const on = i === S.menu.sel && e > 1400; ctx.globalAlpha = on ? (Math.floor(t / 250) % 2 ? 1 : .4) : .75; ctx.fillStyle = on ? '#ffffff' : pale; ctx.fillText((on ? '> ' : '  ') + (i + 1) + '. ' + it, mx0, my0 + 16 + i * 16); });
         }
       }
-      S.ash.forEach(a => {
-        a.y += a.s; a.x += a.d + Math.sin(t / 2000 + a.ph) * .3; if (a.y > H) { a.y = -4; a.x = rnd(0, W); } if (a.x < -5) a.x = W + 5; if (a.x > W + 5) a.x = -5;
-        ctx.globalAlpha = a.ember ? .5 + .4 * Math.sin(t / 300 + a.ph) : .5; ctx.fillStyle = a.ember ? '#ff7a2a' : '#9a958c'; ctx.fillRect(a.x, a.y, a.r, a.r);
-      });
       ctx.globalAlpha = 1;
-    },
-  },
-  // ----- Future War: night rubble, blue and red laser crossfire, sweeping searchlights, drifting smoke -----
-  plasmawar: {
-    fps: 12,
-    init(S) {
-      const { W, H } = S;
-      S.base = off(W, H); const c = S.base.getContext('2d');
-      c.fillStyle = '#03040a'; c.beginPath(); c.moveTo(0, H);
-      let x = 0; while (x < W) { const w = rnd(20, 70), h = H * rnd(.05, .2); c.lineTo(x + w * .3, H - h); c.lineTo(x + w * .6, H - h * rnd(.5, 1.1)); c.lineTo(x + w, H - h * rnd(.3, .8)); x += w; }
-      c.lineTo(W, H); c.closePath(); c.fill();
-      S.bolts = []; S.burstAt = performance.now() + rnd(1500, 4000);
-      S.smoke = Array.from({ length: 3 }, () => ({ x: rnd(0, W), y: rnd(H * .5, H), r: rnd(W * .15, W * .3), s: rnd(.1, .3) }));
-      S.smokeImg = glowSprite('#8a94b0', 64);
-    },
-    draw(ctx, S, t) {
-      const { W, H } = S;
-      ctx.clearRect(0, 0, W, H);
-      [[.25, 4100, '#9fc3ff'], [.75, 5300, '#ffd0d8']].forEach(([px, per, col], i) => {           // searchlights
-        const a = Math.sin(t / per + i * 2) * .55, x0 = W * px, len = H * 1.3, g = ctx.createRadialGradient(x0, H, 0, x0, H, len);
-        g.addColorStop(0, rgba(col, .16)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0, H);
-        ctx.lineTo(x0 + Math.sin(a - .06) * len, H - Math.cos(a - .06) * len); ctx.lineTo(x0 + Math.sin(a + .06) * len, H - Math.cos(a + .06) * len); ctx.closePath(); ctx.fill();
-      });
-      S.smoke.forEach(m => { m.x += m.s; if (m.x - m.r > W) m.x = -m.r; ctx.globalAlpha = .12; ctx.drawImage(S.smokeImg, m.x - m.r, m.y - m.r * .5, m.r * 2, m.r); });
-      ctx.globalAlpha = 1;
-      if (t > S.burstAt) {                                                                  // a burst of crossfire
-        S.burstAt = t + rnd(2500, 7000);
-        const n = 3 + ((Math.random() * 7) | 0), fromLeft = Math.random() < .5;
-        for (let i = 0; i < n; i++) S.bolts.push({ born: t + i * rnd(60, 180), x: fromLeft ? -60 : W + 60, y: H * rnd(.45, .85), vx: (fromLeft ? 1 : -1) * rnd(26, 40), vy: rnd(-3, 1), col: Math.random() < .5 ? '#5aa8ff' : '#ff4d6d' });
-      }
-      ctx.globalCompositeOperation = 'lighter';
-      S.bolts = S.bolts.filter(b => {
-        if (t < b.born) return true;
-        b.x += b.vx; b.y += b.vy; if (b.x < -100 || b.x > W + 100) return false;
-        ctx.strokeStyle = b.col; ctx.lineCap = 'round';
-        ctx.globalAlpha = .25; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x - b.vx * 2.2, b.y - b.vy * 2.2); ctx.stroke();
-        ctx.globalAlpha = .95; ctx.lineWidth = 2; ctx.stroke();
-        return true;
-      });
-      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-      ctx.drawImage(S.base, 0, 0);
     },
   },
   // ----- Synthwave: a teal-green scanner beam sweeping down + a teal waveform along the bottom -----
@@ -2130,6 +2126,21 @@ function pipNextMsg(S, t) {
   if (v.length && Math.random() < .5) { do { m = v[(Math.random() * v.length) | 0]; } while (v.length > 1 && m === S.lastV); S.lastV = m; }
   else m = S.msgs[S.mi++ % S.msgs.length];
   return m.length > 46 ? m.slice(0, 45) + '…' : m;
+}
+// v6.17: of a few candidate spots, the one with the least page content (buttons, links, fields, text) underneath
+function emptiestSpot(spots, w, h, avoid) {
+  let best = spots[0], bestScore = 1e9;
+  for (const [x, y] of spots) {
+    if (avoid && avoid.some(a => a && x < a[0] + a[2] && x + w > a[0] && y < a[1] + a[3] && y + h > a[1])) continue;
+    let score = 0;
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) {
+      const el = document.elementFromPoint(x + 6 + i * (w - 12) / 5, y + 6 + j * (h - 12) / 3); if (!el) continue;
+      if (el.closest('button,a,input,select,textarea,[role=button],label')) score += 5;
+      else if (el !== document.body && el !== document.documentElement && el.childElementCount === 0 && (el.textContent || '').trim()) score += 3;
+    }
+    if (score < bestScore) { bestScore = score; best = [x, y]; }
+  }
+  return best;
 }
 // alien glyphs for the hunter readout: strokes on two stacked eight-point stars, made up at random
 function S_glyph() { const g = []; for (let n = 0; n < 2; n++) { const k = 2 + ((Math.random() * 3) | 0); const pick = new Set(); while (pick.size < k) pick.add((Math.random() * 8) | 0); pick.forEach(d => g.push([n, d])); } return g; }
