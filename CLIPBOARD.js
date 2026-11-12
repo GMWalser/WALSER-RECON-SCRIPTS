@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.07
+// @version      6.08
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -1711,17 +1711,17 @@ if (IS_PI) {
             // opening the tab -- it waited 8s for a selector that no
             // longer existed. Anchoring primarily on the input's own
             // stable data-test-id instead.
-            await waitFor(
-                '[data-test-id="@tekion-universalComponents-input"], input.ant-v5-input[placeholder="Type Here"], input.ant-input[placeholder="Type Here"]',
-                8000
-            );
+            await waitFor('input[placeholder="Type Here"]', 8000);
             // v6.07: "@tekion-universalComponents-input" is Tekion's id for ANY of its input boxes -- take the VISIBLE
             // "Type Here" search box, not just the first match. Re-found before every retype, because Tekion can
             // rebuild the box right after we type (then nothing happened: "no suggestion", seen 11/12 09:44 + 09:49).
+            // v6.08: ONLY the P&I page's own "Type Here" part search box. 6.07 also accepted "Search", which picked
+            // Tekion's site-wide search bar at the top ("Search here..."): nothing showed, and Enter there opened
+            // Tekion's global search results page (DMS Customer / Repair Orders / ... / Parts Inventory tabs).
             const findSearchBox = () => {
-                const all = [...document.querySelectorAll('[data-test-id="@tekion-universalComponents-input"], input.ant-v5-input, input.ant-input')].filter(i => i.tagName === 'INPUT');
+                const all = [...document.querySelectorAll('input')].filter(i => /^\s*type here\s*$/i.test(i.placeholder || ''));
                 const vis = all.filter(i => i.offsetParent !== null && !i.disabled);
-                return { box: vis.find(i => /type here|search/i.test(i.placeholder || '')) || vis[0] || all[0], total: all.length, visible: vis.length };
+                return { box: vis[0] || all[0], total: all.length, visible: vis.length };
             };
             const setVal = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
             const typeInto = box => {
@@ -1734,7 +1734,7 @@ if (IS_PI) {
             };
             let found = findSearchBox(), searchBox = found.box;
             console.log('[PI-Cost] Search box found, typing part#:', partNum);
-            rvNote('P&I tab: search box found (' + found.visible + ' visible of ' + found.total + ' input boxes, "' + (searchBox.placeholder || '') + '"), typing ' + partNum);
+            rvNote('P&I tab: "Type Here" search box found (' + found.visible + ' visible of ' + found.total + '), typing ' + partNum);
             typeInto(searchBox);
 
             setPill('Waiting for result...', 'ready');
