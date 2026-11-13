@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tekion -20% Price
 // @namespace    reconclipboard
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRICE_HINT.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PRICE_HINT.js
@@ -39,7 +39,7 @@ function badgeFor(cell) {
     if (!b) {
         b = document.createElement('div');
         b.className = BADGE;
-        b.style.cssText = 'font-size:11px;font-weight:700;line-height:1.1;margin-top:1px;color:#fbbf24;white-space:nowrap;pointer-events:none;';
+        b.style.cssText = 'display:inline-block;margin-left:10px;font-weight:700;color:#fbbf24;white-space:nowrap;pointer-events:none;';
         if (getComputedStyle(cell).position === 'static') cell.style.position = 'relative';
         cell.appendChild(b);
     }
@@ -53,7 +53,7 @@ function scan() {
         const b = badgeFor(cell);
         if (price == null || price <= 0) { b.style.display = 'none'; return; }
         b.style.display = '';
-        b.textContent = money(price * OFF) + '  −20%';
+        b.textContent = money(price * OFF);
     });
 }
 
@@ -75,5 +75,5 @@ document.addEventListener('input', e => {
     if (e.target.closest && e.target.closest('[data-test-id*="sellingPrice-cell"]')) { clearTimeout(timer); timer = setTimeout(scan, 150); }
 }, true);
 
-console.log(LOG, 'v1.0 loaded');
+console.log(LOG, 'v1.1 loaded');
 })();
