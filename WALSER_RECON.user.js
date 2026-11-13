@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1113.1617
+// @version      2026.1113.1621
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -13431,8 +13431,8 @@ if (IS_TK) {
 })();
 });
 
-// ===== Tekion -20% Price v1.0  (PRICE_HINT.js) =====
-WR.add('price_hint', 'Tekion -20% Price', '1.0', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== Tekion -20% Price v1.1  (PRICE_HINT.js) =====
+WR.add('price_hint', 'Tekion -20% Price', '1.1', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -13463,7 +13463,7 @@ function badgeFor(cell) {
     if (!b) {
         b = document.createElement('div');
         b.className = BADGE;
-        b.style.cssText = 'font-size:11px;font-weight:700;line-height:1.1;margin-top:1px;color:#fbbf24;white-space:nowrap;pointer-events:none;';
+        b.style.cssText = 'display:inline-block;margin-left:10px;font-weight:700;color:#fbbf24;white-space:nowrap;pointer-events:none;';
         if (getComputedStyle(cell).position === 'static') cell.style.position = 'relative';
         cell.appendChild(b);
     }
@@ -13477,7 +13477,7 @@ function scan() {
         const b = badgeFor(cell);
         if (price == null || price <= 0) { b.style.display = 'none'; return; }
         b.style.display = '';
-        b.textContent = money(price * OFF) + '  −20%';
+        b.textContent = money(price * OFF);
     });
 }
 
@@ -13499,7 +13499,7 @@ document.addEventListener('input', e => {
     if (e.target.closest && e.target.closest('[data-test-id*="sellingPrice-cell"]')) { clearTimeout(timer); timer = setTimeout(scan, 150); }
 }, true);
 
-console.log(LOG, 'v1.0 loaded');
+console.log(LOG, 'v1.1 loaded');
 })();
 
 });
