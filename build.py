@@ -47,6 +47,7 @@ SCRIPTS = [
     ('oem_vin_bridge',   'OEM_VIN_BRIDGE.js'),
     ('teams_ro_opener',  'TEAMS_RO_OPENER.js'),
     ('parts_database',   'VEHICLE_PARTS_DATABASE.js'),
+    ('price_hint',       'PRICE_HINT.js'),
 ]
 
 RAW = 'https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js'
