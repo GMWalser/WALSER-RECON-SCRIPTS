@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Parts Order Quote Scanner
 // @namespace    reconclipboard
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
@@ -173,7 +173,7 @@ function fetchCandidateLines(woId) {
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const sections = [...doc.querySelectorAll('section.work-order-breakdown--department')]
-        .filter(sec => /work-order-mechanical-repairs-team-\d+/i.test(sec.className));
+        .filter(sec => /mechanical-repairs-team-\d+/i.test(sec.className));
       if (!sections.length) return [];
 
       const candidates = [];

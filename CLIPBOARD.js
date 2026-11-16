@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Recon Clipboard
 // @namespace    reconclipboard
-// @version      6.08
+// @version      6.09
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/CLIPBOARD.js
@@ -2523,7 +2523,7 @@ if (IS_RECONVISION) {
             }
             snapshotPassRunning = true;
             try {
-                const sections = document.querySelectorAll('[class*="work-order-mechanical-repairs"]');
+                const sections = document.querySelectorAll('[class*="mechanical-repairs"]');
                 const rows = [];
                 sections.forEach(sec => {
                     sec.querySelectorAll('tr.table__row--content[data-service-id]').forEach(r => rows.push(r));
