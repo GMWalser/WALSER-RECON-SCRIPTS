@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RV Recon Budget Tracker
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUDGET_TRACKER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/BUDGET_TRACKER.js
@@ -110,7 +110,7 @@ function init() {
 
   // Mechanical Repairs section's team number varies per vehicle
   // (Team 1/2/3/4 depending on assignment) -- match generically.
-  const section = document.querySelector('section[class*="work-order-mechanical-repairs"]');
+  const section = document.querySelector('section[class*="mechanical-repairs"]');
   if (!section) return; // this vehicle isn't currently in a Mechanical Repairs dept
 
   const headerTable = section.querySelector('table.collapsible__header');
@@ -142,7 +142,7 @@ function waitForReady(callback) {
   const maxAttempts = 20; // ~6s at 300ms
   const check = () => {
     attempts++;
-    if (document.querySelector('section[class*="work-order-mechanical-repairs"]') || attempts >= maxAttempts) {
+    if (document.querySelector('section[class*="mechanical-repairs"]') || attempts >= maxAttempts) {
       callback();
       return;
     }

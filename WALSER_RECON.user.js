@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1113.1640
+// @version      2026.1116.1415
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -9229,8 +9229,8 @@ log('v1.4 loaded');
 })();
 });
 
-// ===== RV Recon Budget Tracker v1.1  (BUDGET_TRACKER.js) =====
-WR.add('budget_tracker', 'RV Recon Budget Tracker', '1.1', ['https://app.reconvision.com/work_orders/*/edit'], 'document-idle',
+// ===== RV Recon Budget Tracker v1.2  (BUDGET_TRACKER.js) =====
+WR.add('budget_tracker', 'RV Recon Budget Tracker', '1.2', ['https://app.reconvision.com/work_orders/*/edit'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9332,7 +9332,7 @@ function init() {
 
   // Mechanical Repairs section's team number varies per vehicle
   // (Team 1/2/3/4 depending on assignment) -- match generically.
-  const section = document.querySelector('section[class*="work-order-mechanical-repairs"]');
+  const section = document.querySelector('section[class*="mechanical-repairs"]');
   if (!section) return; // this vehicle isn't currently in a Mechanical Repairs dept
 
   const headerTable = section.querySelector('table.collapsible__header');
@@ -9364,7 +9364,7 @@ function waitForReady(callback) {
   const maxAttempts = 20; // ~6s at 300ms
   const check = () => {
     attempts++;
-    if (document.querySelector('section[class*="work-order-mechanical-repairs"]') || attempts >= maxAttempts) {
+    if (document.querySelector('section[class*="mechanical-repairs"]') || attempts >= maxAttempts) {
       callback();
       return;
     }
