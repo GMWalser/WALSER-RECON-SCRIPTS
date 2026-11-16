@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tekion to RV Parts Transfer
 // @namespace    reconclipboard
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @description  Tekion RO: one click captures every part (part#, description, qty, price, job). RV Parts page: shows them matched to the Mechanical Repairs lines (change any match), then fills them all in. You review and click Save.
 // @match        https://app.tekioncloud.com/parts/*
@@ -114,14 +114,12 @@ function rememberWorkOrder() {
   const id = woId(); if (!id) return;
   const ro = ((document.body.textContent || '').match(/RO#\s*(7\d{6})/) || [])[1] || '';
   const mech = [];
-  for (const h of document.querySelectorAll('h1,h2,h3,h4,h5,h6,span,div,a,b,strong,p')) {
-    if (h.childElementCount || !/^\s*mechanical repairs/i.test(h.textContent || '')) continue;
-    let card = h.parentElement, hops = 0;
-    while (card && card !== document.body && hops++ < 12 && !card.querySelector('[data-service-id]')) card = card.parentElement;
-    if (!card || card === document.body) continue;
-    if (((card.textContent || '').match(/DEPT\.?\s*TOTAL/gi) || []).length > 1) continue;   // went too far up (several departments)
-    card.querySelectorAll('[data-service-id]').forEach(r => { const sid = r.getAttribute('data-service-id'); if (sid && !mech.includes(sid)) mech.push(sid); });
-  }
+  // v1.5: find the Mechanical Repairs sections by CLASS, not by header text. "Heavy Line Mechanical Repairs"
+  // does not start with "Mechanical Repairs", so the old text match missed it and the panel fell back to
+  // offering EVERY line (the "unnecessary lines" problem). The class covers both.
+  document.querySelectorAll('section[class*="mechanical-repairs"]').forEach(sec => {
+    sec.querySelectorAll('[data-service-id]').forEach(r => { const sid = r.getAttribute('data-service-id'); if (sid && !mech.includes(sid)) mech.push(sid); });
+  });
   if (!ro && !mech.length) return;
   const all = load('workorders', {}); const prev = all[id] || {};
   all[id] = { ro: ro || prev.ro || '', mech: mech.length ? mech : (prev.mech || []), ts: Date.now() };
