@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1116.1417
+// @version      2026.1116.1508
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -2774,8 +2774,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.08  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.08', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.09  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.09', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -5283,7 +5283,7 @@ if (IS_RECONVISION) {
             }
             snapshotPassRunning = true;
             try {
-                const sections = document.querySelectorAll('[class*="work-order-mechanical-repairs"]');
+                const sections = document.querySelectorAll('[class*="mechanical-repairs"]');
                 const rows = [];
                 sections.forEach(sec => {
                     sec.querySelectorAll('tr.table__row--content[data-service-id]').forEach(r => rows.push(r));
@@ -7999,8 +7999,8 @@ if (location.hostname === 'app.tekioncloud.com') {
 
 });
 
-// ===== Safety Inspection Parts Scanner v1.3  (SAFETY_INSPECTION_SCANNER.js) =====
-WR.add('safety_scanner', 'Safety Inspection Parts Scanner', '1.3', ['https://app.reconvision.com/*'], 'document-idle',
+// ===== Safety Inspection Parts Scanner v1.4  (SAFETY_INSPECTION_SCANNER.js) =====
+WR.add('safety_scanner', 'Safety Inspection Parts Scanner', '1.4', ['https://app.reconvision.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -8203,7 +8203,7 @@ function fetchCandidateLines(woId) {
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const sections = [...doc.querySelectorAll('section.work-order-breakdown--department')]
-        .filter(sec => /work-order-mechanical-repairs-team-\d+/i.test(sec.className));
+        .filter(sec => /mechanical-repairs-team-\d+/i.test(sec.className));
       if (!sections.length) return [];
 
       const candidates = [];
@@ -8488,8 +8488,8 @@ setTimeout(init, 1000);
 })();
 });
 
-// ===== Parts Order Quote Scanner v1.0  (PARTS_ORDER_SCANNER.js) =====
-WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.0', ['https://app.reconvision.com/*'], 'document-idle',
+// ===== Parts Order Quote Scanner v1.1  (PARTS_ORDER_SCANNER.js) =====
+WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.1', ['https://app.reconvision.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -8653,7 +8653,7 @@ function fetchCandidateLines(woId) {
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const sections = [...doc.querySelectorAll('section.work-order-breakdown--department')]
-        .filter(sec => /work-order-mechanical-repairs-team-\d+/i.test(sec.className));
+        .filter(sec => /mechanical-repairs-team-\d+/i.test(sec.className));
       if (!sections.length) return [];
 
       const candidates = [];
