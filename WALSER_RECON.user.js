@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1117.1528
+// @version      2026.1117.1532
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -13605,7 +13605,7 @@ console.log(LOG, 'v1.0 loaded');
 
 });
 
-// ===== Teams Response Time v1.0  (TEAMS_RESPONSE_TIME.js) =====
+// ===== Teams Response Time v1.0  (TEAMS_RESPONSE_TIME.user.js) =====
 WR.add('teams_rt', 'Teams Response Time', '1.0', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 

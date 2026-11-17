@@ -49,7 +49,7 @@ SCRIPTS = [
     ('parts_database',   'VEHICLE_PARTS_DATABASE.js'),
     ('price_hint',       'PRICE_HINT.js'),
     ('gp_setter',        'GP_PRICE_SETTER.js'),
-    ('teams_rt',         'TEAMS_RESPONSE_TIME.js'),
+    ('teams_rt',         'TEAMS_RESPONSE_TIME.user.js'),
 ]
 
 RAW = 'https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js'
