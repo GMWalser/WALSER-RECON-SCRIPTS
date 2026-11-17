@@ -3,8 +3,8 @@
 // @namespace    reconclipboard
 // @version      1.0
 // @author       Gabe
-// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.js
-// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.js
+// @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
+// @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @description  Watches ONE Teams room (you pick it) and measures how fast the team responds to each message -- a response = the first clock or thumbs-up reaction landing on it. Menu report: average response time per technician (who asked), with a click-through to each message and its own response time. Keep the room open in a tab; reactions are timed as the tab sees them happen.
 // @match        https://teams.microsoft.com/*
 // @match        https://teams.cloud.microsoft/*
