@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1117.1731
+// @version      2026.1117.1752
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -11426,8 +11426,8 @@ log('v1.3 loaded on', location.hostname);
 })();
 });
 
-// ===== Filter Quick Add v1.8  (FILTER_QUICKADD.js) =====
-WR.add('filter_quickadd', 'Filter Quick Add', '1.8', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
+// ===== Filter Quick Add v1.9  (FILTER_QUICKADD.js) =====
+WR.add('filter_quickadd', 'Filter Quick Add', '1.9', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/parts/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -11562,8 +11562,24 @@ function trimOnPage() {
   const el = document.querySelector('#vehicleDetailsOverviewTrim');
   return el ? (el.value || el.textContent || '').trim() : '';
 }
+// Engine clue for Subarus: H4/H6, "4 Cyl"/"6 Cyl", or a displacement like "2.5L".
+const ENGINE_RE = /\b[HV]6\b|\b[HI]4\b|\b[46]\s*[\s-]?CYL\b|\b[2-4]\.\d\s*[LiR]\b/i;   // L liters, i/R = Subaru trims (2.5i, 3.6R)
+// The dedicated trim box is best, but Tekion renames ids and the panel is often collapsed.
+// If the box has no engine clue, scan small leaf elements near the top of the page for one.
+function engineTextOnPage() {
+  const t = trimOnPage();
+  if (ENGINE_RE.test(t)) return t;
+  let n = 0;
+  for (const el of document.querySelectorAll('span,div,p,td')) {
+    if (el.childElementCount !== 0) continue;
+    const s = (el.textContent || '').trim();
+    if (s && s.length <= 80 && ENGINE_RE.test(s)) return s;
+    if (++n > 4000) break;                         // keep it cheap on huge pages
+  }
+  return t;
+}
 function rememberTrim() {
-  const trim = trimOnPage();
+  const trim = trimOnPage();                       // cheap single-selector read (runs every second)
   if (!trim) return;
   const vin = pageVin();
   if (!vin) return;
@@ -11577,12 +11593,15 @@ function rememberTrim() {
   log('Remembered trim for', vin, ':', trim);
 }
 function subaruCylinders() {
-  let trim = trimOnPage();
-  if (!trim) {
-    try { trim = JSON.parse(GM_getValue(TRIM_CACHE_KEY, '{}'))[pageVin()] || ''; } catch (e) {}
+  let trim = engineTextOnPage();                   // live read (box, else page scan)
+  if (!ENGINE_RE.test(trim)) {                      // nothing useful live -> try the per-VIN cache
+    try { const c = JSON.parse(GM_getValue(TRIM_CACHE_KEY, '{}'))[pageVin()] || ''; if (c) trim = c; } catch (e) {}
   }
-  if (/\b[HV]6\b|\b6[\s-]*CYL/i.test(trim)) return { cyl: 6, trim };
-  if (/\b[HI]4\b|\b4[\s-]*CYL/i.test(trim)) return { cyl: 4, trim };
+  if (/\b[HV]6\b|\b6\s*[\s-]?CYL/i.test(trim)) return { cyl: 6, trim };
+  if (/\b[HI]4\b|\b4\s*[\s-]?CYL/i.test(trim)) return { cyl: 4, trim };
+  // Displacement fallback: Subaru 2.0 / 2.4 / 2.5 = 4-cyl boxer, 3.0 / 3.6 = 6-cyl boxer.
+  const m = trim.match(/\b([2-4])\.(\d)\s*[LiR]\b/i);
+  if (m) { const d = parseFloat(m[1] + '.' + m[2]); if (d >= 3.0) return { cyl: 6, trim }; if (d >= 2.0) return { cyl: 4, trim }; }
   return { cyl: 0, trim };
 }
 
@@ -11616,6 +11635,11 @@ function gasketLine(sec, pn) {
   const hit = lineTexts(sec)
     .find(t => pnKey(t.split(' - ')[0]).indexOf(key) !== -1 || /drain\s*plug/i.test(t));   // EAP9043012031 = 90430-12031
   return hit || null;
+}
+// Did the gasket actually land on ANY job of the RO? Used to verify before claiming success,
+// so the toast never says "added" when the line is not really there.
+function gasketOnRO(pn) {
+  return [...document.querySelectorAll('[data-id^="Job"]')].some(s => gasketLine(s, pn));
 }
 
 let busy = false;
@@ -11690,7 +11714,10 @@ async function handleRequest(raw) {
       const have = sec && gasketLine(sec, mk.pn);
       if (have) { log('Gasket already on a line in the job -- skipped. Line was:', JSON.stringify(have)); toast('Added ' + req.part + '. Gasket already on RO'); return; }
       log('Make:', mk.text, '-> gasket', mk.pn);
-      if (await addOne(mk.pn)) toast('Added ' + req.part + ' + gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : ''));
+      if (await addOne(mk.pn)) {
+        if (gasketOnRO(mk.pn)) toast('Added ' + req.part + ' + gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : ''));
+        else { log('Gasket', mk.pn, 'did not land on a line.'); toast('Filter added, but gasket ' + mk.pn + ' did not stick -- add it by hand', true); }
+      }
     } else if (ok) {
       toast('Added ' + req.part);
     }
@@ -11732,7 +11759,10 @@ async function autoGasketCheck() {
     busy = true;
     try {
       log('Auto gasket: oil filter line found (' + filt + ') on', mk.text, '-> adding', mk.pn);
-      if (await addOne(mk.pn)) toast('Auto-added gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : '') + ' for the oil filter');
+      if (await addOne(mk.pn)) {
+        if (gasketOnRO(mk.pn)) toast('Auto-added gasket ' + mk.pn + (mk.note ? ' (' + mk.note + ')' : '') + ' for the oil filter');
+        else { log('Auto gasket', mk.pn, 'did not land on a line.'); toast('Tried gasket ' + mk.pn + ' but it did not stick -- add it by hand', true); }
+      }
     } catch (e) { log('Auto gasket error:', e); }
     finally { busy = false; }
     return;
@@ -11748,7 +11778,7 @@ function initTekion() {
 if (location.hostname.indexOf('partstech') !== -1) initPartsTech();
 else initTekion();
 
-log('v1.8 loaded on', location.hostname);
+log('v1.9 loaded on', location.hostname);
 })();
 
 });
