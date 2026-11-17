@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1117.1549
+// @version      2026.1117.1613
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -13605,8 +13605,8 @@ console.log(LOG, 'v1.0 loaded');
 
 });
 
-// ===== Teams Response Time v1.1  (TEAMS_RESPONSE_TIME.user.js) =====
-WR.add('teams_rt', 'Teams Response Time', '1.1', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
+// ===== Teams Response Time v1.2  (TEAMS_RESPONSE_TIME.user.js) =====
+WR.add('teams_rt', 'Teams Response Time', '1.2', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -13620,6 +13620,9 @@ function load(k, d) { try { const v = GM_getValue(k); return v == null ? d : JSO
 function save(k, v) { GM_setValue(k, JSON.stringify(v)); }
 
 let msgs = load(K_MSGS, {}); if (!msgs || typeof msgs !== 'object') msgs = {};
+// v1.2 migration: the message id is the exact post time; recompute postTs from it so old records that parsed a
+// timezone-less datetime (which read as a FUTURE time -> negative, blank "response") are corrected.
+(function () { let ch = false; Object.keys(msgs).forEach(id => { const n = Number(id); if (/^\d{12,14}$/.test(id) && n >= 15e11 && n <= Date.now() + 864e5 && msgs[id].postTs !== n) { msgs[id].postTs = n; ch = true; } }); if (ch) save(K_MSGS, msgs); })();
 let dirty = false;
 
 // ---- Teams DOM (confirmed from real markup) ----
@@ -13633,7 +13636,12 @@ function idOf(item) {
   return a && a.id ? a.id.replace('author-', '') : '';
 }
 function authorOf(item) { const a = item.querySelector('[data-tid="message-author-name"]'); return a ? a.textContent.trim() : ''; }
-function postTsOf(item) { const t = item.querySelector('time[datetime]'); const d = t && t.getAttribute('datetime'); const ms = d ? Date.parse(d) : NaN; return isFinite(ms) ? ms : null; }
+function idEpoch(id) { const n = Number(id); return (/^\d{12,14}$/.test(id) && n >= 15e11 && n <= Date.now() + 864e5) ? n : null; }  // Teams ids ARE the post time in ms
+function postTsOf(item, id) {
+  const fromId = idEpoch(id); if (fromId) return fromId;               // id is exact epoch ms -- timezone-proof
+  const t = item.querySelector('time[datetime]'); const d = t && t.getAttribute('datetime'); const ms = d ? Date.parse(d) : NaN;
+  return isFinite(ms) ? ms : null;
+}
 function textOf(item) {
   const h = item.querySelector('[role="heading"]');
   let t = (h ? h.textContent : item.textContent) || '';
@@ -13659,12 +13667,13 @@ function scan() {
     const r = reactionsOf(item);
     let rec = msgs[id];
     if (!rec) {
-      rec = { author: authorOf(item), room, text: textOf(item), postTs: postTsOf(item),
+      rec = { author: authorOf(item), room, text: textOf(item), postTs: null,
               firstSeen: Date.now(), respTs: null, respKind: null, preReacted: !!(r.clock || r.thumb) };
+      rec.postTs = postTsOf(item, id);
       msgs[id] = rec; dirty = true;
     }
     // a response = the first clock/thumbs we WATCH land (one we did not already see on this message at first sight)
-    if (rec.respTs == null && !rec.preReacted && (r.clock || r.thumb)) {
+    if (rec.respTs == null && !rec.preReacted && (r.clock || r.thumb) && rec.postTs && Date.now() >= rec.postTs) {
       rec.respTs = Date.now(); rec.respKind = r.clock ? 'clock' : 'thumb'; dirty = true;
     }
   });
