@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Teams Response Time
 // @namespace    reconclipboard
-// @version      1.0
+// @version      1.1
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
@@ -110,75 +110,62 @@ function byTech(list) {
     .sort((a, b) => b.total - a.total);
 }
 
-let panel = null, curPeriod = 'all';
-function openReport() {
-  if (panel) panel.remove();
-  panel = document.createElement('div');
-  panel.id = 'wr-teams-rt';
-  panel.style.cssText = 'position:fixed;inset:5% 5% auto 50%;transform:translateX(-50%);width:min(820px,92vw);max-height:88vh;overflow:auto;z-index:2147483647;background:#0f172a;color:#e5e7eb;border:1px solid #334155;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6);font:13px Segoe UI,sans-serif;padding:16px';
-  render();
-  document.body.appendChild(panel);
-}
-function render() {
-  const list = rows(curPeriod), techs = byTech(list);
-  const totalResp = list.filter(m => m.respTs != null && m.postTs);
-  const overallAvg = totalResp.length ? totalResp.reduce((a, m) => a + (m.respTs - m.postTs), 0) / totalResp.length : null;
-  const tracked = trackedRoom();
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const pBtn = (id, label) => `<button data-p="${id}" style="padding:3px 10px;border-radius:6px;border:1px solid #334155;background:${curPeriod === id ? '#2563eb' : '#1e293b'};color:#fff;cursor:pointer">${label}</button>`;
-  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <b style="font-size:16px">📊 Teams Response Time</b>
-    <div><button id="rt-close" style="padding:3px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;cursor:pointer">✕ Close</button></div></div>`;
-  if (!tracked) {
-    html += `<div style="background:#422006;border:1px solid #b45309;border-radius:8px;padding:10px;margin-bottom:8px">No room is being tracked yet. Open the room you want to measure, then use the Tampermonkey menu → <b>📍 Track THIS Teams room</b>. Only that room is recorded.</div>`;
-  } else {
-    html += `<div style="opacity:.8;margin-bottom:8px">Tracking room: <b>${esc(tracked)}</b>  ·  <span>${pBtn('today', 'Today')} ${pBtn('7d', '7 days')} ${pBtn('all', 'All')}</span></div>`;
-    html += `<div style="background:#111827;border:1px solid #334155;border-radius:8px;padding:10px;margin-bottom:10px">
-      <b>${list.length}</b> messages · <b>${totalResp.length}</b> responded · overall average response <b style="color:#4ade80">${fmtDur(overallAvg)}</b></div>`;
-    html += `<table style="width:100%;border-collapse:collapse"><tr style="text-align:left;border-bottom:1px solid #334155">
-      <th style="padding:5px">Technician</th><th style="padding:5px">Messages</th><th style="padding:5px">Responded</th><th style="padding:5px">Avg response</th><th></th></tr>`;
-    techs.forEach((t, i) => {
-      html += `<tr data-tech="${i}" style="border-bottom:1px solid #1f2937;cursor:pointer">
-        <td style="padding:5px">${esc(t.author) || '(no name)'}</td><td style="padding:5px">${t.total}</td>
-        <td style="padding:5px">${t.responded}${t.total - t.responded ? ` <span style="opacity:.5">(+${t.total - t.responded} no resp)</span>` : ''}</td>
-        <td style="padding:5px;color:#4ade80;font-weight:700">${fmtDur(t.avg)}</td>
-        <td style="padding:5px;opacity:.6">details ▸</td></tr>
-        <tr data-detail="${i}" style="display:none"><td colspan="5" style="padding:0 5px 8px"></td></tr>`;
-    });
-    html += `</table>`;
-    if (!techs.length) html += `<div style="opacity:.7;padding:10px">Nothing recorded for this period yet. Leave the room open; new messages and the reactions you add are captured as they happen.</div>`;
-  }
-  html += `<div style="margin-top:12px;display:flex;gap:8px"><button id="rt-copy" style="padding:4px 12px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#fff;cursor:pointer">Copy summary</button>
-    <button id="rt-clear" style="padding:4px 12px;border-radius:6px;border:1px solid #7f1d1d;background:#3b0d0d;color:#fff;cursor:pointer">Clear all data</button></div>`;
-  panel.innerHTML = html;
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function overallAvg(list){const r=list.filter(m=>m.respTs!=null&&m.postTs);return r.length?r.reduce((a,m)=>a+(m.respTs-m.postTs),0)/r.length:null;}
 
-  panel.querySelector('#rt-close').onclick = () => { panel.remove(); panel = null; };
-  panel.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { curPeriod = b.getAttribute('data-p'); render(); });
-  panel.querySelectorAll('[data-tech]').forEach(r => r.onclick = () => {
-    const i = r.getAttribute('data-tech'), det = panel.querySelector(`[data-detail="${i}"]`);
-    if (det.style.display === 'none') {
-      const t = techs[i], cell = det.firstElementChild;
-      cell.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;background:#0b1220;border-radius:6px">' +
-        t.msgs.slice().sort((a, b) => b.postTs - a.postTs).map(m => `<tr style="border-bottom:1px solid #1f2937">
-          <td style="padding:4px 6px;max-width:360px">${esc(m.text).slice(0, 90)}</td>
-          <td style="padding:4px 6px;white-space:nowrap">${fmtTime(m.postTs)}</td>
-          <td style="padding:4px 6px;white-space:nowrap;color:${m.respTs ? '#4ade80' : '#f59e0b'}">${m.respTs ? fmtDur(m.respTs - m.postTs) + (m.respKind === 'clock' ? ' 🕐' : ' 👍') : (m.preReacted ? 'before tracking' : 'no response')}</td>
-        </tr>`).join('') + '</table>';
-      det.style.display = '';
-    } else det.style.display = 'none';
-  });
-  panel.querySelector('#rt-copy').onclick = () => {
-    const lines = ['Teams Response Time — ' + (trackedRoom() || '') + ' — ' + curPeriod,
-      'Overall: ' + list.length + ' messages, ' + totalResp.length + ' responded, avg ' + fmtDur(overallAvg), ''];
-    techs.forEach(t => lines.push(t.author + ' — ' + t.total + ' msgs, ' + t.responded + ' responded, avg ' + fmtDur(t.avg)));
-    navigator.clipboard.writeText(lines.join('\n')).then(() => { panel.querySelector('#rt-copy').textContent = 'Copied ✓'; }, () => {});
-  };
-  panel.querySelector('#rt-clear').onclick = () => {
-    if (confirm('Clear ALL recorded Teams response-time data? This cannot be undone.')) { msgs = {}; save(K_MSGS, msgs); render(); }
-  };
+// The report is a DOWNLOADED standalone HTML file. We build a string and download it -- nothing is injected into
+// Teams' page, so Teams' Trusted-Types security policy (which blocks innerHTML on the page) does not apply.
+function buildReportHtml(){
+  const room=trackedRoom()||'(no room set)', now=new Date();
+  const all=rows('all'), techs=byTech(all);
+  const respAll=all.filter(m=>m.respTs!=null&&m.postTs).length;
+  const avgAll=fmtDur(overallAvg(all)), avg7=fmtDur(overallAvg(rows('7d'))), avgToday=fmtDur(overallAvg(rows('today')));
+  const rowsHtml=techs.map(t=>`<tr><td>${esc(t.author)||'(no name)'}</td><td class=n>${t.total}</td><td class=n>${t.responded}</td><td class=n>${esc(fmtDur(t.avg))}</td></tr>`).join('')
+    ||'<tr><td colspan=4 class=dim>Nothing recorded yet.</td></tr>';
+  const detail=techs.map(t=>{
+    const items=t.msgs.slice().sort((a,b)=>(b.postTs||0)-(a.postTs||0)).map(m=>{
+      const rt=m.respTs?esc(fmtDur(m.respTs-m.postTs))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':'<span class=no>no response</span>');
+      return `<tr><td>${esc(m.text).slice(0,120)}</td><td class=t>${esc(fmtTime(m.postTs))}</td><td class=t>${rt}</td></tr>`;
+    }).join('');
+    return `<details><summary><b>${esc(t.author)||'(no name)'}</b> — ${t.total} messages, ${t.responded} responded, avg ${esc(fmtDur(t.avg))}</summary>`
+      +`<table class=sub><tr><th>Message</th><th>Asked</th><th>Response</th></tr>${items}</table></details>`;
+  }).join('')||'<p class=dim>Nothing recorded yet. Keep the room open so new messages and reactions are captured.</p>';
+  return `<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">`
+    +`<title>Teams Response Time — ${esc(room)}</title><style>`
+    +`body{font:15px/1.5 "Segoe UI",Arial,sans-serif;color:#1f2937;background:#f8fafc;margin:0;padding:28px}`
+    +`h1{margin:0 0 4px;font-size:24px}h2{margin:22px 0 8px;font-size:17px}.meta{color:#64748b;margin:0 0 18px}`
+    +`.cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;min-width:130px}`
+    +`.card .big{font-size:22px;font-weight:700;color:#16a34a}.card .lbl{color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.04em}`
+    +`table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}`
+    +`th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #eef2f7}th{background:#f1f5f9;font-size:13px}td.n{text-align:right;font-variant-numeric:tabular-nums}td.t{white-space:nowrap;color:#475569;font-size:13px}`
+    +`details{background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;padding:6px 12px}summary{cursor:pointer;padding:6px 0}`
+    +`table.sub{margin:6px 0 10px}table.sub th{background:#f8fafc}.dim{color:#94a3b8}.no{color:#d97706}`
+    +`@media print{body{padding:0}details{break-inside:avoid}}`
+    +`</style></head><body><h1>Teams Response Time</h1>`
+    +`<p class=meta>Room: <b>${esc(room)}</b> · Generated ${esc(now.toLocaleString())}</p>`
+    +`<div class=cards><div class=card><div class=lbl>Avg response (all)</div><div class=big>${esc(avgAll)}</div></div>`
+    +`<div class=card><div class=lbl>Last 7 days</div><div class=big>${esc(avg7)}</div></div>`
+    +`<div class=card><div class=lbl>Today</div><div class=big>${esc(avgToday)}</div></div>`
+    +`<div class=card><div class=lbl>Messages</div><div class=big style="color:#1f2937">${all.length}</div></div>`
+    +`<div class=card><div class=lbl>Responded</div><div class=big style="color:#1f2937">${respAll}</div></div></div>`
+    +`<h2>By technician (all time)</h2><table><tr><th>Technician</th><th class=n>Messages</th><th class=n>Responded</th><th class=n>Avg response</th></tr>${rowsHtml}</table>`
+    +`<h2>Breakdown</h2>${detail}</body></html>`;
 }
-
-GM_registerMenuCommand('📊 Teams response time report', openReport);
+function toast(txt){
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;background:#16a34a;color:#fff;font:600 14px "Segoe UI",sans-serif;padding:10px 18px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.4)';
+  d.textContent=txt; document.body.appendChild(d); setTimeout(()=>d.remove(),4500);
+}
+function downloadReport(){
+  try{
+    const html=buildReportHtml(), blob=new Blob([html],{type:'text/html'}), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'), d=new Date(), p=n=>String(n).padStart(2,'0');
+    a.href=url; a.download='teams-response-time-'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.html';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast('\u{1F4E5} Report downloaded — open the HTML file to view it.');
+  }catch(e){ console.error(LOG,'download failed',e); alert('Could not build the report: '+(e&&e.message||e)); }
+}
+GM_registerMenuCommand('📥 Download response-time report (HTML)', downloadReport);
 GM_registerMenuCommand('📍 Track THIS Teams room (' + (trackedRoom() || 'none set') + ')', () => {
   const r = roomName();
   if (!r) { alert('Open a Teams room first (the channel title must be visible), then run this again.'); return; }
