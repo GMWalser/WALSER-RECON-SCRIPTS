@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1117.1613
+// @version      2026.1117.1727
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -13605,8 +13605,8 @@ console.log(LOG, 'v1.0 loaded');
 
 });
 
-// ===== Teams Response Time v1.2  (TEAMS_RESPONSE_TIME.user.js) =====
-WR.add('teams_rt', 'Teams Response Time', '1.2', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
+// ===== Teams Response Time v1.3  (TEAMS_RESPONSE_TIME.user.js) =====
+WR.add('teams_rt', 'Teams Response Time', '1.3', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -13673,7 +13673,7 @@ function scan() {
       msgs[id] = rec; dirty = true;
     }
     // a response = the first clock/thumbs we WATCH land (one we did not already see on this message at first sight)
-    if (rec.respTs == null && !rec.preReacted && (r.clock || r.thumb) && rec.postTs && Date.now() >= rec.postTs) {
+    if (rec.respTs == null && !rec.preReacted && (r.clock || r.thumb)) {
       rec.respTs = Date.now(); rec.respKind = r.clock ? 'clock' : 'thumb'; dirty = true;
     }
   });
@@ -13683,6 +13683,17 @@ setInterval(scan, 2500);
 setTimeout(scan, 1500);
 
 // ---- report ----
+// Response time. The message's post time comes from the SENDER's clock (its id), but we stamp the reaction with
+// THIS machine's clock -- if those differ by a minute or two, post-based time can go negative on a fast response.
+// So for a message we saw live (first-seen near its post time), measure reacted - firstSeen (one clock, never
+// negative). Only an old message we first saw long after it was posted falls back to the post-based time.
+function responseMs(m) {
+  if (m.respTs == null) return null;
+  const seenLive = m.postTs && m.firstSeen && Math.abs(m.firstSeen - m.postTs) < 300000;   // saw it within 5 min of posting
+  if (seenLive && m.firstSeen != null) { const d = m.respTs - m.firstSeen; return d >= 0 ? d : 0; }
+  if (m.postTs) { const d = m.respTs - m.postTs; return d >= 0 ? d : null; }
+  return null;
+}
 function fmtDur(ms) {
   if (ms == null || !isFinite(ms) || ms < 0) return '—';
   const s = Math.round(ms / 1000);
@@ -13708,14 +13719,14 @@ function byTech(list) {
   list.forEach(m => {
     const t = map[m.author] || (map[m.author] = { author: m.author, total: 0, responded: 0, sum: 0, msgs: [] });
     t.total++; t.msgs.push(m);
-    if (m.respTs != null && m.postTs) { t.responded++; t.sum += (m.respTs - m.postTs); }
+    const d = responseMs(m); if (d != null) { t.responded++; t.sum += d; }
   });
   return Object.values(map).map(t => ({ ...t, avg: t.responded ? t.sum / t.responded : null }))
     .sort((a, b) => b.total - a.total);
 }
 
 function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function overallAvg(list){const r=list.filter(m=>m.respTs!=null&&m.postTs);return r.length?r.reduce((a,m)=>a+(m.respTs-m.postTs),0)/r.length:null;}
+function overallAvg(list){const d=list.map(responseMs).filter(x=>x!=null);return d.length?d.reduce((a,x)=>a+x,0)/d.length:null;}
 
 // The report is a DOWNLOADED standalone HTML file. We build a string and download it -- nothing is injected into
 // Teams' page, so Teams' Trusted-Types security policy (which blocks innerHTML on the page) does not apply.
@@ -13728,7 +13739,7 @@ function buildReportHtml(){
     ||'<tr><td colspan=4 class=dim>Nothing recorded yet.</td></tr>';
   const detail=techs.map(t=>{
     const items=t.msgs.slice().sort((a,b)=>(b.postTs||0)-(a.postTs||0)).map(m=>{
-      const rt=m.respTs?esc(fmtDur(m.respTs-m.postTs))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':'<span class=no>no response</span>');
+      const d=responseMs(m); const rt=d!=null?esc(fmtDur(d))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':(m.respTs?'<span class=dim>reacted (time n/a)</span>':'<span class=no>no response</span>'));
       return `<tr><td>${esc(m.text).slice(0,120)}</td><td class=t>${esc(fmtTime(m.postTs))}</td><td class=t>${rt}</td></tr>`;
     }).join('');
     return `<details><summary><b>${esc(t.author)||'(no name)'}</b> — ${t.total} messages, ${t.responded} responded, avg ${esc(fmtDur(t.avg))}</summary>`
