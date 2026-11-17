@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Teams Response Time
 // @namespace    reconclipboard
-// @version      1.4
+// @version      1.5
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
@@ -52,13 +52,22 @@ function textOf(item) {
   let t = (h ? h.textContent : item.textContent) || '';
   return t.replace(/\s+/g, ' ').trim().slice(0, 240);
 }
-// clock = itemid "23f2_timerclock", thumbs/like = itemid "yes"
+// A response is a clock reaction (started) or a thumbs-up (done). Teams gives each reaction
+// a different id/image, and the clock the techs use is NOT always "23f2_timerclock" -- any
+// clock emoji counts. So match on the id, the label (alt/title/aria-label), AND the actual
+// emoji character, for both the clock family and the thumbs-up.
+const CLOCK_CHARS = /[⌚⌛⏰-⏳\u{1F550}-\u{1F567}\u{1F570}]/u; // watch, alarm, hourglass, all clock faces, mantel clock
+const THUMB_CHARS = /\u{1F44D}/u;                                               // thumbs up
 function reactionsOf(item) {
   let clock = false, thumb = false;
-  item.querySelectorAll('button[data-tid="diverse-reaction-pill-button"] img[itemid]').forEach(img => {
-    const k = img.getAttribute('itemid');
-    if (k === '23f2_timerclock') clock = true;
-    if (k === 'yes') thumb = true;
+  item.querySelectorAll('button[data-tid="diverse-reaction-pill-button"]').forEach(btn => {
+    const img = btn.querySelector('img');
+    const id = ((img && img.getAttribute('itemid')) || '').toLowerCase();
+    const label = (((img && (img.getAttribute('alt') || img.getAttribute('title'))) || '')
+      + ' ' + (btn.getAttribute('title') || '') + ' ' + (btn.getAttribute('aria-label') || '')).toLowerCase();
+    const glyph = ((img && (img.getAttribute('alt') || img.getAttribute('title'))) || btn.textContent || '');
+    if (/clock|timer|watch|alarm/.test(id) || /clock|timer|watch|alarm/.test(label) || CLOCK_CHARS.test(glyph)) clock = true;
+    if (id === 'yes' || /thumb|\blike\b|thumbsup/.test(id) || /thumb|\blike\b|thumbsup/.test(label) || THUMB_CHARS.test(glyph)) thumb = true;
   });
   return { clock, thumb };
 }
@@ -70,15 +79,21 @@ function scan() {
   items().forEach(item => {
     const id = idOf(item); if (!id) return;
     const r = reactionsOf(item);
+    const anyR = r.clock || r.thumb;
     let rec = msgs[id];
     if (!rec) {
       rec = { author: authorOf(item), room, text: textOf(item), postTs: null,
-              firstSeen: Date.now(), respTs: null, respKind: null, preReacted: !!(r.clock || r.thumb) };
+              firstSeen: Date.now(), respTs: null, respKind: null,
+              preReacted: !!anyR, reacted: !!anyR, observedBare: !anyR };
       rec.postTs = postTsOf(item, id);
       msgs[id] = rec; dirty = true;
     }
-    // a response = the first clock/thumbs we WATCH land (one we did not already see on this message at first sight)
-    if (rec.respTs == null && !rec.preReacted && (r.clock || r.thumb)) {
+    if (!anyR && !rec.observedBare) { rec.observedBare = true; dirty = true; }   // we have seen it with NO reaction
+    if (anyR && !rec.reacted) { rec.reacted = true; dirty = true; }              // a reaction exists (even if we can't time it)
+    // Real time only when we WITNESSED the change: saw it bare, then the clock/thumbs landed.
+    // (If a reaction was already there the first/only time we saw the message, we can't know when
+    //  it was added -- it is marked "reacted" above and shows "reacted (time n/a)", never "no response".)
+    if (rec.respTs == null && rec.observedBare && anyR) {
       rec.respTs = Date.now(); rec.respKind = r.clock ? 'clock' : 'thumb'; dirty = true;
     }
   });
@@ -162,7 +177,7 @@ function buildReportHtml(){
     ||'<tr><td colspan=4 class=dim>Nothing recorded yet.</td></tr>';
   const detail=techs.map(t=>{
     const items=t.msgs.slice().sort((a,b)=>(b.postTs||0)-(a.postTs||0)).map(m=>{
-      const d=responseMs(m); const rt=d!=null?esc(fmtDur(d))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':(m.respTs?'<span class=dim>reacted (time n/a)</span>':'<span class=no>no response</span>'));
+      const d=responseMs(m); const rt=d!=null?esc(fmtDur(d))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':((m.respTs||m.reacted)?'<span class=dim>reacted (time n/a)</span>':'<span class=no>no response</span>'));
       return `<tr><td>${esc(m.text).slice(0,120)}</td><td class=t>${esc(fmtTime(m.postTs))}</td><td class=t>${rt}</td></tr>`;
     }).join('');
     return `<details><summary><b>${esc(t.author)||'(no name)'}</b> — ${t.total} messages, ${t.responded} responded, avg ${esc(fmtDur(t.avg))}</summary>`
@@ -214,5 +229,5 @@ GM_registerMenuCommand('🗑 Clear Teams response-time data', () => {
   if (confirm('Clear ALL recorded Teams response-time data?')) { msgs = {}; save(K_MSGS, msgs); }
 });
 
-console.log(LOG, 'v1.0 loaded; tracking room:', trackedRoom() || '(none set)');
+console.log(LOG, 'v1.5 loaded; tracking room:', trackedRoom() || '(none set)');
 })();
