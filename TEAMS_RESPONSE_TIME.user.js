@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Teams Response Time
 // @namespace    reconclipboard
-// @version      1.3
+// @version      1.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
@@ -84,8 +84,26 @@ function scan() {
   });
   if (dirty) { save(K_MSGS, msgs); dirty = false; }
 }
-setInterval(scan, 2500);
-setTimeout(scan, 1500);
+// Capture that keeps working when the tab is MINIMIZED.
+// Minimized/background tabs slow down timers (setInterval/setTimeout), so a timer-only
+// scan can miss when a reaction actually appeared. A MutationObserver fires the instant
+// Teams changes the page -- it is NOT slowed by background-tab throttling -- so we run the
+// scan right then, stamping the reaction when it really shows up. We gate with Date.now()
+// (not a timer) so bursts of DOM changes don't cause more than one scan per 300ms.
+// The interval stays as a fallback in case Teams renders without a mutation we catch.
+var lastScan = 0;
+function maybeScan() {
+  var t = Date.now();
+  if (t - lastScan < 300) return;
+  lastScan = t;
+  try { scan(); } catch (e) {}
+}
+try {
+  var mo = new MutationObserver(maybeScan);
+  mo.observe(document.body, { childList: true, subtree: true });
+} catch (e) {}
+setInterval(maybeScan, 2500);
+setTimeout(maybeScan, 1500);
 
 // ---- report ----
 // Response time. The message's post time comes from the SENDER's clock (its id), but we stamp the reaction with
