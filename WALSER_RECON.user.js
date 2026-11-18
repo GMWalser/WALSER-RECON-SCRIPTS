@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1118.1825
+// @version      2026.1118.1929
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10778,8 +10778,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.7  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.7', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.8  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.8', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10838,7 +10838,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
     ],
     [
       { label: 'BGB',      search: 'LT12700',     match: 'BUICK GMC',                    email: 'rallen@walser.com,mdeluca@walser.com,jsmith3@walser.com,mkraft@walser.com,nobrien1@walser.com' },
-      { label: 'CHV SUB',  search: 'WL1986',      match: 'SUBURBAN CHEVROLET',            email: 'jsmith3@walser.com,mdeluca@walser.com,mkraft@walser.com,nobrien1@walser.com,rallen@walser.com' },   // SUBCHEV contact group
+      { label: 'CHV SUB',  search: 'WL1986',      match: 'SUBURBAN CHEVROLET',            email: 'schevwpartsorders@walser.com' },   // SUBCHEV
       { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE',           email: 'cjdparts@walser.com' },
       { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE', email: 'gtidrick@dodgeofburnsville.com' },
       { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD',                    email: 'WalserReconParts@appleautos.com' },
