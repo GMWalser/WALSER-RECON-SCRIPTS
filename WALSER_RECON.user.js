@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1118.1355
+// @version      2026.1118.1434
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -13635,8 +13635,8 @@ console.log(LOG, 'v1.0 loaded');
 
 });
 
-// ===== Teams Response Time v1.6  (TEAMS_RESPONSE_TIME.user.js) =====
-WR.add('teams_rt', 'Teams Response Time', '1.6', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
+// ===== Teams Response Time v1.7  (TEAMS_RESPONSE_TIME.user.js) =====
+WR.add('teams_rt', 'Teams Response Time', '1.7', ['https://teams.microsoft.com/*', 'https://teams.cloud.microsoft/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -13735,10 +13735,12 @@ function scan() {
     }
     if (!anyR && !rec.observedBare) { rec.observedBare = true; dirty = true; }   // we have seen it with NO reaction
     if (anyR && !rec.reacted) { rec.reacted = true; dirty = true; }              // a reaction exists (even if we can't time it)
-    // Real time only when we WITNESSED the change: saw it bare, then the clock/thumbs landed.
-    // (If a reaction was already there the first/only time we saw the message, we can't know when
-    //  it was added -- it is marked "reacted" above and shows "reacted (time n/a)", never "no response".)
-    if (rec.respTs == null && rec.observedBare && anyR) {
+    // Real time only when we WITNESSED the response on a message we caught LIVE -- first seen within a
+    // few minutes of when it was actually posted. This stops Teams redrawing an OLD message (its text
+    // paints first, then its reactions a beat later) from looking like a brand-new response, which was
+    // producing bogus ~20h times for yesterday's messages.
+    const caughtLive = rec.postTs && rec.firstSeen && Math.abs(rec.firstSeen - rec.postTs) < 300000;
+    if (rec.respTs == null && rec.observedBare && anyR && caughtLive) {
       rec.respTs = Date.now(); rec.respKind = r.clock ? 'clock' : 'thumb'; dirty = true;
     }
   });
@@ -13766,16 +13768,15 @@ setInterval(maybeScan, 2500);
 setTimeout(maybeScan, 1500);
 
 // ---- report ----
-// Response time. The message's post time comes from the SENDER's clock (its id), but we stamp the reaction with
-// THIS machine's clock -- if those differ by a minute or two, post-based time can go negative on a fast response.
-// So for a message we saw live (first-seen near its post time), measure reacted - firstSeen (one clock, never
-// negative). Only an old message we first saw long after it was posted falls back to the post-based time.
+// Response time = when we SAW the reaction minus when we FIRST SAW the message (one clock, so sender/receiver
+// clock skew can't make it negative). We only trust this for a message caught LIVE: first seen within 5 min of
+// its real post time (the message id). A message loaded from history (first seen long after it was posted) is
+// NOT timed -- the "reaction landing" we saw there is just Teams redrawing it, which produced bogus ~20h times.
 function responseMs(m) {
-  if (m.respTs == null) return null;
-  const seenLive = m.postTs && m.firstSeen && Math.abs(m.firstSeen - m.postTs) < 300000;   // saw it within 5 min of posting
-  if (seenLive && m.firstSeen != null) { const d = m.respTs - m.firstSeen; return d >= 0 ? d : 0; }
-  if (m.postTs) { const d = m.respTs - m.postTs; return d >= 0 ? d : null; }
-  return null;
+  if (m.respTs == null || !m.postTs || !m.firstSeen) return null;
+  if (Math.abs(m.firstSeen - m.postTs) >= 300000) return null;   // not caught live -> can't be timed
+  const d = m.respTs - m.firstSeen;
+  return d >= 0 ? d : 0;
 }
 function fmtDur(ms) {
   if (ms == null || !isFinite(ms) || ms < 0) return '—';
@@ -13874,7 +13875,7 @@ GM_registerMenuCommand('🗑 Clear Teams response-time data', () => {
   if (confirm('Clear ALL recorded Teams response-time data?')) { msgs = {}; save(K_MSGS, msgs); }
 });
 
-console.log(LOG, 'v1.6 loaded; tracking room:', trackedRoom() || '(none set)');
+console.log(LOG, 'v1.7 loaded; tracking room:', trackedRoom() || '(none set)');
 })();
 
 });
