@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Teams Response Time
 // @namespace    reconclipboard
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
-// @description  Watches ONE Teams room (you pick it) and measures how fast the team responds to each message -- a response = the first clock or thumbs-up reaction landing on it. Menu report: average response time per technician (who asked), with a click-through to each message and its own response time. Keep the room open in a tab; reactions are timed as the tab sees them happen.
+// @description  Watches ONE Teams room (you pick it) and measures how fast the team responds to each message -- a response = the first clock or thumbs-up reaction landing on it. Menu report: average response time per technician (who asked), with a click-through to each message and its own response time. Keep the room open in a tab (works minimized); reactions are timed as they land.
 // @match        https://teams.microsoft.com/*
 // @match        https://teams.cloud.microsoft/*
 // @grant        GM_getValue
@@ -16,6 +16,26 @@
 
 (function () {
 'use strict';
+
+// ---- keep Teams live while the tab is minimized ----
+// Teams slows/pauses updating a room when it thinks the tab is hidden, so a minimized tab often
+// shows a message and its reaction TOGETHER when it finally catches up -- we never see the gap, so
+// it reads as "reacted (time n/a)". Report that the page is always visible so Teams keeps rendering
+// new messages and reactions in real time; the DOM watcher below then times them.
+// (A deeply-minimized tab can still lag up to ~a minute because the browser itself slows background
+//  timers. For exact times, leave the Teams window visible on screen.)
+(function keepLive() {
+  try {
+    const no = () => false, vis = () => 'visible';
+    [['hidden', no], ['webkitHidden', no], ['msHidden', no],
+     ['visibilityState', vis], ['webkitVisibilityState', vis], ['msVisibilityState', vis]
+    ].forEach(([k, g]) => { try { Object.defineProperty(document, k, { configurable: true, get: g }); } catch (e) {} });
+    const swallow = e => { try { e.stopImmediatePropagation(); } catch (x) {} };
+    ['visibilitychange', 'webkitvisibilitychange', 'msvisibilitychange'].forEach(ev => {
+      try { document.addEventListener(ev, swallow, true); } catch (e) {}
+    });
+  } catch (e) {}
+})();
 
 const LOG = '[Teams RT]';
 const K_MSGS = 'teams_rt_msgs';     // { id: {author, room, text, postTs, firstSeen, respTs, respKind, preReacted} }
@@ -229,5 +249,5 @@ GM_registerMenuCommand('🗑 Clear Teams response-time data', () => {
   if (confirm('Clear ALL recorded Teams response-time data?')) { msgs = {}; save(K_MSGS, msgs); }
 });
 
-console.log(LOG, 'v1.5 loaded; tracking room:', trackedRoom() || '(none set)');
+console.log(LOG, 'v1.6 loaded; tracking room:', trackedRoom() || '(none set)');
 })();
