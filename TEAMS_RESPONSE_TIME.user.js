@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Teams Response Time
 // @namespace    reconclipboard
-// @version      1.7
+// @version      1.8
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/TEAMS_RESPONSE_TIME.user.js
@@ -147,11 +147,22 @@ setTimeout(maybeScan, 1500);
 // clock skew can't make it negative). We only trust this for a message caught LIVE: first seen within 5 min of
 // its real post time (the message id). A message loaded from history (first seen long after it was posted) is
 // NOT timed -- the "reaction landing" we saw there is just Teams redrawing it, which produced bogus ~20h times.
+// We only trust a message caught LIVE: first seen within 5 min of its real post time (the id).
+// - EXACT: we watched the message sit with no reaction, then the clock/thumbs land -> respTs-firstSeen
+//   (one clock, no skew). Shown as a plain time.
+// - ESTIMATE: the reaction was already there the first time we saw the message (Teams batched the draw
+//   -- common when its window isn't the focused one). We can't see the exact gap, so we use post time ->
+//   first-seen as an upper bound. Shown with a leading ~. Capped by the 5-min live window so it can
+//   never blow up to hours.
 function responseMs(m) {
-  if (m.respTs == null || !m.postTs || !m.firstSeen) return null;
+  if (!m.postTs || !m.firstSeen) return null;
   if (Math.abs(m.firstSeen - m.postTs) >= 300000) return null;   // not caught live -> can't be timed
-  const d = m.respTs - m.firstSeen;
-  return d >= 0 ? d : 0;
+  if (m.respTs != null) { const d = m.respTs - m.firstSeen; return d >= 0 ? d : 0; }  // exact
+  if (m.reacted) { const d = m.firstSeen - m.postTs; return d >= 0 ? d : 0; }         // estimate
+  return null;
+}
+function isEstimate(m) {
+  return m.respTs == null && m.reacted && m.postTs && m.firstSeen && Math.abs(m.firstSeen - m.postTs) < 300000;
 }
 function fmtDur(ms) {
   if (ms == null || !isFinite(ms) || ms < 0) return '—';
@@ -198,7 +209,8 @@ function buildReportHtml(){
     ||'<tr><td colspan=4 class=dim>Nothing recorded yet.</td></tr>';
   const detail=techs.map(t=>{
     const items=t.msgs.slice().sort((a,b)=>(b.postTs||0)-(a.postTs||0)).map(m=>{
-      const d=responseMs(m); const rt=d!=null?esc(fmtDur(d))+(m.respKind==='clock'?' \u{1F550}':' \u{1F44D}'):(m.preReacted?'<span class=dim>before tracking</span>':((m.respTs||m.reacted)?'<span class=dim>reacted (time n/a)</span>':'<span class=no>no response</span>'));
+      const d=responseMs(m); const est=isEstimate(m); const icon=m.respKind==='clock'?' \u{1F550}':m.respKind==='thumb'?' \u{1F44D}':'';
+      const rt=d!=null?(est?'~':'')+esc(fmtDur(d))+icon:(m.preReacted?'<span class=dim>before tracking</span>':'<span class=no>no response</span>');
       return `<tr><td>${esc(m.text).slice(0,120)}</td><td class=t>${esc(fmtTime(m.postTs))}</td><td class=t>${rt}</td></tr>`;
     }).join('');
     return `<details><summary><b>${esc(t.author)||'(no name)'}</b> — ${t.total} messages, ${t.responded} responded, avg ${esc(fmtDur(t.avg))}</summary>`
@@ -217,6 +229,7 @@ function buildReportHtml(){
     +`@media print{body{padding:0}details{break-inside:avoid}}`
     +`</style></head><body><h1>Teams Response Time</h1>`
     +`<p class=meta>Room: <b>${esc(room)}</b> · Generated ${esc(now.toLocaleString())}</p>`
+    +`<p class=meta style="margin-top:-12px">A plain time was watched exactly. A <b>~</b> time is approximate (post time &rarr; when the tab first saw it) &mdash; used when the Teams window isn't focused and draws the message and its reaction together.</p>`
     +`<div class=cards><div class=card><div class=lbl>Avg response (all)</div><div class=big>${esc(avgAll)}</div></div>`
     +`<div class=card><div class=lbl>Last 7 days</div><div class=big>${esc(avg7)}</div></div>`
     +`<div class=card><div class=lbl>Today</div><div class=big>${esc(avgToday)}</div></div>`
@@ -250,5 +263,5 @@ GM_registerMenuCommand('🗑 Clear Teams response-time data', () => {
   if (confirm('Clear ALL recorded Teams response-time data?')) { msgs = {}; save(K_MSGS, msgs); }
 });
 
-console.log(LOG, 'v1.7 loaded; tracking room:', trackedRoom() || '(none set)');
+console.log(LOG, 'v1.8 loaded; tracking room:', trackedRoom() || '(none set)');
 })();
