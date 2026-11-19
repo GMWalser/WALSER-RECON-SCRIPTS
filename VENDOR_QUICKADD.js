@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.11
+// @version      3.12
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -230,11 +230,15 @@
     btn.textContent = vendorConfig.label;
     btn.type = 'button';
     btn.style.cssText = `
-      box-sizing: border-box;
-      width: 96px;
-      text-align: center;
-      padding: 7px 6px;
-      font-size: 14px;
+      box-sizing: border-box !important;
+      width: 96px !important;
+      min-width: 96px !important;
+      max-width: 96px !important;
+      flex: 0 0 96px !important;
+      text-align: center !important;
+      padding: 7px 6px !important;
+      margin: 0 !important;
+      font-size: 14px !important;
       font-weight: 700;
       border-radius: 20px;
       border: none;
