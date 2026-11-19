@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         RV Euro Filter Order
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/EURO_FILTER_ORDER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/EURO_FILTER_ORDER.js
 // @description  Flags European cars in the RV Picked Up bucket with a button that opens a Tekion Misc PO. Vendor buttons on the PO screen auto-fill the vendor and open a pre-filled Outlook email for filter ordering.
 // @match        https://app.reconvision.com/departments/28149*
+// @match        https://app.reconvision.com/departments/3130*
 // @match        https://app.tekioncloud.com/*
 // @grant        none
 // @run-at       document-idle

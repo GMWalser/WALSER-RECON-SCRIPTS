@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tekion to RV Parts Transfer
 // @namespace    reconclipboard
-// @version      1.5
+// @version      1.6
 // @author       Gabe
 // @description  Tekion RO: one click captures every part (part#, description, qty, price, job). RV Parts page: shows them matched to the Mechanical Repairs lines (change any match), then fills them all in. You review and click Save.
 // @match        https://app.tekioncloud.com/parts/*
@@ -192,6 +192,7 @@ const VENDOR_MAP = {
   'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
   'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
   'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF',
+  'HH': 'HH', 'W': 'WP', 'K': 'KEYSTONE', 'KI': 'KIA', 'LE': 'LEXUS', 'ME': 'METRIC',
 };
 const vendorName = t => { const k = (t || '').trim().toUpperCase(); return VENDOR_MAP[k] || (t || '').trim(); };
 function initRvParts() {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.8
+// @version      3.9
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -86,6 +86,7 @@
       { label: 'BMW',     search: 'WT53',     match: 'MOTORWERKS BMW',            email: 'epeterson@penskeautomotive.com,sgroth@penskeautomotive.com' },
       { label: 'GENESIS', search: '5428',     match: 'LUTHER GENESIS',            email: 'Parts@LutherGenesis.com' },
       { label: 'JLR',     search: '1264',     match: 'JAGUAR LAND ROVER',         email: 'Parts.JaguarLandRover@morries.com' },
+      { label: 'LEX',     search: 'WO270',    match: 'LEXUS',                     email: 'lomwholesale@napleton.com' },
       { label: 'MERC',    search: 'WO1205',   match: 'SEARS IMPORTED',            email: 'william.wissbaum@searsimports.com' },
     ],
     [

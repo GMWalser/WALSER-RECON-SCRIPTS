@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1118.1929
+// @version      2026.1119.1301
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -21,6 +21,7 @@
 // @match        https://app.reconvision.com/*
 // @match        https://app.reconvision.com/departments/*
 // @match        https://app.reconvision.com/departments/28149*
+// @match        https://app.reconvision.com/departments/3130*
 // @match        https://app.reconvision.com/work_orders/*
 // @match        https://app.reconvision.com/departments/3127*
 // @match        https://app.reconvision.com/departments/3139*
@@ -2774,8 +2775,8 @@ function ruleForm(root, el) {
 
 });
 
-// ===== Recon Clipboard v6.09  (CLIPBOARD.js) =====
-WR.add('clipboard', 'Recon Clipboard', '6.09', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
+// ===== Recon Clipboard v6.10  (CLIPBOARD.js) =====
+WR.add('clipboard', 'Recon Clipboard', '6.10', ['https://app.partstech.com/*', 'https://app.tekioncloud.com/*', 'https://*.reconvision.com/*', 'https://shop.usautoforce.com/*', 'https://repairlinkshop.com/*'], 'document-start',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -5328,7 +5329,7 @@ if (IS_RECONVISION) {
         'D': 'DOB', 'I': 'INFINITI', 'T': 'TOY', 'LK': 'LKQ', 'AU': 'AUDI',
         'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
         'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
-        'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF',
+        'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF', 'HH': 'HH', 'W': 'WP', 'K': 'KEYSTONE', 'KI': 'KIA', 'LE': 'LEXUS', 'ME': 'METRIC',
     };
     const QP_STATUS_MAP = { 'A': '1', 'O': '3' }; // 1 = Action Required, 3 = Ordered (confirmed RV status select values)
 
@@ -8489,8 +8490,8 @@ setTimeout(init, 1000);
 })();
 });
 
-// ===== Parts Order Quote Scanner v1.1  (PARTS_ORDER_SCANNER.js) =====
-WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.1', ['https://app.reconvision.com/*'], 'document-idle',
+// ===== Parts Order Quote Scanner v1.3  (PARTS_ORDER_SCANNER.js) =====
+WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.3', ['https://app.reconvision.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -8499,7 +8500,14 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
 const LOG = '[Parts Order Scanner]';
 function log(...args) { console.log(LOG, ...args); }
 
-const PARTS_ORDER_BUCKET_ID = '3134';
+const PARTS_ORDER_BUCKET_IDS = ['3134', '3130'];
+
+// Pre-Order bucket extra: a car with a "Mount & Balance ... Tires" line (any qty) is
+// highlighted green on the list. Checked off the same work-order fetch the quote scan does,
+// and kept in its own map so it does NOT depend on the quote cache (a car can have the tire
+// line but no mechanical lines to quote).
+const MB_TIRES_RE = /mount.*balance.*tire/i;
+const mbTires = {};   // woId -> true/false
 
 // A vehicle is GREEN when at least this share of its part lines are fully
 // quoted (part#, price, vendor all filled). Everything below is RED.
@@ -8603,6 +8611,11 @@ addStyle(`
   .pos-stock-stacked {
     display:flex !important;flex-direction:column !important;align-items:flex-start !important;
   }
+  /* Pre-Order car has a Mount & Balance Tires line -> highlight the whole card green */
+  #vehicle-info-bar.pos-mb-tires, .info-bar.pos-mb-tires {
+    background:rgba(22,163,74,0.22) !important;
+    box-shadow: inset 4px 0 0 #16a34a;
+  }
 `);
 
 // ---------------------------------------------------------------------
@@ -8653,6 +8666,9 @@ function fetchCandidateLines(woId) {
     .then(r => r.text())
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
+      // Mount & Balance Tires line anywhere on this work order (any quantity)?
+      mbTires[woId] = [...doc.querySelectorAll('input[name$="[name]"]')].some(inp =>
+        MB_TIRES_RE.test(inp.getAttribute('title') || inp.getAttribute('value') || ''));
       const sections = [...doc.querySelectorAll('section.work-order-breakdown--department')]
         .filter(sec => /mechanical-repairs-team-\d+/i.test(sec.className));
       if (!sections.length) return [];
@@ -8882,6 +8898,8 @@ function applyVehicleTags() {
     const card = row.link ? row.link.closest('#vehicle-info-bar') : null;
     if (!card) return;
 
+    card.classList.toggle('pos-mb-tires', !!mbTires[row.woId]);   // green card = has Mount & Balance Tires
+
     card.querySelectorAll('.info-bar__item--stock div').forEach(stockEl => {
       if (!stockEl.isConnected) return;
       const wrapper = stockEl.closest('.info-bar__item--stock') || stockEl.parentElement;
@@ -8949,7 +8967,7 @@ function buildScanBar() {
 }
 
 function ensureActiveOnBucket() {
-  const onBucket = currentBucketId() === PARTS_ORDER_BUCKET_ID;
+  const onBucket = PARTS_ORDER_BUCKET_IDS.includes(currentBucketId());
   const bar = document.getElementById('pos-scan-bar');
   if (onBucket && !bar) {
     const { btn, status } = buildScanBar();
@@ -9380,8 +9398,8 @@ waitForReady(init);
 
 });
 
-// ===== Picked Up Filter Order v1.3  (PICKED_UP_FILTER_ORDER.js) =====
-WR.add('picked_up_filter', 'Picked Up Filter Order', '1.3', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
+// ===== Picked Up Filter Order v1.4  (PICKED_UP_FILTER_ORDER.js) =====
+WR.add('picked_up_filter', 'Picked Up Filter Order', '1.4', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/departments/3130*', 'https://app.reconvision.com/work_orders/*/edit*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9545,15 +9563,15 @@ async function doFilters() {
   tekionBtn.click();
 }
 
-if (/^\/departments\/28149/.test(location.pathname)) initBucket();
+if (/^\/departments\/(28149|3130)/.test(location.pathname)) initBucket();
 else if (/\/work_orders\/\d+\/edit/.test(location.pathname) && location.hash === HASH_KEY) doFilters();
 
 log('v1.3 loaded');
 })();
 });
 
-// ===== RV Euro Filter Order v1.5  (EURO_FILTER_ORDER.js) =====
-WR.add('euro_filter', 'RV Euro Filter Order', '1.5', ['https://app.reconvision.com/departments/28149*', 'https://app.tekioncloud.com/*'], 'document-idle',
+// ===== RV Euro Filter Order v1.6  (EURO_FILTER_ORDER.js) =====
+WR.add('euro_filter', 'RV Euro Filter Order', '1.6', ['https://app.reconvision.com/departments/28149*', 'https://app.reconvision.com/departments/3130*', 'https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10778,8 +10796,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.8  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.8', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.9  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.9', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10857,6 +10875,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
       { label: 'BMW',     search: 'WT53',     match: 'MOTORWERKS BMW',            email: 'epeterson@penskeautomotive.com,sgroth@penskeautomotive.com' },
       { label: 'GENESIS', search: '5428',     match: 'LUTHER GENESIS',            email: 'Parts@LutherGenesis.com' },
       { label: 'JLR',     search: '1264',     match: 'JAGUAR LAND ROVER',         email: 'Parts.JaguarLandRover@morries.com' },
+      { label: 'LEX',     search: 'WO270',    match: 'LEXUS',                     email: 'lomwholesale@napleton.com' },
       { label: 'MERC',    search: 'WO1205',   match: 'SEARS IMPORTED',            email: 'william.wissbaum@searsimports.com' },
     ],
     [
@@ -11784,8 +11803,8 @@ log('v1.9 loaded on', location.hostname);
 
 });
 
-// ===== Tekion to RV Parts Transfer v1.5  (PARTS_TRANSFER.js) =====
-WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.5', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
+// ===== Tekion to RV Parts Transfer v1.6  (PARTS_TRANSFER.js) =====
+WR.add('parts_transfer', 'Tekion to RV Parts Transfer', '1.6', ['https://app.tekioncloud.com/parts/*', 'https://app.reconvision.com/work_orders/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -11969,6 +11988,7 @@ const VENDOR_MAP = {
   'BM': 'BMW', 'MB': 'MERC', 'NI': 'NIS', 'S': 'SUB', 'P': 'PAMS',
   'AA': 'AAA', 'V': 'VW', 'VO': 'VOLVO', 'M': 'MAZ', 'L': 'LEXUS',
   'HY': 'HYU', 'E': 'EBAY', 'AC': 'ACURA', 'AV': 'FORD', 'ST': 'STOCK', 'U': 'USAF',
+  'HH': 'HH', 'W': 'WP', 'K': 'KEYSTONE', 'KI': 'KIA', 'LE': 'LEXUS', 'ME': 'METRIC',
 };
 const vendorName = t => { const k = (t || '').trim().toUpperCase(); return VENDOR_MAP[k] || (t || '').trim(); };
 function initRvParts() {

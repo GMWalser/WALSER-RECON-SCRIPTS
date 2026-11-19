@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Picked Up Filter Order
 // @namespace    reconclipboard
-// @version      1.3
+// @version      1.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PICKED_UP_FILTER_ORDER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PICKED_UP_FILTER_ORDER.js
 // @description  Picked Up bucket: every NON-European car gets a Filters button (opens the RO in RV, ticks the filter lookups, opens PartsTech, opens Tekion) and a check button that adds the note FILTERS ORDERED. Euro cars are skipped (they use Euro Filter Order).
 // @match        https://app.reconvision.com/departments/28149*
+// @match        https://app.reconvision.com/departments/3130*
 // @match        https://app.reconvision.com/work_orders/*/edit*
 // @grant        none
 // @run-at       document-idle
@@ -173,7 +174,7 @@ async function doFilters() {
   tekionBtn.click();
 }
 
-if (/^\/departments\/28149/.test(location.pathname)) initBucket();
+if (/^\/departments\/(28149|3130)/.test(location.pathname)) initBucket();
 else if (/\/work_orders\/\d+\/edit/.test(location.pathname) && location.hash === HASH_KEY) doFilters();
 
 log('v1.3 loaded');

@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Parts Order Quote Scanner
 // @namespace    reconclipboard
-// @version      1.1
+// @version      1.3
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
-// @description  On the Parts Order bucket, pre-reads every vehicle's mechanical lines and tags each vehicle green (quoted) or red (not quoted). Hover the tag to see which parts still need part#/price/vendor.
+// @description  On the Parts Order and Pre-Order buckets, pre-reads every vehicle's mechanical lines and tags each vehicle green (quoted) or red (not quoted). Hover the tag to see which parts still need part#/price/vendor. On Pre-Order, cars with a Mount & Balance Tires line (any qty) are highlighted green.
 // @match        https://app.reconvision.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -18,7 +18,14 @@
 const LOG = '[Parts Order Scanner]';
 function log(...args) { console.log(LOG, ...args); }
 
-const PARTS_ORDER_BUCKET_ID = '3134';
+const PARTS_ORDER_BUCKET_IDS = ['3134', '3130'];
+
+// Pre-Order bucket extra: a car with a "Mount & Balance ... Tires" line (any qty) is
+// highlighted green on the list. Checked off the same work-order fetch the quote scan does,
+// and kept in its own map so it does NOT depend on the quote cache (a car can have the tire
+// line but no mechanical lines to quote).
+const MB_TIRES_RE = /mount.*balance.*tire/i;
+const mbTires = {};   // woId -> true/false
 
 // A vehicle is GREEN when at least this share of its part lines are fully
 // quoted (part#, price, vendor all filled). Everything below is RED.
@@ -122,6 +129,11 @@ addStyle(`
   .pos-stock-stacked {
     display:flex !important;flex-direction:column !important;align-items:flex-start !important;
   }
+  /* Pre-Order car has a Mount & Balance Tires line -> highlight the whole card green */
+  #vehicle-info-bar.pos-mb-tires, .info-bar.pos-mb-tires {
+    background:rgba(22,163,74,0.22) !important;
+    box-shadow: inset 4px 0 0 #16a34a;
+  }
 `);
 
 // ---------------------------------------------------------------------
@@ -172,6 +184,9 @@ function fetchCandidateLines(woId) {
     .then(r => r.text())
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
+      // Mount & Balance Tires line anywhere on this work order (any quantity)?
+      mbTires[woId] = [...doc.querySelectorAll('input[name$="[name]"]')].some(inp =>
+        MB_TIRES_RE.test(inp.getAttribute('title') || inp.getAttribute('value') || ''));
       const sections = [...doc.querySelectorAll('section.work-order-breakdown--department')]
         .filter(sec => /mechanical-repairs-team-\d+/i.test(sec.className));
       if (!sections.length) return [];
@@ -401,6 +416,8 @@ function applyVehicleTags() {
     const card = row.link ? row.link.closest('#vehicle-info-bar') : null;
     if (!card) return;
 
+    card.classList.toggle('pos-mb-tires', !!mbTires[row.woId]);   // green card = has Mount & Balance Tires
+
     card.querySelectorAll('.info-bar__item--stock div').forEach(stockEl => {
       if (!stockEl.isConnected) return;
       const wrapper = stockEl.closest('.info-bar__item--stock') || stockEl.parentElement;
@@ -468,7 +485,7 @@ function buildScanBar() {
 }
 
 function ensureActiveOnBucket() {
-  const onBucket = currentBucketId() === PARTS_ORDER_BUCKET_ID;
+  const onBucket = PARTS_ORDER_BUCKET_IDS.includes(currentBucketId());
   const bar = document.getElementById('pos-scan-bar');
   if (onBucket && !bar) {
     const { btn, status } = buildScanBar();
