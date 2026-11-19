@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1119.1340
+// @version      2026.1119.1804
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -9250,8 +9250,8 @@ log('v1.4 loaded');
 })();
 });
 
-// ===== RV Recon Budget Tracker v1.2  (BUDGET_TRACKER.js) =====
-WR.add('budget_tracker', 'RV Recon Budget Tracker', '1.2', ['https://app.reconvision.com/work_orders/*/edit'], 'document-idle',
+// ===== RV Recon Budget Tracker v1.3  (BUDGET_TRACKER.js) =====
+WR.add('budget_tracker', 'RV Recon Budget Tracker', '1.3', ['https://app.reconvision.com/work_orders/*/edit'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -9348,13 +9348,26 @@ function updateWidget() {
   leftSpan.classList.toggle('rv-bt-under', left >= 0);
 }
 
+// Where to anchor the Recon Dollars display:
+//  - Normal vehicles: next to the Mechanical Repairs section (team number varies, match generically).
+//  - Pre-Order bucket vehicles have NO Mechanical Repairs section -- anchor on the Safety Inspection
+//    section (where the parts live), else the Pre-Order Parts section. Gated on a pre-order-parts
+//    section existing so we don't add it to unrelated vehicles.
+function findAnchorSection() {
+  const mech = document.querySelector('section[class*="mechanical-repairs"]');
+  if (mech) return mech;
+  if (document.querySelector('section[class*="pre-order-parts"]')) {
+    return document.querySelector('section[class*="safety-inspection"]')
+        || document.querySelector('section[class*="pre-order-parts"]');
+  }
+  return null;
+}
+
 function init() {
   if (document.getElementById('rv-budget-tracker')) return; // already injected
 
-  // Mechanical Repairs section's team number varies per vehicle
-  // (Team 1/2/3/4 depending on assignment) -- match generically.
-  const section = document.querySelector('section[class*="mechanical-repairs"]');
-  if (!section) return; // this vehicle isn't currently in a Mechanical Repairs dept
+  const section = findAnchorSection();
+  if (!section) return; // not a Mechanical Repairs or Pre-Order vehicle
 
   const headerTable = section.querySelector('table.collapsible__header');
   if (!headerTable) return;
@@ -9385,7 +9398,7 @@ function waitForReady(callback) {
   const maxAttempts = 20; // ~6s at 300ms
   const check = () => {
     attempts++;
-    if (document.querySelector('section[class*="mechanical-repairs"]') || attempts >= maxAttempts) {
+    if (findAnchorSection() || attempts >= maxAttempts) {
       callback();
       return;
     }
