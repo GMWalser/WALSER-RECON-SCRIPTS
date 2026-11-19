@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1119.1315
+// @version      2026.1119.1317
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10796,8 +10796,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.10  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.10', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.11  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.11', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -11019,7 +11019,10 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
     btn.textContent = vendorConfig.label;
     btn.type = 'button';
     btn.style.cssText = `
-      padding: 7px 12px;
+      box-sizing: border-box;
+      width: 96px;
+      text-align: center;
+      padding: 7px 6px;
       font-size: 14px;
       font-weight: 700;
       border-radius: 20px;
