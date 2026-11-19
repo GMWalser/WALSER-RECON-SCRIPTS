@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PO Vendor Quick-Add
 // @namespace    http://tampermonkey.net/
-// @version      3.12
+// @version      3.13
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/VENDOR_QUICKADD.js
@@ -71,12 +71,14 @@
       { label: 'CJD',      search: '40030WIKS',   match: 'CHRYSLER JEEP DODGE',           email: 'cjdparts@walser.com' },
       { label: 'DOB',      search: 'DODGE OF BURNSVILLE',  match: 'DODGE OF BURNSVILLE', email: 'gtidrick@dodgeofburnsville.com' },
       { label: 'FORD',     search: 'WB1956',      match: 'APPLE FORD',                    email: 'WalserReconParts@appleautos.com' },
-      { label: 'HON',      search: '1259',        match: 'WALSER HONDA',                  email: 'HONParts@walser.com' },
     ],
     [
+      { label: 'HON',      search: '1259',        match: 'WALSER HONDA',                  email: 'HONParts@walser.com' },
       { label: 'HYU',      search: '1364',        match: 'WALSER HYUNDAI',      email: 'HYUParts@walser.com' },
       { label: 'KIA',      search: '1143',        match: 'LUTHER NISSAN KIA',   email: 'parts@luthernissankia.com' },
       { label: 'LEX',      search: 'WO270',       match: 'LEXUS',               email: 'lomwholesale@napleton.com' },
+    ],
+    [
       { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE',              email: 'parts.invergrovemazda@morries.com' },
       { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN',       email: 'NISParts@walser.com' },
       { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL',      email: 'SPMNSUParts@walser.com' },
@@ -109,11 +111,12 @@
 
   const ROW_COLORS = [
     { bg: '#1d4ed8' },   // row 1 - deep blue (parts distributors)
-    { bg: '#0f766e' },   // row 2 - deep teal (Walser dealerships + Ford, part 1)
-    { bg: '#0f766e' },   // row 3 - deep teal (Walser dealerships, part 2 + Hyundai/Kia)
-    { bg: '#5b21b6' },   // row 4 - deep purple (European OEM dealerships, part 1)
-    { bg: '#5b21b6' },   // row 5 - deep purple (European OEM dealerships, part 2)
-    { bg: '#15803d' },   // row 6 - deep green (junkyards)
+    { bg: '#0f766e' },   // row 2 - deep teal (dealerships, part 1)
+    { bg: '#0f766e' },   // row 3 - deep teal (dealerships, part 2)
+    { bg: '#0f766e' },   // row 4 - deep teal (dealerships, part 3)
+    { bg: '#5b21b6' },   // row 5 - deep purple (European OEM dealerships, part 1)
+    { bg: '#5b21b6' },   // row 6 - deep purple (European OEM dealerships, part 2)
+    { bg: '#15803d' },   // row 7 - deep green (junkyards)
   ];
 
   function log(...args) {
@@ -231,10 +234,8 @@
     btn.type = 'button';
     btn.style.cssText = `
       box-sizing: border-box !important;
-      width: 96px !important;
-      min-width: 96px !important;
-      max-width: 96px !important;
-      flex: 0 0 96px !important;
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
       text-align: center !important;
       padding: 7px 6px !important;
       margin: 0 !important;
@@ -311,6 +312,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      width: 606px;
       position: absolute;
       top: ${anchorRect.top - containerRect.top + scrollContainer.scrollTop}px;
       left: ${anchorRect.right - containerRect.left + scrollContainer.scrollLeft + 78}px;
@@ -327,6 +329,7 @@
       rowEl.style.cssText = `
         display: flex;
         gap: 6px;
+        width: 100%;
       `;
       rowConfigs.forEach((vendorConfig) => {
         rowEl.appendChild(makeButton(vendorConfig, ROW_COLORS[rowIndex]));
