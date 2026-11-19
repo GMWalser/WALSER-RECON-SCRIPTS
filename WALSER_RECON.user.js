@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1119.1302
+// @version      2026.1119.1314
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -10796,8 +10796,8 @@ log('v1.3 loaded');
 })();
 });
 
-// ===== PO Vendor Quick-Add v3.9  (VENDOR_QUICKADD.js) =====
-WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.9', ['https://app.tekioncloud.com/*'], 'document-idle',
+// ===== PO Vendor Quick-Add v3.10  (VENDOR_QUICKADD.js) =====
+WR.add('vendor_quickadd', 'PO Vendor Quick-Add', '3.10', ['https://app.tekioncloud.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -10865,6 +10865,7 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
     [
       { label: 'HYU',      search: '1364',        match: 'WALSER HYUNDAI',      email: 'HYUParts@walser.com' },
       { label: 'KIA',      search: '1143',        match: 'LUTHER NISSAN KIA',   email: 'parts@luthernissankia.com' },
+      { label: 'LEX',      search: 'WO270',       match: 'LEXUS',               email: 'lomwholesale@napleton.com' },
       { label: 'MAZ IGH',  search: '5543710204',  match: 'MORRIE',              email: 'parts.invergrovemazda@morries.com' },
       { label: 'NIS',      search: '1040',        match: 'WALSER NISSAN',       email: 'NISParts@walser.com' },
       { label: 'SUB STP',  search: '4073',        match: 'SUBARU ST PAUL',      email: 'SPMNSUParts@walser.com' },
@@ -10875,7 +10876,6 @@ function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueCh
       { label: 'BMW',     search: 'WT53',     match: 'MOTORWERKS BMW',            email: 'epeterson@penskeautomotive.com,sgroth@penskeautomotive.com' },
       { label: 'GENESIS', search: '5428',     match: 'LUTHER GENESIS',            email: 'Parts@LutherGenesis.com' },
       { label: 'JLR',     search: '1264',     match: 'JAGUAR LAND ROVER',         email: 'Parts.JaguarLandRover@morries.com' },
-      { label: 'LEX',     search: 'WO270',    match: 'LEXUS',                     email: 'lomwholesale@napleton.com' },
       { label: 'MERC',    search: 'WO1205',   match: 'SEARS IMPORTED',            email: 'william.wissbaum@searsimports.com' },
     ],
     [
