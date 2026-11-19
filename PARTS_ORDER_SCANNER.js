@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Parts Order Quote Scanner
 // @namespace    reconclipboard
-// @version      1.3
+// @version      1.4
 // @author       Gabe
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
 // @downloadURL  https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/PARTS_ORDER_SCANNER.js
@@ -19,6 +19,7 @@ const LOG = '[Parts Order Scanner]';
 function log(...args) { console.log(LOG, ...args); }
 
 const PARTS_ORDER_BUCKET_IDS = ['3134', '3130'];
+const PREORDER_BUCKET_ID = '3130';   // Mount & Balance Tires green highlight is ONLY for this bucket
 
 // Pre-Order bucket extra: a car with a "Mount & Balance ... Tires" line (any qty) is
 // highlighted green on the list. Checked off the same work-order fetch the quote scan does,
@@ -416,7 +417,8 @@ function applyVehicleTags() {
     const card = row.link ? row.link.closest('#vehicle-info-bar') : null;
     if (!card) return;
 
-    card.classList.toggle('pos-mb-tires', !!mbTires[row.woId]);   // green card = has Mount & Balance Tires
+    // green card = has Mount & Balance Tires -- ONLY on the Pre-Order bucket, never on Parts Order
+    card.classList.toggle('pos-mb-tires', currentBucketId() === PREORDER_BUCKET_ID && !!mbTires[row.woId]);
 
     card.querySelectorAll('.info-bar__item--stock div').forEach(stockEl => {
       if (!stockEl.isConnected) return;

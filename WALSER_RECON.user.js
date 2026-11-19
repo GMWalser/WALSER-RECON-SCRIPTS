@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Walser Recon Tools
 // @namespace    walser-recon-tools
-// @version      2026.1119.1330
+// @version      2026.1119.1340
 // @author       Gabe
 // @description  All Walser recon scripts in one. Turn each one on/off from the Tampermonkey menu.
 // @updateURL    https://raw.githubusercontent.com/GMWalser/WALSER-RECON-SCRIPTS/refs/heads/main/WALSER_RECON.user.js
@@ -8490,8 +8490,8 @@ setTimeout(init, 1000);
 })();
 });
 
-// ===== Parts Order Quote Scanner v1.3  (PARTS_ORDER_SCANNER.js) =====
-WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.3', ['https://app.reconvision.com/*'], 'document-idle',
+// ===== Parts Order Quote Scanner v1.4  (PARTS_ORDER_SCANNER.js) =====
+WR.add('quote_scanner', 'Parts Order Quote Scanner', '1.4', ['https://app.reconvision.com/*'], 'document-idle',
 function (GM_getValue, GM_setValue, GM_deleteValue, GM_listValues, GM_addValueChangeListener, GM_removeValueChangeListener, setInterval, setTimeout, requestAnimationFrame, MutationObserver) {
 
 (function () {
@@ -8501,6 +8501,7 @@ const LOG = '[Parts Order Scanner]';
 function log(...args) { console.log(LOG, ...args); }
 
 const PARTS_ORDER_BUCKET_IDS = ['3134', '3130'];
+const PREORDER_BUCKET_ID = '3130';   // Mount & Balance Tires green highlight is ONLY for this bucket
 
 // Pre-Order bucket extra: a car with a "Mount & Balance ... Tires" line (any qty) is
 // highlighted green on the list. Checked off the same work-order fetch the quote scan does,
@@ -8898,7 +8899,8 @@ function applyVehicleTags() {
     const card = row.link ? row.link.closest('#vehicle-info-bar') : null;
     if (!card) return;
 
-    card.classList.toggle('pos-mb-tires', !!mbTires[row.woId]);   // green card = has Mount & Balance Tires
+    // green card = has Mount & Balance Tires -- ONLY on the Pre-Order bucket, never on Parts Order
+    card.classList.toggle('pos-mb-tires', currentBucketId() === PREORDER_BUCKET_ID && !!mbTires[row.woId]);
 
     card.querySelectorAll('.info-bar__item--stock div').forEach(stockEl => {
       if (!stockEl.isConnected) return;
